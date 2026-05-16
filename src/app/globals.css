@@ -1,0 +1,675 @@
+/* never edit the this global css file*/
+
+
+/* Fonts moved to layout.js for better loading control and CLS prevention */
+@import "tailwindcss";
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Work Sans' !important;
+  font-weight: 400;
+  font-kerning: normal;
+  font-feature-settings: 'kern' 1;
+  letter-spacing: 0.010em;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  width: 100%; /* Ensure full width */
+  max-width: 100vw; /* Prevent overflow beyond viewport */
+  min-height: 100vh; /* Ensure minimum height */
+  position: relative; /* Prevent white space issues */
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+}
+
+/* Headings use DM Sans from Google Fonts */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'DM Sans' !important;
+}
+
+/* Universal H1 styling per request */
+h1 {
+  font-size: 60px !important;
+  line-height: 3.75rem !important;
+  letter-spacing: -0.65px !important;
+}
+
+/* Universal H2 styling per request */
+h2 {
+  font-size: 48px !important;
+  line-height: 3rem !important;
+  letter-spacing: -0.65px !important;
+}
+
+h3 {
+  font-size: 36px !important;
+  line-height: 2.25rem !important;
+  letter-spacing: -0.65px !important;
+  
+}
+
+
+h4 {
+  font-size: 30px !important;
+  line-height: 1.875rem !important;
+  letter-spacing: -0.65px !important;
+}
+
+h5 {
+  font-size: 24px !important;
+  line-height: 1.5rem !important;
+  letter-spacing: -0.65px !important;
+}
+
+h6 {
+  font-size: 18px !important;
+  line-height: 1.25rem !important;
+  letter-spacing: -0.65px !important;
+}
+
+/* Tablet responsive overrides (768px - 1023px)
+   Note: we intentionally do NOT override h1 here so tablet hero uses the same
+   heading size as laptop/desktop. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* CMS hero section specific tablet line-height override */
+  .cms-hero-title {
+    line-height: 1.2 !important;
+  }
+  
+  h2 {
+    font-size: 32px !important;
+    line-height: 2rem !important;
+  }
+  
+  h3 {
+    font-size: 28px !important;
+    line-height: 1.75rem !important;
+  }
+  
+  h4 {
+    font-size: 24px !important;
+    line-height: 1.5rem !important;
+  }
+  
+  h5 {
+    font-size: 20px !important;
+    line-height: 1.25rem !important;
+  }
+  
+  h6 {
+    font-size: 18px !important;
+    line-height: 1.25rem !important;
+  }
+}
+
+/* Laptop responsive overrides (1024px and above) */
+@media (min-width: 1024px) {
+  /* CMS hero section specific laptop line-height override */
+  .cms-hero-title {
+    line-height: 1.2 !important;
+  }
+}
+
+/* Mobile responsive overrides to prevent layout shift */
+@media (max-width: 767px) {
+  h1 {
+    font-size: 28px !important;
+    line-height: 1.2rem !important;
+  }
+  
+  /* CMS hero section specific mobile line-height override */
+  .cms-hero-title {
+    line-height: 2rem !important;
+  }
+  
+  h2 {
+    font-size: 24px !important;
+    line-height: 1.2rem !important;
+  }
+  
+  h3 {
+    font-size: 20px !important;
+    line-height: 1.2rem !important;
+  }
+  
+  h4 {
+    font-size: 18px !important;
+    line-height: 1.2rem !important;
+  }
+  
+  h5 {
+    font-size: 16px !important;
+    line-height: 1.2rem !important;
+  }
+  
+  h6 {
+    font-size: 14px  !important;
+    line-height: 1.2rem !important;
+  }
+}
+
+/* Paragraphs use Work Sans */
+p {
+  font-family: 'Work Sans' !important;
+  font-size: 16px !important;
+  line-height: 1.5rem ;
+  letter-spacing: -0.50px !important;
+}
+
+/* Paragraph size classes - like headings but for paragraphs */
+.p2 {
+  font-family: 'Work Sans' !important;
+  font-size: 16px !important;
+  line-height: 1rem !important;
+  letter-spacing: -0.80px !important;
+  font-weight: 300 !important;
+}
+
+/* Utility: tighter tracking override */
+.tight-tracking {
+  letter-spacing: -0.50px !important;
+}
+
+/* Number bold styling */
+.number-bold {
+  font-weight: 500 !important;
+}
+
+
+/* Specific override for Hero h1 - uses DM Sans */
+.hero-title {
+  font-family: 'DM Sans' !important;
+  color: #23153B !important;
+}
+
+
+/* Ensure anchors use body font and standard features */
+a { font-family: inherit; font-feature-settings: 'kern' 1; font-variant-ligatures: normal; }
+
+/* Hero badge text override */
+.hero-badge-text {
+  font-family: 'Work Sans' !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.50px !important;
+}
+
+/* Header navigation menu items */
+.header-nav-item {
+  font-family: 'Work Sans' !important;
+  letter-spacing: -0.40px !important;
+}
+
+/* Improve rendering of custom fonts */
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+}
+
+html {
+  height: 100%; /* Ensure html takes full height */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  scroll-behavior: smooth; /* Enable smooth scrolling */
+  scroll-padding-top: 0.25rem; /* Small offset for anchor links */
+}
+
+/* Respect user's motion preferences for accessibility (WCAG compliance) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Ensure increased letter-spacing for body text */
+body, span, li, a, button, input, textarea {
+  letter-spacing: 0.010em !important;
+}
+
+/* Make all buttons and clickable elements show pointer cursor */
+button {
+  cursor: pointer !important;
+}
+
+/* Prevent layout shifts (CLS) */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure images with aspect-ratio don't cause shifts */
+img[width][height] {
+  aspect-ratio: attr(width) / attr(height);
+}
+
+/* Prevent font loading layout shifts */
+body {
+  font-display: swap;
+}
+
+/* Hero description mobile styling - prevents hydration issues */
+@media (max-width: 767px) {
+  .hero-description {
+    max-width: 300px;
+    line-height: 1.3;
+    margin-left: auto;
+    margin-right: auto;
+    word-break: normal;
+    hyphens: none;
+    overflow-wrap: break-word;
+  }
+  .hero-title {
+    line-height: 1.1 !important;
+  }
+}
+
+/* Tablet hero styling */
+@media (min-width: 768px) and (max-width: 1180px) and (max-height: 1180px) {
+  .hero-section.hero-home {
+    padding-bottom: 0;
+  }
+  .hero-mobile-wrapper {
+    margin-bottom: 0;
+    margin-top: 24px;
+  }
+  .hero-image-box {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  .hero-content-wrapper {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-text {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .hero-text .hero-title {
+    text-align: center;
+    width: 100%;
+  }
+  .hero-text .hero-description {
+    text-align: center;
+    width: 100%;
+  }
+  .hero-text .hero-badge {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Reserve space for images during load */
+.doctor-card-image,
+.guide-video-card img {
+  background-color: #f3f4f6;
+  background-image: linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 50%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Ensure global paragraph letter-spacing takes effect sitewide */
+p {
+  letter-spacing: -0.50px !important;
+}
+
+/* Hide scrollbars globally while keeping scroll behavior */
+html, body {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  width: 100%; /* Ensure full width */
+  max-width: 100vw; /* Prevent overflow beyond viewport */
+  min-height: 100vh; /* Ensure minimum height */
+  position: relative; /* Prevent white space issues */
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Hide scrollbars for all elements */
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Carousel scrollbar hiding */
+.carousel-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Hide scrollbar while keeping scroll behavior */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Login page specific styles - removed to allow full height */
+.login-page,
+.register-page {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Android-specific fixes to prevent white space on swipe */
+@media screen and (max-width: 768px) {
+  html {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  
+  body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    position: relative;
+    scroll-behavior: smooth;
+  }
+  
+  /* Box model sitewide; cap width on replaced/media only (avoid `* { max-width }` breaking flex/grid) */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  img,
+  video,
+  canvas,
+  svg:not(:root),
+  iframe,
+  embed,
+  object {
+    max-width: 100%;
+  }
+  
+  /* Fix for Android Chrome */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      -webkit-overflow-scrolling: touch;
+      overflow-x: hidden;
+    }
+  }
+}
+
+/* Hero Section Styles */
+.hero-section {
+  min-height: auto;
+}
+
+.hero-title {
+  text-align: left;
+}
+
+.hero-description {
+  text-align: left;
+}
+
+.hero-badge {
+  margin: 0;
+}
+
+.hero-badge-text {
+  font-size: 12px;
+}
+
+.hero-image-box {
+  position: relative;
+}
+
+@media (max-width: 767px) {
+  .hero-section {
+    min-height: auto;
+    padding: 16px 0 0 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  .hero-image-box {
+    width: 100% !important;
+    aspect-ratio: 4 / 3 !important;
+    margin-top: 20px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .hero-mobile-image {
+    object-fit: cover !important;
+    object-position: center bottom !important;
+  }
+
+  .hero-title {
+    font-size: 32px !important;
+    line-height: 1.05 !important;
+    margin-top: 18px !important;
+    text-align: center !important;
+  }
+
+  .hero-description {
+    font-size: 16px !important;
+    margin-top: 16px !important;
+    text-align: center !important;
+  }
+
+  .hero-badge {
+    margin: 0 auto !important;
+  }
+
+  .hero-buttons {
+    margin-top: 24px !important;
+    gap: 12px !important;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-buttons button {
+    padding: 12px 24px !important;
+    font-size: 16px !important;
+  }
+
+  .hero-buttons button:first-child {
+    max-width: 200px !important;
+  }
+}
+
+/* Tablet hero layout: mirror mobile hero layout but with slightly larger hero */
+@media (min-width: 768px) and (max-width: 1180px) and (max-height: 1180px) {
+  .hero-section.hero-home {
+    min-height: auto;
+    padding-top: 24px;
+    padding-bottom: 0;
+  }
+
+  .hero-mobile-wrapper {
+    /* Tablet: match hero's inner width/padding like laptop (no extra horizontal constraints) */
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: -16px;
+    display: block !important;
+  }
+
+  .hero-image-box {
+    width: 100%;
+    aspect-ratio: 3 / 2.2;
+    margin-top: 20px;
+    margin-bottom: 0;
+  }
+
+  .hero-mobile-image {
+    object-fit: cover;
+    object-position: center bottom;
+  }
+
+  .hero-content-wrapper {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .hero-text {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .hero-title {
+    /* Match laptop-style width on tablet: no extra max-width constraint */
+    text-align: center !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 100% !important;
+  }
+
+  .hero-description {
+    text-align: center !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-badge {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .hero-buttons {
+    margin-top: 24px !important;
+    gap: 12px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .hero-buttons button {
+    padding: 12px 24px;
+    font-size: 16px;
+  }
+
+  .hero-buttons button:first-child {
+    max-width: 220px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1180px) and (max-height: 1180px) {
+  /* Tablet-specific hero overrides removed for global .hero-section to allow per-page control */
+}
+
+@media (min-width: 1280px) {
+  .hero-section {
+    min-height: var(--hero-desktop-min-height);
+  }
+
+  .hero-image-box {
+    height: 100% !important;
+    min-height: var(--hero-desktop-image-min-height);
+  }
+
+  .hero-title,
+  .hero-description {
+    text-align: left !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1280px) {
+  .hero-content-wrapper {
+    position: relative !important;
+    gap: 32px !important;
+  }
+
+  .hero-text {
+    width: 100% !important;
+    max-width: 560px !important;
+  }
+
+  .desktop-hero-image {
+    position: relative !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    min-height: 420px !important;
+  }
+
+  .desktop-hero-image .hero-image-box {
+    position: relative !important;
+    inset: auto !important;
+    height: 100% !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .hero-wrapper {
+    max-width: clamp(1400px, 78vw, 1720px) !important;
+  }
+
+  .hero-section {
+    padding-left: clamp(50px, 6vw, 90px) !important;
+    padding-right: clamp(50px, 6vw, 90px) !important;
+  }
+}
+
+/* Team and Leadership image border radius for mobile */
+@media (max-width: 767px) {
+  .team-image-container,
+  .leadership-image-container {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .team-image-container *,
+  .leadership-image-container * {
+    border-radius: 10px;
+  }
+  .team-image-container img,
+  .team-image-container span,
+  .team-image-container span img,
+  .team-image-container > *,
+  .team-image-container > * > *,
+  .leadership-image-container img,
+  .leadership-image-container span,
+  .leadership-image-container span img,
+  .leadership-image-container > *,
+  .leadership-image-container > * > * {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+}

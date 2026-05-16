@@ -1,0 +1,58 @@
+.page :global(h3) {
+    font-size: 24px !important;
+    line-height: 1.8rem !important;
+    letter-spacing: -0.4px !important;
+}
+
+.page :global(h4) {
+    font-size: 20px !important;
+    line-height: 1.6rem !important;
+    letter-spacing: -0.3px !important;
+}
+
+.title {
+    font-size: 22px !important;
+    line-height: 1.6rem !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.35px !important;
+    text-transform: uppercase;
+}
+
+.sectionHeading {
+    font-size: 20px !important;
+    line-height: 1.6rem !important;
+    letter-spacing: -0.3px !important;
+    text-transform: uppercase;
+    font-weight: 600 !important;
+}
+
+.subHeading {
+    font-size: 18px !important;
+    line-height: 1.5rem !important;
+    letter-spacing: -0.2px !important;
+    font-weight: 600 !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

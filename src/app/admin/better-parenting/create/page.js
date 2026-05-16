@@ -1,0 +1,44 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { adminApi } from '@/lib/backendApi';
+import BetterParentingPageBuilder from '@/components/BetterParentingPageBuilder';
+
+export default function CreateBetterParentingPage() {
+  const { isAuthenticated, hasRole, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated()) return router.push('/');
+      if (!hasRole('admin') && !hasRole('superadmin')) return router.push('/profile');
+    }
+  }, [authLoading]);
+
+  const handleSubmit = async (data) => {
+    try {
+      setSaving(true);
+      setError('');
+      const res = await adminApi.createBetterParentingPage(data);
+      if (res?.success) router.push('/admin/better-parenting');
+      else setError(res?.message || 'Failed to create page');
+    } catch (e) {
+      setError('Error creating page');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div>
+      {error && <div className="container mx-auto px-4 py-4"><div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div></div>}
+      <BetterParentingPageBuilder onSubmit={handleSubmit} onCancel={() => router.push('/admin/better-parenting')} loading={saving} />
+    </div>
+  );
+}
+
+

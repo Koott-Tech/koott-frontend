@@ -1,0 +1,142 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches: 
+      - main
+      - master
+      - develop
+      - calneder
+      - calender
+      - merge
+      - merge_new
+      - new
+      - production
+      - roles
+      - working
+  pull_request:
+    branches: 
+      - main
+      - master
+      - develop
+      - calneder
+      - calender
+      - merge
+      - merge_new
+      - new
+      - production
+      - roles
+      - working
+  workflow_dispatch: # Allows manual triggering from Actions tab ggood
+
+jobs:
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        env:
+          CI: true
+        run: |
+          # Try to run linter, but skip if ESLint requires interactive configuration
+          echo "Running ESLint..."
+          npm run lint 2>&1 | tee lint-output.txt || true
+          if grep -q "How would you like to configure ESLint" lint-output.txt; then
+            echo "⚠️ ESLint requires interactive setup. Skipping linting in CI."
+            echo "Note: Configure ESLint locally by running 'npm run lint' and following the prompts."
+          else
+            echo "✅ Linting completed"
+          fi
+        continue-on-error: true # Don't fail build if linting fails
+
+      - name: Run tests
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_BACKEND_URL: http://localhost:5001/api
+        run: npm run test:ci
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [frontend-tests]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate static images
+        continue-on-error: true
+        run: node scripts/validate-images.js
+
+      - name: Build Next.js app
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api' }}
+        run: npm run build
+
+      - name: Build status
+        run: echo "✅ Frontend build check passed"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate || true
+
+      - name: Check React2Shell vulnerabilities (CVE-2025-55182, CVE-2025-55183, CVE-2025-55184, CVE-2025-67779)
+        run: |
+          echo "Checking for React2Shell and related vulnerabilities..."
+          npx fix-react2shell-next || echo "⚠️ Vulnerability check completed with warnings"
+        
+      - name: Security audit summary
+        if: always()
+        run: |
+          echo "## Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- React version: $(npm list react --depth=0 2>/dev/null | grep react@ || echo 'Not found')" >> $GITHUB_STEP_SUMMARY
+          echo "- Next.js version: $(npm list next --depth=0 2>/dev/null | grep next@ || echo 'Not found')" >> $GITHUB_STEP_SUMMARY
+          echo "- React-DOM version: $(npm list react-dom --depth=0 2>/dev/null | grep react-dom@ || echo 'Not found')" >> $GITHUB_STEP_SUMMARY
