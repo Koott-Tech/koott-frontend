@@ -377,7 +377,7 @@ export default function DoctorsPage() {
           <div>
             <h6>Doctors Management</h6>
           <p className="mt-1 text-sm text-gray-600">
-            Manage psychologist profiles (psychiatrists / psychologists) stored in the database — unrelated to “Koott Therapists”, which lists people seen on synced Wix bookings.
+            Manage psychologist profiles.
           </p>
           <p className="mt-2 text-xs text-gray-500">{doctors.length} profile(s) total.</p>
         </div>
@@ -507,8 +507,10 @@ export default function DoctorsPage() {
                         </span>
                       ) : null}
                       {(doctor.active === false || (doctor.availability && doctor.availability.length > 0)) && <span className="text-gray-400">·</span>}
-                      {doctor.google_calendar_credentials ? (
-                        <span className="text-green-600 text-sm">Calendar connected</span>
+                      {doctor.google_calendar_connected ? (
+                        <span className="text-blue-600 text-sm font-medium flex items-center gap-1">
+                          <Check className="h-3 w-3" /> G-Calendar SYNCED
+                        </span>
                       ) : (
                         <span className="text-gray-500 text-sm">Calendar not connected</span>
                       )}
@@ -797,15 +799,15 @@ export default function DoctorsPage() {
                       </div>
                     ))}
                     <div className="pt-1">
-                      <span className={`text-xs font-medium ${selectedDoctor.google_calendar_credentials ? 'text-green-600' : 'text-slate-500'}`}>
-                        {selectedDoctor.google_calendar_credentials ? '✓ Calendar connected' : 'Calendar not connected'}
+                      <span className={`text-xs font-medium ${selectedDoctor.google_calendar_connected ? 'text-blue-600' : 'text-slate-500'}`}>
+                        {selectedDoctor.google_calendar_connected ? '✓ G-Calendar connected' : 'Calendar not connected'}
                       </span>
                     </div>
                   </div>
                 ) : (
                   <div className="pt-1">
-                    <span className={`text-xs font-medium ${selectedDoctor.google_calendar_credentials ? 'text-green-600' : 'text-slate-500'}`}>
-                      {selectedDoctor.google_calendar_credentials ? '✓ Calendar connected' : 'Calendar not connected'}
+                    <span className={`text-xs font-medium ${selectedDoctor.google_calendar_connected ? 'text-blue-600' : 'text-slate-500'}`}>
+                      {selectedDoctor.google_calendar_connected ? '✓ G-Calendar connected' : 'Calendar not connected'}
                     </span>
                   </div>
                 )}

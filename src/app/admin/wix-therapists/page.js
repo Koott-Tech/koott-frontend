@@ -246,7 +246,7 @@ export default function WixTherapistsPage() {
           <div>
             <div className="text-xl font-semibold text-gray-900">Koott Therapists</div>
             <p className="text-xs text-slate-500 mt-0.5 max-w-xl">
-              Unique therapists inferred from synced Wix bookings — not the same count as psychologist profiles unless every profile has booking history.
+              Unique therapists inferred from synced Wix bookings.
             </p>
           </div>
         </div>
@@ -298,63 +298,6 @@ export default function WixTherapistsPage() {
         </div>
       </div>
 
-      {!loading && statsMeta && typeof statsMeta.psychologistsTableCount === 'number' && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700 space-y-2">
-          <p className="font-medium text-slate-900">
-            Why {statsMeta.distinctTherapistIdentitiesAfterDedupe ?? rows.length} here vs{' '}
-            {statsMeta.psychologistsTableCount} on Doctors
-          </p>
-          <ul className="list-disc pl-5 space-y-1 text-slate-600 text-xs md:text-sm">
-            <li>
-              <strong>Doctors</strong> counts every saved profile (<code className="text-xs">psychologists</code>{' '}
-              table).
-            </li>
-            <li>
-              <strong>This page</strong> counts distinct therapist identities found on synced{' '}
-              <code className="text-xs">wix_bookings</code> rows (we skip rows with no therapist name or email).
-            </li>
-            {typeof statsMeta.bookingRowsWithNoTherapistIdentity === 'number' &&
-              statsMeta.bookingRowsWithNoTherapistIdentity > 0 && (
-                <li>
-                  {statsMeta.bookingRowsWithNoTherapistIdentity.toLocaleString()} mirrored booking rows have no therapist
-                  name/email — those sessions never contribute to this count.
-                </li>
-              )}
-            {typeof statsMeta.psychologistProfilesLinkedMatched === 'number' && (
-              <li>
-                Profiles auto-linked from booking data (name/email match):{' '}
-                <strong>{statsMeta.psychologistProfilesLinkedMatched}</strong>
-                {typeof statsMeta.psychologistsUnlinkedShowingOnPageEstimated === 'number' &&
-                  statsMeta.psychologistsUnlinkedShowingOnPageEstimated > 0 && (
-                    <>
-                      {' '}
-                      · Appear on this list but still <strong>UNLINKED</strong> (name/spelling/email mismatch): about{' '}
-                      <strong>{statsMeta.psychologistsUnlinkedShowingOnPageEstimated}</strong>
-                    </>
-                  )}
-              </li>
-            )}
-            {typeof statsMeta.psychologistsProbablyMissingFromSyncedWixBookings === 'number' &&
-              statsMeta.psychologistsProbablyMissingFromSyncedWixBookings > 0 && (
-                <li>
-                  Roughly{' '}
-                  <strong>{statsMeta.psychologistsProbablyMissingFromSyncedWixBookings}</strong> doctor profile(s) show
-                  no therapist row for them on the mirrored Wix bookings (sessions only in-app, mirror not synced, or they
-                  never took Wix-booked appointments).
-                </li>
-              )}
-          </ul>
-          {Array.isArray(statsMeta.samplePsychologistsProbablyMissingFromMirror) &&
-            statsMeta.samplePsychologistsProbablyMissingFromMirror.length > 0 && (
-              <div className="text-xs text-slate-600 pt-1 border-t border-slate-200 mt-2">
-                <span className="font-medium text-slate-700">Examples (profiles with no mirrored therapist match): </span>
-                {statsMeta.samplePsychologistsProbablyMissingFromMirror.map((p) => p.displayName || p.email || p.id).join(
-                  ', '
-                )}
-              </div>
-            )}
-        </div>
-      )}
 
       <div className="flex flex-col gap-4">
         {filtered.map((row, idx) => {
@@ -400,6 +343,18 @@ export default function WixTherapistsPage() {
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100">
                         <AlertCircle className="h-2.5 w-2.5" /> UNLINKED
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-gray-500 mb-1">G-Calendar</div>
+                    {row.psychologist?.google_calendar_connected ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-100" title="Google Calendar is connected and synced">
+                        <Check className="h-2.5 w-2.5" /> SYNCED
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-50 text-gray-500 text-[10px] font-bold border border-gray-200" title="Google Calendar is not connected">
+                        NOT SYNCED
                       </span>
                     )}
                   </div>
