@@ -19,6 +19,8 @@ const getTherapistImageUrl = (therapist) => {
 function EditTherapistModal({ therapist, onClose, onSaved }) {
   const { showError, showSuccess } = useNotification();
   const [loading, setLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [formData, setFormData] = useState({
     firstName: therapist.psychologist?.firstName || therapist.name?.split(' ')[0] || '',
     lastName: therapist.psychologist?.lastName || therapist.name?.split(' ').slice(1).join(' ') || '',
@@ -37,7 +39,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
       let r;
       if (therapist.psychologist?.id) {
         // Update existing
-        r = await adminApi.updatePsychologist(therapist.psychologist.id, {
+        const payload = {
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email,
@@ -46,7 +48,11 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
           area_of_expertise: formData.area_of_expertise,
           experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
           description: formData.description,
-        });
+        };
+        if (showPasswordReset && newPassword.trim()) {
+          payload.password = newPassword.trim();
+        }
+        r = await adminApi.updatePsychologist(therapist.psychologist.id, payload);
       } else {
         // Create new
         r = await adminApi.createPsychologist({
@@ -84,7 +90,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
+        <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
           <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3 space-y-1">
             <div className="text-[10px] uppercase tracking-wider font-bold text-blue-600/80">Wix Reference</div>
             <div className="text-sm font-medium text-blue-900">{therapist.name}</div>
@@ -176,7 +182,46 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
             />
           </div>
 
-          <div className="pt-4 flex gap-3">
+          {/* Password Section */}
+          <div className="space-y-3 pt-4 border-t border-slate-100">
+            <label className="text-xs font-semibold text-gray-700 block">Account Password</label>
+            {therapist.psychologist?.id ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-100 rounded-lg p-2.5">
+                  <div className="text-[11px] text-gray-600 leading-relaxed">
+                    Manage the password for this therapist account.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordReset(!showPasswordReset)}
+                    className="px-3 py-1.5 bg-[#3f2e73] hover:bg-[#2d2152] text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
+                  >
+                    {showPasswordReset ? 'Cancel Reset' : 'Reset Password'}
+                  </button>
+                </div>
+                {showPasswordReset && (
+                  <div className="space-y-2 animate-in slide-in-from-top duration-200">
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                      placeholder="Enter new password"
+                    />
+                    <p className="text-[10px] text-gray-500">
+                      Leave empty to keep current password unchanged
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="px-3 py-2 border border-blue-100 rounded-lg bg-blue-50/50 text-xs text-blue-800">
+                Password will be automatically set to <span className="font-semibold">Koott@#2026</span> upon creation.
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 flex gap-3 sticky bottom-0 bg-white border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}

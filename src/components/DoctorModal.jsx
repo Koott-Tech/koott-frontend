@@ -1162,10 +1162,7 @@ export default function DoctorModal({
 
     // Compare simple fields
     const simpleFields = [
-      'first_name', 'last_name', 'email', 'phone', 'description', 
-      'designation', 'experience_years', 'price', 'display_order',
-      'cover_image_url', 'faq_question_1', 'faq_answer_1', 
-      'faq_question_2', 'faq_answer_2', 'faq_question_3', 'faq_answer_3'
+      'first_name', 'last_name', 'email', 'phone', 'designation', 'cover_image_url'
     ];
 
     simpleFields.forEach(field => {
@@ -1180,111 +1177,6 @@ export default function DoctorModal({
         changedFields[field] = currentValue;
       }
     });
-
-    // Compare education fields
-    const educationFields = ['ug_college', 'pg_college', 'mphil_college', 'phd_college'];
-    educationFields.forEach(field => {
-      const currentValue = currentData[field];
-      const originalValue = originalData[field];
-      if (!valuesAreEqual(currentValue, originalValue)) {
-        changedFields[field] = currentValue;
-      }
-    });
-
-    // Compare arrays (specializations, personalities)
-    if (!valuesAreEqual(currentData.area_of_expertise, originalData.area_of_expertise)) {
-      changedFields.area_of_expertise = currentData.area_of_expertise;
-    }
-
-    if (!valuesAreEqual(currentData.personality_traits, originalData.personality_traits)) {
-      changedFields.personality_traits = currentData.personality_traits;
-    }
-
-    if (currentData.specialist_category !== originalData.specialist_category) {
-      changedFields.specialist_category =
-        currentData.specialist_category === 'child_specialist' ? 'child_specialist' : 'better_parent';
-    }
-
-    const origChildJson = originalData.child_specialist_pricing_json || '';
-    const curChildJson = currentData.child_specialist_pricing_json || '';
-    if (currentData.specialist_category === 'child_specialist') {
-      if (curChildJson !== origChildJson) {
-        try {
-          changedFields.child_specialist_pricing = JSON.parse(curChildJson);
-        } catch {
-          /* ignore */
-        }
-      }
-    } else if (
-      originalData.specialist_category === 'child_specialist' ||
-      (origChildJson && currentData.specialist_category !== 'child_specialist')
-    ) {
-      changedFields.child_specialist_pricing = null;
-    }
-
-    // Compare languages_json
-    const currentLanguages = currentData.languages_json ? JSON.parse(currentData.languages_json) : [];
-    const originalLanguages = originalData.languages_json ? JSON.parse(originalData.languages_json) : [];
-    if (!valuesAreEqual(currentLanguages, originalLanguages)) {
-      changedFields.languages_json = currentData.languages_json;
-    }
-
-    // Only include availability if user actually modified it
-    if (hasUserModifiedAvailability && currentData.availability && Array.isArray(currentData.availability) && currentData.availability.length > 0) {
-      changedFields.availability = currentData.availability;
-    }
-
-    // Only include packages if they were actually changed
-    // Compare packages by checking if IDs, prices, or structure changed
-    if (currentData.packages && Array.isArray(currentData.packages) && currentData.packages.length > 0) {
-      // Check if packages were actually modified by comparing with original packages
-      const packagesChanged = (() => {
-        // If no original packages, packages are new/changed
-        if (!originalPackages || originalPackages.length === 0) {
-          return currentData.packages.some(pkg => pkg.sessions > 1); // Only check multi-session packages
-        }
-        
-        // Compare package counts (excluding individual session)
-        const currentMultiSession = currentData.packages.filter(pkg => pkg.sessions > 1);
-        const originalMultiSession = originalPackages.filter(pkg => pkg.sessions > 1);
-        
-        if (currentMultiSession.length !== originalMultiSession.length) {
-          return true; // Package count changed
-        }
-        
-        // Compare each package
-        for (const currentPkg of currentMultiSession) {
-          const originalPkg = originalMultiSession.find(op => op.id === currentPkg.id);
-          if (!originalPkg) {
-            return true; // New package added
-          }
-          // Check if price or name changed
-          if (parseInt(currentPkg.price) !== parseInt(originalPkg.price) || 
-              currentPkg.name !== originalPkg.name ||
-              currentPkg.sessions !== originalPkg.sessions) {
-            return true; // Package modified
-          }
-        }
-        
-        // Check if any original package was removed
-        for (const originalPkg of originalMultiSession) {
-          const currentPkg = currentMultiSession.find(cp => cp.id === originalPkg.id);
-          if (!currentPkg) {
-            return true; // Package removed
-          }
-        }
-        
-        return false; // No changes
-      })();
-      
-      if (packagesChanged) {
-        changedFields.packages = currentData.packages;
-        // Include deletePackages flag if needed
-        if (currentData.deletePackages !== undefined) {
-          changedFields.deletePackages = currentData.deletePackages;
-        }
-      }
-    }
 
     // Always include password if it's being changed
     if (currentData.password) {
@@ -1311,32 +1203,6 @@ export default function DoctorModal({
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!formData.experience_years || formData.experience_years < 0) newErrors.experience_years = 'Years of experience is required and must be 0 or greater';
-    // Availability is optional in both add and edit (can be set via daily availability adder)
-    // (no validation for availability)
-
-    if (!isPsychiatristForm && formData.specialistCategory !== 'child_specialist') {
-      if (!formData.price || String(formData.price).trim() === '') {
-        newErrors.price = 'Individual session price is required';
-      }
-    }
-    if (!isPsychiatristForm && formData.specialistCategory === 'child_specialist') {
-      try {
-        const built = buildChildSpecialistPricingPayload(childSpecialistPricing);
-        const flat = [];
-        ['parent_only', 'child_only', 'family'].forEach((k) => flat.push(built.initial[k].price));
-        CHILD_FOLLOW_TIERS.forEach(({ key: tier }) => {
-          ['parent_only', 'child_only', 'family'].forEach((k) =>
-            flat.push(built.followUpPackages[tier][k].price)
-          );
-        });
-        if (flat.some((n) => !Number.isFinite(n) || n <= 0)) {
-          newErrors.childSpecialistPricing = 'Enter valid positive prices for all child specialist options';
-        }
-      } catch {
-        newErrors.childSpecialistPricing = 'Invalid child specialist pricing';
-      }
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -1345,106 +1211,20 @@ export default function DoctorModal({
     }
 
     try {
-      // Convert availability data to per-date format, preserving exact dates as selected
-      const convertedAvailability = Object.entries(availabilityData).map(([dateStr, data]) => {
-        return {
-          date: dateStr,
-          timeSlots: {
-            morning: Array.isArray(data.timeSlots.morning) ? data.timeSlots.morning : [],
-            noon: Array.isArray(data.timeSlots.noon) ? data.timeSlots.noon : [],
-            evening: Array.isArray(data.timeSlots.evening) ? data.timeSlots.evening : [],
-            night: Array.isArray(data.timeSlots.night) ? data.timeSlots.night : [],
-          }
-        };
-      });
-
       const resolvedImage = typeof formData.coverImage === 'string' ? formData.coverImage : null;
       const safeImageUrl = resolvedImage && !resolvedImage.startsWith('data:') ? resolvedImage : undefined;
       
-      // Build full doctor data object
+      // Build full doctor data object (containing only the active UI fields)
       const fullDoctorData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
         email: formData.email,
         phone: countryCode + formData.phone,
-        ug_college: formData.education.ug,
-        pg_college: formData.education.pg,
-        mphil_college: formData.education.mphil,
-        phd_college: formData.education.phd,
-        description: formData.description,
         designation: formData.designation?.trim() || null,
-        experience_years: parseInt(formData.experience_years) || 0,
-        price: formData.price ? Number(formData.price) : undefined,
-        psychiatrist_15min_price: formData.psychiatrist15Price ? Number(formData.psychiatrist15Price) : undefined,
-        psychiatrist_30min_price: formData.psychiatrist30Price ? Number(formData.psychiatrist30Price) : undefined,
-        display_order: (() => {
-          const orderValue = formData.display_order;
-          if (!orderValue) return null;
-          // Handle both string and number inputs
-          const strValue = String(orderValue).trim();
-          if (strValue === '' || strValue === '0') return null;
-          const numValue = parseInt(strValue, 10);
-          return isNaN(numValue) ? null : numValue;
-        })(),
-        area_of_expertise: formData.specializations.filter(spec => spec.trim()),
-        personality_traits: formData.personalities.filter(p => p.trim()),
-        availability: convertedAvailability,
-        packages: formData.packages
-          .filter(pkg => pkg.name && pkg.price && pkg.sessions)
-          .map(pkg => ({
-            ...pkg,
-            // Preserve ID as-is (could be UUID or integer) - only remove temp IDs
-            id: (pkg.id && !pkg.id.toString().startsWith('pkg-')) ? pkg.id : undefined
-          })),
-        // Check if any packages were removed (only in edit mode)
-        deletePackages: (() => {
-          if (mode !== 'edit' || originalPackages.length === 0) return false;
-          
-          // Get current package IDs (can be UUID or integer, but not temp IDs)
-          const currentPackageIds = formData.packages
-            .filter(pkg => pkg.name && pkg.price && pkg.sessions)
-            .map(pkg => pkg.id)
-            .filter(id => id && !id.toString().startsWith('pkg-'));
-          
-          // Get original package IDs (keep as-is, can be UUID or integer)
-          const originalPackageIds = originalPackages.map(pkg => pkg.id);
-          
-          // Check if any original packages are missing from current packages
-          const hasRemovedPackages = originalPackageIds.some(originalId => !currentPackageIds.includes(originalId));
-          
-          return hasRemovedPackages;
-        })(),
-        // Use single field only
         cover_image_url: safeImageUrl,
-        faq_question_1: formData.faq_question_1?.trim() || null,
-        faq_answer_1: formData.faq_answer_1?.trim() || null,
-        faq_question_2: formData.faq_question_2?.trim() || null,
-        faq_answer_2: formData.faq_answer_2?.trim() || null,
-        faq_question_3: formData.faq_question_3?.trim() || null,
-        faq_answer_3: formData.faq_answer_3?.trim() || null,
-        specialist_category: isPsychiatristForm
-          ? 'better_parent'
-          : formData.specialistCategory === 'child_specialist'
-            ? 'child_specialist'
-            : 'better_parent',
-        child_specialist_pricing:
-          !isPsychiatristForm && formData.specialistCategory === 'child_specialist'
-            ? buildChildSpecialistPricingPayload(childSpecialistPricing)
-            : null,
-        child_specialist_pricing_json:
-          !isPsychiatristForm && formData.specialistCategory === 'child_specialist'
-            ? JSON.stringify(buildChildSpecialistPricingPayload(childSpecialistPricing))
-            : ''
       };
 
-      const filteredLanguages = formData.languages
-        .map(lang => lang.trim())
-        .filter(Boolean);
-      if (filteredLanguages.length > 0) {
-        fullDoctorData.languages_json = JSON.stringify(filteredLanguages);
-      }
-
-      // Handle password for edit mode
+      // Handle password for edit/add mode
       if (mode === 'edit' && showPasswordReset && newPassword.trim()) {
         fullDoctorData.password = newPassword;
       } else if (mode === 'add') {
@@ -1456,11 +1236,8 @@ export default function DoctorModal({
         ? getChangedFields(fullDoctorData, originalDoctorData)
         : fullDoctorData;
 
-      console.log('📤 Full doctor data:', fullDoctorData);
-      console.log('📤 Changed fields only:', doctorData);
-      console.log('📤 Number of fields changed:', Object.keys(doctorData).length);
-      console.log('📤 Display order in doctorData:', doctorData.display_order);
-      console.log('📤 Display order type:', typeof doctorData.display_order);
+      console.log('📤 Form submitted successfully');
+      console.log('📤 Submitting doctor data:', doctorData);
 
       await onSave(doctorData);
       handleClose();
