@@ -13,7 +13,8 @@ import {
   Clock,
   Calendar,
   GripVertical,
-  MoreVertical
+  MoreVertical,
+  Check
 } from 'lucide-react';
 import {
   DropdownMenu,
