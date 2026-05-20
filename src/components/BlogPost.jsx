@@ -128,9 +128,9 @@ const StructuredContentRenderer = ({ content }) => {
                                  target="_blank"
                                  rel="noopener noreferrer"
                                  className="underline font-medium"
-                                 style={{ textDecoration: 'underline', color: '#3f2e73' }}
-                                 onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-                                 onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+                                 style={{ textDecoration: 'underline', color: '#025545' }}
+                                 onMouseEnter={(e) => e.target.style.color = '#012f23'}
+                                 onMouseLeave={(e) => e.target.style.color = '#025545'}
                                >
                                  {part.text}
                                </a>
@@ -225,9 +225,9 @@ const StructuredContentRenderer = ({ content }) => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline font-medium"
-                        style={{ textDecoration: 'underline', color: '#3f2e73' }}
-                        onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-                        onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+                        style={{ textDecoration: 'underline', color: '#025545' }}
+                        onMouseEnter={(e) => e.target.style.color = '#012f23'}
+                        onMouseLeave={(e) => e.target.style.color = '#025545'}
                       >
                         {part.text}
                       </a>
@@ -576,8 +576,8 @@ export default function BlogPost({ slug }) {
       <article className={`min-h-screen flex flex-col items-center justify-center px-4 ${BLOG_TYPOGRAPHY_ROOT_CLASS} ${BLOG_LETTER_SPACING_CLASS}`}>
         <style dangerouslySetInnerHTML={{ __html: BLOG_TYPOGRAPHY_ROOT_CSS }} />
         <div className="max-w-md text-center">
-          <h1 className={`text-5xl font-bold leading-none mb-4 ${BLOG_LETTER_SPACING_CLASS}`} style={{ color: '#3f2e73' }}>404</h1>
-          <h2 className={`text-2xl font-semibold leading-none mb-3 ${BLOG_LETTER_SPACING_CLASS}`} style={{ color: '#3f2e73' }}>
+          <h1 className={`text-5xl font-bold leading-none mb-4 ${BLOG_LETTER_SPACING_CLASS}`} style={{ color: '#025545' }}>404</h1>
+          <h2 className={`text-2xl font-semibold leading-none mb-3 ${BLOG_LETTER_SPACING_CLASS}`} style={{ color: '#025545' }}>
             Article not found
           </h2>
           <p className={`text-gray-600 leading-none mb-6 ${BLOG_LETTER_SPACING_CLASS}`}>
@@ -585,7 +585,7 @@ export default function BlogPost({ slug }) {
             </p>
           <Link
             href="/"
-            className={`inline-flex items-center justify-center w-full py-3 px-4 text-base font-semibold leading-none text-white rounded-lg transition-colors duration-200 bg-[#3f2e73] hover:bg-[#1d1733] ${BLOG_LETTER_SPACING_CLASS}`}
+            className={`inline-flex items-center justify-center w-full py-3 px-4 text-base font-semibold leading-none text-white rounded-lg transition-colors duration-200 bg-[#025545] hover:bg-[#012f23] ${BLOG_LETTER_SPACING_CLASS}`}
           >
             Go back home
           </Link>

@@ -146,8 +146,8 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
           <div className="mb-4 p-3 rounded-md border" style={{ backgroundColor: 'rgba(63, 46, 115, 0.08)', borderColor: 'rgba(63, 46, 115, 0.2)' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2" style={{ color: '#3f2e73' }} />
-                <span className="text-sm" style={{ color: '#3f2e73' }}>
+                <Calendar className="h-4 w-4 mr-2" style={{ color: '#025545' }} />
+                <span className="text-sm" style={{ color: '#025545' }}>
                   {hasGoogleCalendar ? 'Google Calendar connected' : 'Google Calendar not connected'} · Availability loaded for this month
                 </span>
               </div>
@@ -155,7 +155,7 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
                 onClick={fetchCalendarAndAvailability}
                 disabled={loading}
                 className="text-xs flex items-center gap-1 font-medium hover:opacity-80 disabled:opacity-60"
-                style={{ color: '#3f2e73' }}
+                style={{ color: '#025545' }}
               >
                 {loading ? (
                   <>
@@ -236,18 +236,18 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
                         onClick={() => isAvailable && setSelectedDate(new Date(year, month, day))}
                         className={`text-center py-1 rounded-lg transition-all duration-200 text-xs cursor-pointer border ${
                           isSelected
-                            ? 'bg-[#3f2e73] text-white font-bold shadow-lg border-[#3f2e73]'
+                            ? 'bg-[#025545] text-white font-bold shadow-lg border-[#025545]'
                             : isToday && shouldHighlightAvailable
-                              ? 'bg-[#6d5ba8] text-white font-semibold shadow-md border-[#6d5ba8]'
+                              ? 'bg-[#189e4f] text-white font-semibold shadow-md border-[#189e4f]'
                               : isToday
-                                ? 'bg-[#eae4ff] text-[#3f2e73] font-semibold border-[#d8ccff]'
+                                ? 'bg-[#d7fec5] text-[#025545] font-semibold border-[#d7fec5]'
                                 : shouldHighlightAvailable
-                                  ? 'bg-[#f0edff] text-[#3f2e73] font-semibold border-[#3f2e73] hover:bg-[#e3dcff]'
+                                  ? 'bg-[#f2fff1] text-[#025545] font-semibold border-[#025545] hover:bg-[#d7fec5]'
                                   : hasEvents && !isPastDate
                                     ? 'bg-red-50 text-red-700 font-semibold border-red-200 hover:bg-red-100'
                                     : isPastDate
                                       ? 'text-gray-300 cursor-not-allowed border-transparent'
-                                      : 'text-[#3f2e73] border-transparent hover:bg-[#f6f3ff]'
+                                      : 'text-[#025545] border-transparent hover:bg-[#f2fff1]'
                         }`}
                         title={hasEvents ? 'Has bookings/events' : shouldHighlightAvailable ? 'Available for booking' : isPastDate ? 'Past date' : 'No slots'}
                       >
@@ -255,7 +255,7 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
                         {shouldHighlightAvailable && (
                           <div
                             className={`w-2 h-2 rounded-full mx-auto mt-1 shadow-sm ${
-                              isSelected ? 'bg-[#f0edff]' : isToday && shouldHighlightAvailable ? 'bg-white' : 'bg-[#3f2e73]'
+                              isSelected ? 'bg-[#f2fff1]' : isToday && shouldHighlightAvailable ? 'bg-white' : 'bg-[#025545]'
                             }`}
                           />
                         )}
@@ -334,7 +334,7 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
           {/* Available slots for selected date */}
           <div className="bg-white border rounded-lg p-4 mt-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" style={{ color: '#3f2e73' }} />
+              <CheckCircle className="h-4 w-4" style={{ color: '#025545' }} />
               Available times — {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
             </h4>
             {(() => {
@@ -345,7 +345,7 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
                   {slots.map((time, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-[#3f2e73]/10 text-[#3f2e73] border border-[#3f2e73]/20"
+                      className="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium bg-[#025545]/10 text-[#025545] border border-[#025545]/20"
                     >
                       <Clock className="h-3 w-3 mr-1" />
                       {time}

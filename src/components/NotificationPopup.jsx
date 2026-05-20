@@ -53,9 +53,9 @@ const NotificationPopup = ({
         container: 'border-2',
         title: 'text-gray-900',
         message: 'text-gray-700',
-        iconColor: '#3f2e73',
-        borderColor: '#3f2e73',
-        bgColor: '#f5f3ff'
+        iconColor: '#025545',
+        borderColor: '#025545',
+        bgColor: '#f2fff1'
       };
     }
 

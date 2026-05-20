@@ -182,7 +182,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
               letterSpacing: '-0.01em'
             }}
           >
-            <Calendar size={18} style={{ color: '#3f2e73', flexShrink: 0 }} />
+            <Calendar size={18} style={{ color: '#025545', flexShrink: 0 }} />
             Recurring block
           </div>
           <button
@@ -226,7 +226,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                     padding: '4px 8px',
                     fontSize: '0.6875rem',
                     fontWeight: 500,
-                    color: '#3f2e73',
+                    color: '#025545',
                     background: 'transparent',
                     border: '1px solid #c7d2fe',
                     borderRadius: 6,
@@ -253,7 +253,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                       type="checkbox"
                       checked={selectedDays.includes(i)}
                       onChange={() => toggleDay(i)}
-                      style={{ width: 14, height: 14, accentColor: '#3f2e73' }}
+                      style={{ width: 14, height: 14, accentColor: '#025545' }}
                     />
                     {DAYS[i]}
                   </label>
@@ -270,7 +270,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                     padding: '4px 8px',
                     fontSize: '0.6875rem',
                     fontWeight: 500,
-                    color: '#3f2e73',
+                    color: '#025545',
                     background: 'transparent',
                     border: '1px solid #c7d2fe',
                     borderRadius: 6,
@@ -297,7 +297,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                       type="checkbox"
                       checked={selectedDays.includes(i)}
                       onChange={() => toggleDay(i)}
-                      style={{ width: 14, height: 14, accentColor: '#3f2e73' }}
+                      style={{ width: 14, height: 14, accentColor: '#025545' }}
                     />
                     {DAYS[i]}
                   </label>
@@ -333,7 +333,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                 type="checkbox"
                 checked={blockEntireDay}
                 onChange={(e) => setBlockEntireDay(e.target.checked)}
-                style={{ width: 14, height: 14, accentColor: '#3f2e73' }}
+                style={{ width: 14, height: 14, accentColor: '#025545' }}
               />
               <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: '#334155' }}>Block full day</span>
             </label>
@@ -362,7 +362,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                       border: 'none',
                       cursor: 'pointer',
                       background: useTimeRange ? '#fff' : 'transparent',
-                      color: useTimeRange ? '#3f2e73' : '#64748b',
+                      color: useTimeRange ? '#025545' : '#64748b',
                       boxShadow: useTimeRange ? '0 1px 3px rgba(0,0,0,0.06)' : 'none'
                     }}
                   >
@@ -380,7 +380,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                       border: 'none',
                       cursor: 'pointer',
                       background: !useTimeRange ? '#fff' : 'transparent',
-                      color: !useTimeRange ? '#3f2e73' : '#64748b',
+                      color: !useTimeRange ? '#025545' : '#64748b',
                       boxShadow: !useTimeRange ? '0 1px 3px rgba(0,0,0,0.06)' : 'none'
                     }}
                   >
@@ -523,7 +523,7 @@ export default function RecurringBlockModal({ isOpen, onClose, onSave }) {
                 fontWeight: 500,
                 border: 'none',
                 borderRadius: 10,
-                background: (isLoading || !canSave) ? '#cbd5e1' : '#3f2e73',
+                background: (isLoading || !canSave) ? '#cbd5e1' : '#025545',
                 color: '#fff',
                 cursor: (isLoading || !canSave) ? 'not-allowed' : 'pointer'
               }}

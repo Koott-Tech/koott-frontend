@@ -688,7 +688,7 @@ export default function AssessmentBookingModal({ open, onClose, assessment, doct
                         onClick={()=>{ setSelectedTime(slot.time); setSelectedSlot(slot); }}
                         className={`p-2 rounded-lg border text-xs transition-all duration-200 w-full h-10 flex items-center justify-center ${
                           selectedTime === slot.time && selectedSlot?.doctorId === slot.doctorId
-                            ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
+                            ? 'bg-[#025545] text-white border-[#025545]'
                             : 'border-gray-300 bg-white hover:border-gray-400 text-gray-700'
                         }`}
                       >{slot.time}</button>
@@ -777,7 +777,7 @@ export default function AssessmentBookingModal({ open, onClose, assessment, doct
                       onClick={()=>handleSelectDate(d)}
                       className={`rounded-md py-2 text-sm border ${
                         selected
-                          ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
+                          ? 'bg-[#025545] text-white border-[#025545]'
                           : has && !isPast
                             ? 'border-gray-300 hover:bg-gray-50 bg-blue-50'
                             : 'border-gray-200 text-gray-300'
@@ -793,7 +793,7 @@ export default function AssessmentBookingModal({ open, onClose, assessment, doct
             {/* Continue button */}
             <div className="mt-6">
               <button 
-                className="w-full px-6 py-2.5 rounded-md bg-[#3f2e73] text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed transition-colors" 
+                className="w-full px-6 py-2.5 rounded-md bg-[#025545] text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed transition-colors" 
                 disabled={!selectedDate || !selectedTime || isBooking} 
                 onClick={handleBook}
               >

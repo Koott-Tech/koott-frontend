@@ -73,10 +73,10 @@ export default function LoadingScreen({ message = "", isVisible = true }) {
         <div
           className="loading-logo"
           style={{
-            width: "240px",
-            height: "79px",
+            width: "720px",
+            height: "237px",
             margin: "0 auto",
-            backgroundImage: "url('/mainlogo.webp')",
+            backgroundImage: "url('/logo.png')",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
@@ -110,8 +110,8 @@ export default function LoadingScreen({ message = "", isVisible = true }) {
           }
           @media (max-width: 767px) {
             .loading-logo {
-              width: 200px !important;
-              height: 66px !important;
+              width: 500px !important;
+              height: 165px !important;
             }
           }
         `}

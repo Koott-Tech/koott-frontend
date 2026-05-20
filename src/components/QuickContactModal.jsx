@@ -128,33 +128,33 @@ export default function QuickContactModal({ open, onClose, onSaved }) {
           <h6 className="text-center text-gray-900 text-base md:text-lg font-semibold">Add your details</h6>
           <button aria-label="Close" onClick={onClose} className="absolute right-4 top-4 text-gray-500 hover:text-gray-700">✕</button>
         </div>
-        {error && <div className="mx-4 mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm" style={{ color: '#2C1A4A' }}>{error}</div>}
+        {error && <div className="mx-4 mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm" style={{ color: '#012f23' }}>{error}</div>}
         <form onSubmit={handleSubmit} className="p-4 space-y-3">
           <input
             value={firstName}
             onChange={(e)=>setFirstName(e.target.value)}
             placeholder="First Name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]"
             required
           />
           <input
             value={lastName}
             onChange={(e)=>setLastName(e.target.value)}
             placeholder="Last Name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]"
             required
           />
           <input
             value={childName}
             onChange={(e)=>setChildName(e.target.value)}
             placeholder="Child Name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]"
           />
           <div className="flex gap-2">
             <select
               value={countryCode}
               onChange={(e)=>setCountryCode(e.target.value)}
-              className="w-28 rounded-md border border-gray-300 px-3 py-2 bg-gray-50 outline-none focus:ring-2 focus:ring-[#3f2e73]"
+              className="w-28 rounded-md border border-gray-300 px-3 py-2 bg-gray-50 outline-none focus:ring-2 focus:ring-[#025545]"
             >
               <option value="+91">🇮🇳 +91</option>
               <option value="+1">🇺🇸 +1</option>
@@ -171,13 +171,13 @@ export default function QuickContactModal({ open, onClose, onSaved }) {
               value={phone}
               onChange={(e)=>setPhone(e.target.value.replace(/[^\d]/g, ""))}
               placeholder="Phone Number"
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]"
               type="tel"
               inputMode="tel"
               required
             />
           </div>
-          <button type="submit" disabled={isSaving} className="w-full rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isSaving ? 'Saving…' : 'Save & Continue'}</button>
+          <button type="submit" disabled={isSaving} className="w-full rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isSaving ? 'Saving…' : 'Save & Continue'}</button>
         </form>
       </div>
     </div>

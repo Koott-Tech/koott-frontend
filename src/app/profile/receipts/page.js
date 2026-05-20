@@ -118,7 +118,7 @@ export default function ReceiptsPage() {
     return (
       <div className="absolute inset-0 w-full flex items-center justify-center z-10" style={{ minHeight: 'calc(100vh - 8rem)' }}>
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#025545' }}></div>
           <p className="text-gray-600">Loading receipts...</p>
         </div>
       </div>
@@ -135,9 +135,9 @@ export default function ReceiptsPage() {
           <button
             onClick={fetchReceipts}
             className="text-white py-2 px-4 rounded-lg transition-colors"
-            style={{ backgroundColor: '#3f2e73' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+            style={{ backgroundColor: '#025545' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
           >
             Try Again
           </button>
@@ -152,7 +152,7 @@ export default function ReceiptsPage() {
         <div>
           <h5 className="text-gray-900 mb-2">Payment Receipts</h5>
         </div>
-        <Receipt className="h-8 w-8" style={{ color: '#3f2e73' }} />
+        <Receipt className="h-8 w-8" style={{ color: '#025545' }} />
       </div>
       {allReceipts.length === 0 ? (
         <div className="text-center py-12">
@@ -223,9 +223,9 @@ export default function ReceiptsPage() {
                     <button
                       onClick={() => downloadReceipt(receipt)}
                       className="flex items-center gap-2 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium w-full sm:w-auto justify-center"
-                      style={{ backgroundColor: '#3f2e73' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                      style={{ backgroundColor: '#025545' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                     >
                       <Download className="h-4 w-4" />
                       Download Receipt

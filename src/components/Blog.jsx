@@ -153,7 +153,7 @@ export default function Blog() {
             </p>
           </div>
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73]"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545]"></div>
           </div>
         </div>
       </section>
@@ -175,7 +175,7 @@ export default function Blog() {
             <p className="text-red-600 mb-4">Failed to load blogs: {error}</p>
             <button 
               onClick={loadBlogs}
-              className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d2156]"
+              className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23]"
             >
               Try Again
             </button>
@@ -264,7 +264,7 @@ export default function Blog() {
                   <div 
                     role="heading"
                     aria-level={2}
-                    className={`text-gray-900 hover:text-[#3f2e73] transition-colors cursor-pointer ${BLOG_FEATURED_TITLE_CLASS}`}
+                    className={`text-gray-900 hover:text-[#025545] transition-colors cursor-pointer ${BLOG_FEATURED_TITLE_CLASS}`}
                     style={BLOG_FEATURED_TITLE_STYLE}
                   >
                     {featuredPost.title}
@@ -282,9 +282,9 @@ export default function Blog() {
                 {/* Read More Link */}
                 <Link
                   href={`/blog/${featuredPost.slug}`}
-                  className={`mt-6 inline-flex items-center gap-2 text-gray-900 font-medium ${BLOG_UI_LINE_HEIGHT_CLASS} hover:text-[#3f2e73] transition-colors group/link`}
+                  className={`mt-6 inline-flex items-center gap-2 text-gray-900 font-medium ${BLOG_UI_LINE_HEIGHT_CLASS} hover:text-[#025545] transition-colors group/link`}
                 >
-                  <span className="border-b border-gray-900 group-hover/link:border-[#3f2e73]">Read more</span>
+                  <span className="border-b border-gray-900 group-hover/link:border-[#025545]">Read more</span>
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/link:translate-x-1" />
                 </Link>
               </div>
@@ -310,7 +310,7 @@ export default function Blog() {
                       <div className="relative w-8 h-2.5 bg-gray-300 rounded-full overflow-hidden">
                         <div 
                           key={`progress-${featuredIndex}`}
-                          className="absolute top-0 left-0 h-full bg-[#3f2e73] rounded-full"
+                          className="absolute top-0 left-0 h-full bg-[#025545] rounded-full"
                           style={{
                             width: '0%',
                             animation: 'progressFill 8s linear forwards'
@@ -358,7 +358,7 @@ export default function Blog() {
                   idx === visibleCategories.length - 1 && displayCategories.length <= 7 ? 'mr-4 md:mr-0' : ''
                 }`}
                 style={{
-                  backgroundColor: selectedCategory === category ? '#3f2e73' : '#f3f4f6',
+                  backgroundColor: selectedCategory === category ? '#025545' : '#f3f4f6',
                   color: selectedCategory === category ? 'white' : '#374151',
                   boxShadow: selectedCategory === category ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none'
                 }}
@@ -369,7 +369,7 @@ export default function Blog() {
             {displayCategories.length > 7 && (
               <button
                 onClick={() => setShowAllCategories(!showAllCategories)}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${BLOG_UI_LINE_HEIGHT_CLASS} whitespace-nowrap flex-shrink-0 bg-white border-2 border-[#3f2e73] text-[#3f2e73] hover:bg-[#3f2e73] hover:text-white transition-all duration-200 mr-4 md:mr-0`}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${BLOG_UI_LINE_HEIGHT_CLASS} whitespace-nowrap flex-shrink-0 bg-white border-2 border-[#025545] text-[#025545] hover:bg-[#025545] hover:text-white transition-all duration-200 mr-4 md:mr-0`}
               >
                 {showAllCategories ? 'Show less' : `+${displayCategories.length - 7} more`}
               </button>

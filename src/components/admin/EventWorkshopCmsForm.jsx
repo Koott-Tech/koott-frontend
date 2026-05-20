@@ -21,7 +21,7 @@ function Field({ label, children }) {
 
 function TextInput({ value, onChange, rows = 1, type = "text", ...rest }) {
   const cls =
-    "box-border w-full min-w-0 max-w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#3f2e73] focus:ring-1 focus:ring-[#3f2e73]";
+    "box-border w-full min-w-0 max-w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:ring-1 focus:ring-[#025545]";
   if (rows > 1) {
     return <textarea className={cls} rows={rows} value={value || ""} onChange={(e) => onChange(e.target.value)} {...rest} />;
   }
@@ -72,12 +72,12 @@ function EditorSection({ title, children, sectionKey }) {
       className="mb-4 min-w-0 max-w-full overflow-x-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
       data-editor-section={sectionKey || undefined}
     >
-      <div className="border-b border-gray-100 bg-gradient-to-r from-[#3f2e73]/6 to-transparent px-4 py-3">
+      <div className="border-b border-gray-100 bg-gradient-to-r from-[#025545]/6 to-transparent px-4 py-3">
         {/* div not h3: globals.css forces h3 { font-size: 36px !important } site-wide */}
         <div
           role="heading"
           aria-level={3}
-          className="break-words text-[#3f2e73]"
+          className="break-words text-[#025545]"
           style={{
             fontSize: "0.8125rem",
             lineHeight: "1.25rem",
@@ -402,7 +402,7 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
           ))}
           <button
             type="button"
-            className="mt-3 text-sm text-[#3f2e73] hover:underline"
+            className="mt-3 text-sm text-[#025545] hover:underline"
             style={{ fontWeight: 500 }}
             onClick={() =>
               patch((p) => ({

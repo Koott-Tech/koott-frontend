@@ -4,6 +4,41 @@
 /* Fonts moved to layout.js for better loading control and CLS prevention */
 @import "tailwindcss";
 
+@theme {
+  --color-purple-50: #f2fff1;
+  --color-purple-100: #d7fec5;
+  --color-purple-200: #d7fec5;
+  --color-purple-300: #189e4f;
+  --color-purple-400: #189e4f;
+  --color-purple-500: #189e4f;
+  --color-purple-600: #025545;
+  --color-purple-700: #025545;
+  --color-purple-800: #012f23;
+  --color-purple-900: #012f23;
+
+  --color-violet-50: #f2fff1;
+  --color-violet-100: #d7fec5;
+  --color-violet-200: #d7fec5;
+  --color-violet-300: #189e4f;
+  --color-violet-400: #189e4f;
+  --color-violet-500: #189e4f;
+  --color-violet-600: #025545;
+  --color-violet-700: #025545;
+  --color-violet-800: #012f23;
+  --color-violet-900: #012f23;
+  
+  --color-indigo-50: #f2fff1;
+  --color-indigo-100: #d7fec5;
+  --color-indigo-200: #d7fec5;
+  --color-indigo-300: #189e4f;
+  --color-indigo-400: #189e4f;
+  --color-indigo-500: #189e4f;
+  --color-indigo-600: #025545;
+  --color-indigo-700: #025545;
+  --color-indigo-800: #012f23;
+  --color-indigo-900: #012f23;
+}
+
 
 :root {
   --background: #ffffff;
@@ -186,7 +221,7 @@ p {
 /* Specific override for Hero h1 - uses DM Sans */
 .hero-title {
   font-family: 'DM Sans' !important;
-  color: #23153B !important;
+  color: #025545 !important;
 }
 
 

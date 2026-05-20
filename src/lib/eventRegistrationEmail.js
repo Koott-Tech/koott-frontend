@@ -41,12 +41,12 @@ export async function sendEventRegistrationConfirmationEmail({ to, fullName, eve
   const safeJoinText = escapeHtml(join);
   const safeJoinHref = escapeHtmlAttr(join);
   const linkBlock = join
-    ? `<p style="margin-top: 1rem;"><strong>Your session link</strong><br /><a href="${safeJoinHref}" style="color: #3f2e73;">${safeJoinText}</a></p><p style="margin-top: 0.75rem; font-size: 14px; color: #555;">Use this same link to join; we will not send a different meeting link.</p>`
+    ? `<p style="margin-top: 1rem;"><strong>Your session link</strong><br /><a href="${safeJoinHref}" style="color: #025545;">${safeJoinText}</a></p><p style="margin-top: 0.75rem; font-size: 14px; color: #555;">Use this same link to join; we will not send a different meeting link.</p>`
     : `<p>We've saved your spot. Joining details will follow separately.</p>`;
   const html = `
 <!DOCTYPE html>
 <html>
-<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #2a1f52;">
+<body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #012f23;">
   <p>Hi ${safeName},</p>
   <p>Thank you for registering for <strong>${safeTitle}</strong>.</p>
   <p>Your spot is reserved.</p>

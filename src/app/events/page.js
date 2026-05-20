@@ -145,9 +145,9 @@ export default async function EventsPage() {
     <div className={`min-h-screen bg-white ${BLOG_TYPOGRAPHY_ROOT_CLASS} ${BLOG_LETTER_SPACING_CLASS}`}>
       <style dangerouslySetInnerHTML={{ __html: BLOG_TYPOGRAPHY_ROOT_CSS }} />
       {/* Hero Section - 80vh */}
-      <section className="relative flex min-h-[80vh] flex-col items-center justify-center bg-gradient-to-b from-[#f8f6ff] to-white px-5 pt-20 sm:px-8 sm:pt-24 lg:px-12">
+      <section className="relative flex min-h-[80vh] flex-col items-center justify-center bg-gradient-to-b from-[#f2fff1] to-white px-5 pt-20 sm:px-8 sm:pt-24 lg:px-12">
         <div className="mx-auto max-w-4xl text-center mt-12 sm:mt-16">
-          <span className={`inline-flex rounded-full border border-[#3f2e73]/20 bg-[#3f2e73]/10 px-5 py-1.5 text-sm font-semibold text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
+          <span className={`inline-flex rounded-full border border-[#025545]/20 bg-[#025545]/10 px-5 py-1.5 text-sm font-semibold text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
             Events
           </span>
           <div
@@ -165,19 +165,19 @@ export default async function EventsPage() {
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <button
             type="button"
-            className="whitespace-nowrap rounded-full bg-[#3f2e73] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#342560] transition-colors"
+            className="whitespace-nowrap rounded-full bg-[#025545] px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#012f23] transition-colors"
           >
             All Events
           </button>
           <button
             type="button"
-            className="whitespace-nowrap rounded-full border border-[#3f2e73]/25 bg-white px-6 py-2.5 text-sm font-medium text-[#3f2e73] hover:bg-[#f4f1ff] transition-colors"
+            className="whitespace-nowrap rounded-full border border-[#025545]/25 bg-white px-6 py-2.5 text-sm font-medium text-[#025545] hover:bg-[#f4f1ff] transition-colors"
           >
             Nearest Events
           </button>
           <button
             type="button"
-            className="whitespace-nowrap rounded-full border border-[#3f2e73]/25 bg-white px-6 py-2.5 text-sm font-medium text-[#3f2e73] hover:bg-[#f4f1ff] transition-colors"
+            className="whitespace-nowrap rounded-full border border-[#025545]/25 bg-white px-6 py-2.5 text-sm font-medium text-[#025545] hover:bg-[#f4f1ff] transition-colors"
           >
             Latest Event
           </button>
@@ -190,10 +190,10 @@ export default async function EventsPage() {
           {events.length > 0 ? events.map((event) => (
             <article
               key={event.id}
-              className="rounded-3xl border border-[#3f2e73]/15 bg-white/95 p-3 shadow-[0_8px_30px_rgba(63,46,115,0.08)] backdrop-blur-[1px] sm:p-4 lg:p-5"
+              className="rounded-3xl border border-[#025545]/15 bg-white/95 p-3 shadow-[0_8px_30px_rgba(63,46,115,0.08)] backdrop-blur-[1px] sm:p-4 lg:p-5"
             >
               <div className="grid gap-4 md:grid-cols-[300px_1fr_auto] md:items-center md:gap-6">
-                <Link href={event.detailsHref} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#3f2e73]/10 md:aspect-[5/4] cursor-pointer group">
+                <Link href={event.detailsHref} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#025545]/10 md:aspect-[5/4] cursor-pointer group">
                   <Image
                     src={event.image}
                     alt={event.title}
@@ -205,7 +205,7 @@ export default async function EventsPage() {
                 </Link>
 
                 <div className="min-w-0 px-1 md:pr-2">
-                  <span className={`inline-flex rounded-full border border-[#3f2e73]/20 bg-[#3f2e73]/10 px-3 py-1 text-xs font-semibold text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
+                  <span className={`inline-flex rounded-full border border-[#025545]/20 bg-[#025545]/10 px-3 py-1 text-xs font-semibold text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
                     {event.category}
                   </span>
                   <div
@@ -221,10 +221,10 @@ export default async function EventsPage() {
                   </p>
                   <div className={`mt-7 space-y-1.5 text-sm text-gray-700 ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
                     <p>
-                      <span className="font-semibold text-[#2f2358]">Organizer:</span> {event.organizer}
+                      <span className="font-semibold text-[#012f23]">Organizer:</span> {event.organizer}
                     </p>
                     <p>
-                      <span className="font-semibold text-[#2f2358]">Date:</span> {event.schedule}
+                      <span className="font-semibold text-[#012f23]">Date:</span> {event.schedule}
                     </p>
                   </div>
                 </div>
@@ -232,13 +232,13 @@ export default async function EventsPage() {
                 <div className="flex w-full flex-col gap-2.5 px-1 md:w-[160px] md:px-0">
                   <Link
                     href={event.ticketHref}
-                    className="inline-flex w-full items-center justify-center rounded-full bg-[#3f2e73] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#342560]"
+                    className="inline-flex w-full items-center justify-center rounded-full bg-[#025545] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#012f23]"
                   >
                     Book a slot
                   </Link>
                   <Link
                     href={event.detailsHref}
-                    className="inline-flex w-full items-center justify-center text-sm font-semibold text-[#3f2e73] transition-colors hover:text-[#342560]"
+                    className="inline-flex w-full items-center justify-center text-sm font-semibold text-[#025545] transition-colors hover:text-[#012f23]"
                   >
                     See details
                   </Link>
@@ -246,15 +246,15 @@ export default async function EventsPage() {
               </div>
             </article>
           )) : (
-            <article className="rounded-3xl border border-[#3f2e73]/15 bg-white/95 p-6 text-center text-gray-600 shadow-[0_8px_30px_rgba(63,46,115,0.08)]">
+            <article className="rounded-3xl border border-[#025545]/15 bg-white/95 p-6 text-center text-gray-600 shadow-[0_8px_30px_rgba(63,46,115,0.08)]">
               No published events yet. Create and publish an event in Events CMS.
             </article>
           )}
         </div>
 
         <div className="pt-24 pb-10 sm:pt-32 sm:pb-16">
-          <section className="mx-auto max-w-5xl rounded-3xl border border-[#3f2e73]/15 bg-[#f4f1ff] px-6 py-8 text-center sm:px-8 sm:py-10">
-            <span className="inline-flex rounded-full border border-[#3f2e73]/20 bg-[#3f2e73]/10 px-4 py-1 text-xs font-semibold text-[#3f2e73]">
+          <section className="mx-auto max-w-5xl rounded-3xl border border-[#025545]/15 bg-[#f4f1ff] px-6 py-8 text-center sm:px-8 sm:py-10">
+            <span className="inline-flex rounded-full border border-[#025545]/20 bg-[#025545]/10 px-4 py-1 text-xs font-semibold text-[#025545]">
               Our mission
             </span>
           <h3
@@ -283,8 +283,8 @@ export default async function EventsPage() {
           </p>
 
           <div className="mt-16 grid gap-5 md:grid-cols-3">
-            <article className="rounded-2xl border border-[#3f2e73]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3f2e73]/10 text-[#3f2e73]">
+            <article className="rounded-2xl border border-[#025545]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#025545]/10 text-[#025545]">
                 <Calendar className="h-5 w-5" />
               </div>
               <div className={`mt-4 text-gray-900 ${BLOG_CARD_TITLE_CLASS}`} style={BLOG_CARD_TITLE_STYLE} role="heading" aria-level={3}>
@@ -295,8 +295,8 @@ export default async function EventsPage() {
               </p>
             </article>
 
-            <article className="rounded-2xl border border-[#3f2e73]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3f2e73]/10 text-[#3f2e73]">
+            <article className="rounded-2xl border border-[#025545]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#025545]/10 text-[#025545]">
                 <MonitorPlay className="h-5 w-5" />
               </div>
               <div className={`mt-4 text-gray-900 ${BLOG_CARD_TITLE_CLASS}`} style={BLOG_CARD_TITLE_STYLE} role="heading" aria-level={3}>
@@ -307,8 +307,8 @@ export default async function EventsPage() {
               </p>
             </article>
 
-            <article className="rounded-2xl border border-[#3f2e73]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3f2e73]/10 text-[#3f2e73]">
+            <article className="rounded-2xl border border-[#025545]/15 bg-white p-5 shadow-[0_8px_22px_rgba(63,46,115,0.07)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#025545]/10 text-[#025545]">
                 <Clock className="h-5 w-5" />
               </div>
               <div className={`mt-4 text-gray-900 ${BLOG_CARD_TITLE_CLASS}`} style={BLOG_CARD_TITLE_STYLE} role="heading" aria-level={3}>
@@ -343,8 +343,8 @@ export default async function EventsPage() {
             layout="carousel"
             carouselFullBleed
             naturalMemberImageHeight
-            activeDotClassName="w-8 bg-[#3f2e73]"
-            inactiveDotClassName="w-4 bg-[#3f2e73]/25"
+            activeDotClassName="w-8 bg-[#025545]"
+            inactiveDotClassName="w-4 bg-[#025545]/25"
             dotBaseClassName="h-1.5 rounded-full"
           />
         </div>
@@ -376,7 +376,7 @@ export default async function EventsPage() {
 
             <div className="mt-8">
               <details className="group">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#3f2e73]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
+                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#025545]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
                   <span>Is this event online or offline?</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
@@ -386,7 +386,7 @@ export default async function EventsPage() {
               </details>
 
               <details className="group">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#3f2e73]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
+                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#025545]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
                   <span>Can parents and children join together?</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
@@ -396,7 +396,7 @@ export default async function EventsPage() {
               </details>
 
               <details className="group">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#3f2e73]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
+                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#025545]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
                   <span>How will I receive reminders and updates?</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
@@ -406,13 +406,13 @@ export default async function EventsPage() {
               </details>
 
               <details className="group">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#3f2e73]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
+                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#025545]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
                   <span>Where can I read more parenting and child mental health articles?</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
                 </summary>
                 <p className={`px-1 pb-5 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
                   Visit{" "}
-                  <Link href="/blog" className="font-medium text-[#3f2e73] underline underline-offset-2 hover:text-[#2d2156]">
+                  <Link href="/blog" className="font-medium text-[#025545] underline underline-offset-2 hover:text-[#012f23]">
                     The Koott Blog
                   </Link>{" "}
                   for expert-written guides, family stories, and practical tips that complement what we cover in live events.
@@ -420,7 +420,7 @@ export default async function EventsPage() {
               </details>
 
               <details className="group">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#3f2e73]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
+                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 border-b border-[#025545]/15 px-1 py-5 text-left text-base font-medium text-gray-900 ${BLOG_LETTER_SPACING_CLASS}`}>
                   <span>Do workshop topics also appear as blog posts?</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
                 </summary>

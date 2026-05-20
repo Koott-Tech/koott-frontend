@@ -6,7 +6,7 @@ export default function TestimonialsAbout() {
     const scrollContainerRef = useRef(null);
     const autoPlayRef = useRef(null);
 
-    const colors = ["#ede1ff", "#d6e4e3", "#ffe5c7", "#ffe8eb"];
+    const colors = ["#f2fff1", "#d6e4e3", "#ffe5c7", "#ffe8eb"];
 
     const baseTestimonials = [
         {
@@ -44,12 +44,12 @@ export default function TestimonialsAbout() {
     ];
 
     // Deterministically assign colors to testimonials to prevent hydration mismatch
-    // First row: #ede1ff, #d6e4e3, #ffe5c7, #ffe8eb
-    // Second row: #d6e4e3, #ffe5c7, #ffe8eb, #ede1ff (shifted by 1)
+    // First row: #f2fff1, #d6e4e3, #ffe5c7, #ffe8eb
+    // Second row: #d6e4e3, #ffe5c7, #ffe8eb, #f2fff1 (shifted by 1)
     const testimonials = useMemo(() => {
         // Fixed color patterns for each row to ensure server/client match
-        const firstRowColors = ["#ede1ff", "#d6e4e3", "#ffe5c7", "#ffe8eb"];
-        const secondRowColors = ["#d6e4e3", "#ffe5c7", "#ffe8eb", "#ede1ff"];
+        const firstRowColors = ["#f2fff1", "#d6e4e3", "#ffe5c7", "#ffe8eb"];
+        const secondRowColors = ["#d6e4e3", "#ffe5c7", "#ffe8eb", "#f2fff1"];
         
         return baseTestimonials.map((testimonial, index) => {
             const rowIndex = Math.floor(index / 4);

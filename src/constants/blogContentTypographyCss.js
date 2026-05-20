@@ -395,11 +395,11 @@ export function getBlogPostPageTypographyCss(blogBodyImageMaxWidth) {
       visibility: visible !important;
     }
     .blog-content a {
-      color: #3f2e73 !important;
+      color: #025545 !important;
       text-decoration: underline !important;
     }
     .blog-content a:hover {
-      color: #1d1733 !important;
+      color: #012f23 !important;
     }
     .blog-content .doc-editor-img-block,
     .blog-content .document-editor-image-wrapper {

@@ -2373,12 +2373,12 @@ const DocumentStyleEditor = forwardRef(function DocumentStyleEditor({
           ${getBlogDocumentEditorTypographyCss(sel)}
           ${sel} a,
           ${sel} .document-editor-link {
-            color: #3f2e73 !important;
+            color: #025545 !important;
             text-decoration: underline !important;
           }
           ${sel} a:hover,
           ${sel} .document-editor-link:hover {
-            color: #1d1733 !important;
+            color: #012f23 !important;
           }
           ${sel} .doc-editor-img-block,
           ${sel} .document-editor-image-wrapper {

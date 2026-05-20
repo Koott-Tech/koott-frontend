@@ -135,7 +135,7 @@ export default function EditCareerPage({ params }) {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545]" />
       </div>
     );
   }
@@ -166,24 +166,24 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Title *</label>
-              <input type="text" value={form.title} onChange={(e) => set('title', e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.title} onChange={(e) => set('title', e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Slug</label>
-              <input type="text" value={form.slug} onChange={(e) => set('slug', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.slug} onChange={(e) => set('slug', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
           </div>
 
           {/* Short description */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Short Description</label>
-            <input type="text" value={form.short_description} onChange={(e) => set('short_description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+            <input type="text" value={form.short_description} onChange={(e) => set('short_description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
           </div>
 
           {/* Full description */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Description *</label>
-            <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={6} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+            <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={6} required className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
           </div>
 
           {/* Responsibilities, Requirements, Benefits (as points) */}
@@ -197,14 +197,14 @@ export default function EditCareerPage({ params }) {
                     type="text"
                     value={value}
                     onChange={(e) => handlePointChange('responsibilities', idx, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-xs"
                     placeholder={`Responsibility ${idx + 1}`}
                   />
                 ))}
                 <button
                   type="button"
                   onClick={() => addPoint('responsibilities')}
-                  className="text-[11px] text-[#3f2e73] hover:underline"
+                  className="text-[11px] text-[#025545] hover:underline"
                 >
                   + Add responsibility
                 </button>
@@ -219,14 +219,14 @@ export default function EditCareerPage({ params }) {
                     type="text"
                     value={value}
                     onChange={(e) => handlePointChange('requirements', idx, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-xs"
                     placeholder={`Requirement ${idx + 1}`}
                   />
                 ))}
                 <button
                   type="button"
                   onClick={() => addPoint('requirements')}
-                  className="text-[11px] text-[#3f2e73] hover:underline"
+                  className="text-[11px] text-[#025545] hover:underline"
                 >
                   + Add requirement
                 </button>
@@ -241,14 +241,14 @@ export default function EditCareerPage({ params }) {
                     type="text"
                     value={value}
                     onChange={(e) => handlePointChange('benefits', idx, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-xs"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-xs"
                     placeholder={`Benefit ${idx + 1}`}
                   />
                 ))}
                 <button
                   type="button"
                   onClick={() => addPoint('benefits')}
-                  className="text-[11px] text-[#3f2e73] hover:underline"
+                  className="text-[11px] text-[#025545] hover:underline"
                 >
                   + Add benefit
                 </button>
@@ -260,11 +260,11 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Location</label>
-              <input type="text" value={form.location} onChange={(e) => set('location', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.location} onChange={(e) => set('location', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Employment Type</label>
-              <select value={form.employment_type} onChange={(e) => set('employment_type', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm">
+              <select value={form.employment_type} onChange={(e) => set('employment_type', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm">
                 <option value="Full-time">Full-time</option>
                 <option value="Part-time">Part-time</option>
                 <option value="Contract">Contract</option>
@@ -274,7 +274,7 @@ export default function EditCareerPage({ params }) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
-              <input type="text" value={form.department} onChange={(e) => set('department', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.department} onChange={(e) => set('department', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
           </div>
 
@@ -282,7 +282,7 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Experience Level</label>
-              <select value={form.experience_level} onChange={(e) => set('experience_level', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm">
+              <select value={form.experience_level} onChange={(e) => set('experience_level', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm">
                 <option value="">Not specified</option>
                 <option value="Entry">Entry Level</option>
                 <option value="Junior">Junior</option>
@@ -293,11 +293,11 @@ export default function EditCareerPage({ params }) {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Min Experience (years)</label>
-              <input type="number" value={form.min_experience_years} onChange={(e) => set('min_experience_years', e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="number" value={form.min_experience_years} onChange={(e) => set('min_experience_years', e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Max Experience (years)</label>
-              <input type="number" value={form.max_experience_years} onChange={(e) => set('max_experience_years', e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="number" value={form.max_experience_years} onChange={(e) => set('max_experience_years', e.target.value)} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
           </div>
 
@@ -305,11 +305,11 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Application Email</label>
-              <input type="email" value={form.application_email} onChange={(e) => set('application_email', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="email" value={form.application_email} onChange={(e) => set('application_email', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Application URL (optional)</label>
-              <input type="url" value={form.application_url} onChange={(e) => set('application_url', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="url" value={form.application_url} onChange={(e) => set('application_url', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
           </div>
 
@@ -317,17 +317,17 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                <input type="checkbox" checked={form.is_remote} onChange={(e) => set('is_remote', e.target.checked)} className="rounded border-gray-300 text-[#3f2e73] focus:ring-[#3f2e73]" />
+                <input type="checkbox" checked={form.is_remote} onChange={(e) => set('is_remote', e.target.checked)} className="rounded border-gray-300 text-[#025545] focus:ring-[#025545]" />
                 Remote
               </label>
               <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                <input type="checkbox" checked={form.is_featured} onChange={(e) => set('is_featured', e.target.checked)} className="rounded border-gray-300 text-[#3f2e73] focus:ring-[#3f2e73]" />
+                <input type="checkbox" checked={form.is_featured} onChange={(e) => set('is_featured', e.target.checked)} className="rounded border-gray-300 text-[#025545] focus:ring-[#025545]" />
                 Featured
               </label>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Status *</label>
-              <select value={form.status} onChange={(e) => set('status', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm">
+              <select value={form.status} onChange={(e) => set('status', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm">
                 <option value="draft">Draft</option>
                 <option value="open">Open (visible on site)</option>
                 <option value="closed">Closed</option>
@@ -340,18 +340,18 @@ export default function EditCareerPage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">SEO Title</label>
-              <input type="text" value={form.seo_title} onChange={(e) => set('seo_title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.seo_title} onChange={(e) => set('seo_title', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">SEO Description</label>
-              <input type="text" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm" />
+              <input type="text" value={form.seo_description} onChange={(e) => set('seo_description', e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm" />
             </div>
           </div>
 
           {/* Buttons */}
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
             <Link href="/admin/careers" className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">Cancel</Link>
-            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2">
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2">
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

@@ -110,7 +110,7 @@ export default function CounsellingServiceForm({
               onClick={() => setActiveTab(tab.id)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
-                  ? 'border-[#593494] text-[#593494]'
+                  ? 'border-[#189e4f] text-[#189e4f]'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -133,7 +133,7 @@ export default function CounsellingServiceForm({
                 value={formData.slug}
                 onChange={(e) => handleInputChange('slug', e.target.value)}
                 placeholder="e.g., depression, anxiety-sadness"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                 required
               />
               <p className="text-sm text-gray-500 mt-1">
@@ -147,7 +147,7 @@ export default function CounsellingServiceForm({
               <select
                 value={formData.status}
                 onChange={(e) => handleInputChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -167,7 +167,7 @@ export default function CounsellingServiceForm({
                 value={formData.seo_title}
                 onChange={(e) => handleInputChange('seo_title', e.target.value)}
                 placeholder="e.g., Depression Counselling - Koott"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
             </div>
             <div>
@@ -179,7 +179,7 @@ export default function CounsellingServiceForm({
                 onChange={(e) => handleInputChange('seo_description', e.target.value)}
                 placeholder="Meta description for search engines"
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
             </div>
           </div>
@@ -196,7 +196,7 @@ export default function CounsellingServiceForm({
                 value={formData.hero_title}
                 onChange={(e) => handleInputChange('hero_title', e.target.value)}
                 placeholder="e.g., Depression Counselling for Children"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                 required
               />
             </div>
@@ -209,7 +209,7 @@ export default function CounsellingServiceForm({
                 onChange={(e) => handleInputChange('hero_subtext', e.target.value)}
                 placeholder="Supporting text for the hero section"
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
             </div>
             <div>
@@ -221,7 +221,7 @@ export default function CounsellingServiceForm({
                 value={formData.hero_image_url}
                 onChange={(e) => handleInputChange('hero_image_url', e.target.value)}
                 placeholder="https://example.com/hero-image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
             </div>
           </div>
@@ -234,7 +234,7 @@ export default function CounsellingServiceForm({
               <button
                 type="button"
                 onClick={() => handleArrayItemAdd('benefits')}
-                className="bg-[#593494] text-white px-4 py-2 rounded-md hover:bg-[#7351A9] transition-colors duration-200"
+                className="bg-[#189e4f] text-white px-4 py-2 rounded-md hover:bg-[#189e4f] transition-colors duration-200"
               >
                 Add Benefit
               </button>
@@ -260,7 +260,7 @@ export default function CounsellingServiceForm({
                       type="text"
                       value={benefit.title}
                       onChange={(e) => handleArrayItemUpdate('benefits', index, 'title', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                   <div>
@@ -271,7 +271,7 @@ export default function CounsellingServiceForm({
                       type="url"
                       value={benefit.iconUrl}
                       onChange={(e) => handleArrayItemUpdate('benefits', index, 'iconUrl', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export default function CounsellingServiceForm({
                     value={benefit.description}
                     onChange={(e) => handleArrayItemUpdate('benefits', index, 'description', e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                   />
                 </div>
               </div>
@@ -298,7 +298,7 @@ export default function CounsellingServiceForm({
               <button
                 type="button"
                 onClick={() => handleArrayItemAdd('types')}
-                className="bg-[#593494] text-white px-4 py-2 rounded-md hover:bg-[#7351A9] transition-colors duration-200"
+                className="bg-[#189e4f] text-white px-4 py-2 rounded-md hover:bg-[#189e4f] transition-colors duration-200"
               >
                 Add Type
               </button>
@@ -324,7 +324,7 @@ export default function CounsellingServiceForm({
                       type="text"
                       value={type.title}
                       onChange={(e) => handleArrayItemUpdate('types', index, 'title', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                   <div>
@@ -335,7 +335,7 @@ export default function CounsellingServiceForm({
                       value={type.description}
                       onChange={(e) => handleArrayItemUpdate('types', index, 'description', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                 </div>
@@ -351,7 +351,7 @@ export default function CounsellingServiceForm({
               <button
                 type="button"
                 onClick={() => handleArrayItemAdd('faqs')}
-                className="bg-[#593494] text-white px-4 py-2 rounded-md hover:bg-[#7351A9] transition-colors duration-200"
+                className="bg-[#189e4f] text-white px-4 py-2 rounded-md hover:bg-[#189e4f] transition-colors duration-200"
               >
                 Add FAQ
               </button>
@@ -377,7 +377,7 @@ export default function CounsellingServiceForm({
                       type="text"
                       value={faq.question}
                       onChange={(e) => handleArrayItemUpdate('faqs', index, 'question', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                   <div>
@@ -388,7 +388,7 @@ export default function CounsellingServiceForm({
                       value={faq.answer}
                       onChange={(e) => handleArrayItemUpdate('faqs', index, 'answer', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                 </div>
@@ -404,7 +404,7 @@ export default function CounsellingServiceForm({
               <button
                 type="button"
                 onClick={() => handleArrayItemAdd('testimonials')}
-                className="bg-[#593494] text-white px-4 py-2 rounded-md hover:bg-[#7351A9] transition-colors duration-200"
+                className="bg-[#189e4f] text-white px-4 py-2 rounded-md hover:bg-[#189e4f] transition-colors duration-200"
               >
                 Add Testimonial
               </button>
@@ -430,7 +430,7 @@ export default function CounsellingServiceForm({
                       value={testimonial.quote}
                       onChange={(e) => handleArrayItemUpdate('testimonials', index, 'quote', e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                   <div>
@@ -442,7 +442,7 @@ export default function CounsellingServiceForm({
                       value={testimonial.by}
                       onChange={(e) => handleArrayItemUpdate('testimonials', index, 'by', e.target.value)}
                       placeholder="e.g., Sarah M., Parent of 8-year-old"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
                     />
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export default function CounsellingServiceForm({
                 value={formData.right_image_url}
                 onChange={(e) => handleInputChange('right_image_url', e.target.value)}
                 placeholder="https://example.com/right-image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
               <p className="text-sm text-gray-500 mt-1">
                 Image displayed on the right side of the therapy types section
@@ -477,7 +477,7 @@ export default function CounsellingServiceForm({
                 value={formData.mobile_image_url}
                 onChange={(e) => handleInputChange('mobile_image_url', e.target.value)}
                 placeholder="https://example.com/mobile-image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
               />
               <p className="text-sm text-gray-500 mt-1">
                 Image displayed on mobile devices
@@ -499,7 +499,7 @@ export default function CounsellingServiceForm({
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-[#593494] text-white rounded-md hover:bg-[#7351A9] transition-colors duration-200 disabled:opacity-50"
+          className="px-6 py-2 bg-[#189e4f] text-white rounded-md hover:bg-[#189e4f] transition-colors duration-200 disabled:opacity-50"
         >
           {loading ? 'Saving...' : submitText}
         </button>

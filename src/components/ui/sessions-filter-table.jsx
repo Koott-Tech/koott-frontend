@@ -78,7 +78,7 @@ export default function SessionsFilterTable({
       <div className="max-h-[600px] overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3f2e73]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#025545]"></div>
           </div>
         ) : (
           <Table>

@@ -10,7 +10,7 @@ export const metadata = {
     url: "https://www.koott.in/online-child-psychologist",
     images: [
       {
-        url: "https://www.koott.in/favicon.png",
+        url: "https://www.koott.in/logo.png",
         width: 1200,
         height: 630,
         alt: "Koott logo",
@@ -22,7 +22,7 @@ export const metadata = {
     title: "Find Child Psychologists Online | Koott",
     description:
       "Browse trusted child psychologists at Koott. Compare experience, specialties, and pricing to find the right therapist for your child.",
-    images: ["https://www.koott.in/favicon.png"],
+    images: ["https://www.koott.in/logo.png"],
   },
   alternates: {
     canonical: "https://www.koott.in/online-child-psychologist",

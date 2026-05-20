@@ -27,8 +27,8 @@ export const metadata = {
   description:
     "Connect with experienced child psychologists for safe, supportive online child counseling. Help your child manage anxiety, behavior, or school stress from the comfort of home.",
   icons: {
-    icon: [{ url: "/thumb2.png", type: "image/png", sizes: "32x32" }],
-    apple: [{ url: "/thumb2.png", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/logo.png", type: "image/png", sizes: "32x32" }],
+    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     title: "India's Trusted Child Psychologist | Online Child Counseling",
@@ -39,7 +39,7 @@ export const metadata = {
     url: "/",
     images: [
       {
-        url: "/thumb2.png",
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Koott",
@@ -51,7 +51,7 @@ export const metadata = {
     title: "India's Trusted Child Psychologist | Online Child Counseling",
     description:
       "Connect with experienced child psychologists for safe, supportive online child counseling. Help your child manage anxiety, behavior, or school stress from the comfort of home.",
-    images: [`${siteUrl}/thumb2.png`],
+    images: [`${siteUrl}/logo.png`],
   },
   robots: {
     index: true,
@@ -81,7 +81,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         {/* Favicon */}
-        <link rel="icon" href="/thumb2.png" type="image/png" />
+        <link rel="icon" href="/logo.png" type="image/png" />
         {/* DNS Prefetch and Preconnect for faster API connections (especially for international users) */}
         {process.env.NEXT_PUBLIC_BACKEND_URL && (
           <>
@@ -103,7 +103,7 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,100..1000&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         {/* Preload logo for instant loading screen display */}
-        <link rel="preload" as="image" href="/mainlogo.webp" />
+        <link rel="preload" as="image" href="/logo.png" />
         {/* CRITICAL: Script to manage loader - runs only on client side to prevent hydration mismatch */}
         <script
           dangerouslySetInnerHTML={{
@@ -266,11 +266,11 @@ export default function RootLayout({ children }) {
               visibility: hidden !important;
               transition: opacity 300ms ease-out !important;
             }
-            #initial-loader .loading-logo {
-              width: 240px;
-              height: 79px;
+             #initial-loader .loading-logo {
+              width: 720px;
+              height: 237px;
               margin: 0 auto;
-              background-image: url('/mainlogo.webp');
+              background-image: url('/logo.png');
               background-size: contain;
               background-repeat: no-repeat;
               background-position: center;
@@ -283,8 +283,8 @@ export default function RootLayout({ children }) {
             }
             @media (max-width: 767px) {
               #initial-loader .loading-logo {
-                width: 200px !important;
-                height: 66px !important;
+                width: 500px !important;
+                height: 165px !important;
               }
             }
           `,
@@ -303,11 +303,11 @@ export default function RootLayout({ children }) {
               url: siteUrl,
               logo: {
                 "@type": "ImageObject",
-                "url": `${siteUrl}/thumb2.png`,
+                "url": `${siteUrl}/logo.png`,
                 "width": 1200,
                 "height": 400
               },
-              image: `${siteUrl}/thumb2.png`,
+              image: `${siteUrl}/logo.png`,
               telephone: "+91 95390 07766",
               email: "hello@koott.in",
               address: {

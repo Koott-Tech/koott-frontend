@@ -139,7 +139,7 @@ export default function FinanceFreeAssessments() {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'booked': return 'bg-[#3f2e73]/10 text-[#3f2e73]';
+      case 'booked': return 'bg-[#025545]/10 text-[#025545]';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -173,7 +173,7 @@ export default function FinanceFreeAssessments() {
   if (isLoading && assessments.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -228,7 +228,7 @@ export default function FinanceFreeAssessments() {
                   placeholder="Search by client name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                 />
               </div>
             </div>
@@ -249,8 +249,8 @@ export default function FinanceFreeAssessments() {
                     relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
                     transition-all duration-200 ease-out
                     ${isActive
-                      ? 'bg-[#3f2e73] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8 active:bg-[#3f2e73]/12'
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
                     }
                   `}
                 >
@@ -279,7 +279,7 @@ export default function FinanceFreeAssessments() {
                   <tr>
                     <td colSpan={5} className="px-6 py-10 text-center">
                       <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                         <span className="text-sm font-medium">Processing...</span>
                       </div>
                     </td>
@@ -355,8 +355,8 @@ export default function FinanceFreeAssessments() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>Free Assessment Details</div>
@@ -480,7 +480,7 @@ export default function FinanceFreeAssessments() {
                         href={selectedAssessment.meetLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#3f2e73] hover:bg-[#3f2e73]/5 break-all"
+                        className="block bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#025545] hover:bg-[#025545]/5 break-all"
                       >
                         {selectedAssessment.meetLink}
                       </a>
@@ -493,7 +493,7 @@ export default function FinanceFreeAssessments() {
               <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
                 <button
                   onClick={() => setIsDetailsOpen(false)}
-                  className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+                  className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
                 >
                   Close
                 </button>

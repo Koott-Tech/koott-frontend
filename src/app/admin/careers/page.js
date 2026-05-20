@@ -101,7 +101,7 @@ export default function CareersAdminPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]" />
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function CareersAdminPage() {
             <div className="flex items-center gap-3">
               <h6>Careers CMS</h6>
               {careers.length > 0 && (
-                <span className="px-3 py-1 bg-[#3f2e73]/10 text-[#3f2e73] rounded-full text-sm font-medium">
+                <span className="px-3 py-1 bg-[#025545]/10 text-[#025545] rounded-full text-sm font-medium">
                   {careers.length} {careers.length === 1 ? 'Job' : 'Jobs'}
                 </span>
               )}
@@ -126,7 +126,7 @@ export default function CareersAdminPage() {
           </div>
           <Link
             href="/admin/careers/new"
-            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors"
+            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Job
@@ -143,7 +143,7 @@ export default function CareersAdminPage() {
                 placeholder="Search by title, department, or keyword..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm"
               />
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function CareersAdminPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent text-sm"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent text-sm"
             >
               <option value="all">All Status</option>
               <option value="open">Open</option>
@@ -193,7 +193,7 @@ export default function CareersAdminPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan="6" className="px-6 py-4 text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3f2e73] mx-auto"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#025545] mx-auto"></div>
                     </td>
                   </tr>
                 ) : careers.length === 0 ? (
@@ -207,7 +207,7 @@ export default function CareersAdminPage() {
                         <p className="text-gray-500 mb-4">Create your first job to show on the careers page</p>
                         <Link
                           href="/admin/careers/new"
-                          className="bg-[#3f2e73] text-white px-4 py-2 rounded-lg hover:bg-[#1d1733] inline-flex items-center space-x-2"
+                          className="bg-[#025545] text-white px-4 py-2 rounded-lg hover:bg-[#012f23] inline-flex items-center space-x-2"
                         >
                           <Plus className="h-4 w-4" />
                           <span>Create First Job</span>

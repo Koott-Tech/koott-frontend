@@ -168,7 +168,7 @@ function IdMenu({ entries, onViewDetails }) {
               >
                 <span className="text-[10px] text-slate-500">{e.label}</span>
                 <span className="font-mono text-[11px] text-slate-800 break-all">{e.value}</span>
-                <span className="flex items-center gap-1 text-[10px] text-[#3f2e73]">
+                <span className="flex items-center gap-1 text-[10px] text-[#025545]">
                   <Copy className="h-3 w-3" /> Tap to copy
                 </span>
               </DropdownMenuItem>
@@ -290,7 +290,7 @@ function SessionDetailOverlay({ open, onClose, payload }) {
                 <button
                   type="button"
                   onClick={() => copyOne(r.key, String(r.value))}
-                  className="shrink-0 p-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-[#3f2e73]"
+                  className="shrink-0 p-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-[#025545]"
                   title="Copy"
                 >
                   {copiedLine === r.key ? (
@@ -495,7 +495,7 @@ export default function ClientBookingsHistoryModal({ isOpen, onClose, clientId, 
 
           {clientId && loading && (
             <div className="flex items-center justify-center py-14 text-slate-400">
-              <Loader2 className="h-7 w-7 animate-spin text-[#3f2e73]" />
+              <Loader2 className="h-7 w-7 animate-spin text-[#025545]" />
             </div>
           )}
 
@@ -530,7 +530,7 @@ export default function ClientBookingsHistoryModal({ isOpen, onClose, clientId, 
                         >
                           <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-left [&::-webkit-details-marker]:hidden">
                             <ChevronRight className="chevron-pkg h-3.5 w-3.5 text-slate-400 shrink-0 transition-transform duration-200" />
-                            <Package className="h-3.5 w-3.5 text-[#3f2e73] shrink-0" />
+                            <Package className="h-3.5 w-3.5 text-[#025545] shrink-0" />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-medium text-slate-900 leading-tight">{title}</div>
                               <div className="text-[10px] text-slate-500 mt-0.5">

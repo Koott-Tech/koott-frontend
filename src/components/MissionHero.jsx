@@ -102,7 +102,7 @@ export default function MissionHero() {
         <div className="mission-hero-header flex flex-col items-center px-6 pt-16 md:pt-16 mt-8 md:mt-8 text-center">
           <h1 
             className="mission-hero-title text-[2.5rem] md:text-4xl lg:text-5xl font-medium leading-[1.0] md:leading-tight mb-6 md:mb-6 max-w-4xl tracking-[-0.195rem]"
-            style={{ color: '#1d1733' }}
+            style={{ color: '#012f23' }}
           >
             Our mission is to make care <br /> feel closer, calmer, and real.
           </h1>
@@ -117,9 +117,9 @@ export default function MissionHero() {
           <button 
             type="button"
             onClick={handleGetStartedClick}
-            className="px-8 py-3 bg-[#3f2e73] text-white font-semibold text-sm rounded-full transition-colors duration-200 shadow-lg"
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d1733'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#3f2e73'; }}
+            className="px-8 py-3 bg-[#025545] text-white font-semibold text-sm rounded-full transition-colors duration-200 shadow-lg"
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#012f23'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#025545'; }}
           >
             Explore how we can help
           </button>

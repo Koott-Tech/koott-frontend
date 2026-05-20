@@ -85,7 +85,7 @@ function HeroMiniPassTicket({ cms, targetId = "session-pass-ticket" }) {
     <button
       type="button"
       onClick={scrollToPass}
-      className="group relative w-full max-w-full overflow-hidden rounded-2xl border border-white/45 bg-white text-left shadow-[0_18px_44px_-14px_rgba(0,0,0,0.48)] ring-1 ring-[#3f2e73]/12 transition-[transform,box-shadow] hover:shadow-[0_22px_50px_-14px_rgba(63,46,115,0.42)] active:scale-[0.997] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#3f2e73]/40 sm:rounded-[1.35rem]"
+      className="group relative w-full max-w-full overflow-hidden rounded-2xl border border-white/45 bg-white text-left shadow-[0_18px_44px_-14px_rgba(0,0,0,0.48)] ring-1 ring-[#025545]/12 transition-[transform,box-shadow] hover:shadow-[0_22px_50px_-14px_rgba(63,46,115,0.42)] active:scale-[0.997] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#025545]/40 sm:rounded-[1.35rem]"
       aria-label={`View full pass below${b.title ? `: ${b.title}` : ""}`}
     >
       <span className="sr-only">
@@ -93,19 +93,19 @@ function HeroMiniPassTicket({ cms, targetId = "session-pass-ticket" }) {
         {b.subtitle ? ` ${b.subtitle}` : ""}
       </span>
       <div
-        className="pointer-events-none absolute right-0 top-0 h-12 w-12 bg-[#3f2e73] sm:h-14 sm:w-14"
+        className="pointer-events-none absolute right-0 top-0 h-12 w-12 bg-[#025545] sm:h-14 sm:w-14"
         style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#3f2e73] via-[#7b68b8] to-[#3f2e73] sm:h-1.5"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#025545] via-[#7b68b8] to-[#025545] sm:h-1.5"
         aria-hidden
       />
 
       <div className="relative flex w-full flex-col sm:flex-row sm:items-stretch">
         <div className="min-w-0 flex-1 px-5 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5 md:px-7 md:pb-6 md:pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-[#3f2e73]/22 pb-3 sm:pb-3.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#3f2e73]/75 sm:text-[11px]">{b.passLabel}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-[#025545]/22 pb-3 sm:pb-3.5">
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#025545]/75 sm:text-[11px]">{b.passLabel}</span>
             <span className="inline-flex max-w-[11rem] items-center gap-1 rounded-full border border-emerald-300/85 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold leading-tight text-emerald-800 sm:max-w-[13rem] sm:text-[10px]">
               <Gift className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
               <span className="line-clamp-1">{b.badgeText}</span>
@@ -116,7 +116,7 @@ function HeroMiniPassTicket({ cms, targetId = "session-pass-ticket" }) {
             <div className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-3.5 sm:mt-4 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-4">
               {detailRows.map((d) => (
                 <div key={d.label} className="min-w-0 text-left">
-                  <p className="text-[9px] font-semibold uppercase tracking-wide text-[#3f2e73]/58 sm:text-[10px]">{d.label}</p>
+                  <p className="text-[9px] font-semibold uppercase tracking-wide text-[#025545]/58 sm:text-[10px]">{d.label}</p>
                   <p className={`mt-1 line-clamp-2 text-sm font-semibold leading-snug text-[#1a1428] sm:text-[0.9375rem] ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
                     {formatSessionBannerDetailDisplay(d.label, d.value)}
                   </p>
@@ -126,14 +126,14 @@ function HeroMiniPassTicket({ cms, targetId = "session-pass-ticket" }) {
           ) : null}
         </div>
 
-        <div className="flex flex-row items-center justify-between gap-4 border-t border-dashed border-[#3f2e73]/22 bg-[#faf8ff] px-5 py-3.5 sm:w-[9.5rem] sm:flex-none sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-4 sm:py-5 md:w-[10.5rem]">
+        <div className="flex flex-row items-center justify-between gap-4 border-t border-dashed border-[#025545]/22 bg-[#f2fff1] px-5 py-3.5 sm:w-[9.5rem] sm:flex-none sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-4 sm:py-5 md:w-[10.5rem]">
           <div className="flex flex-col items-start leading-none sm:items-center">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-[#3f2e73]/55 sm:text-[11px]">Price</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider text-[#025545]/55 sm:text-[11px]">Price</span>
             <span className="mt-1 text-xs font-medium text-gray-400 line-through sm:text-sm">{b.strikePrice}</span>
-            <span className="mt-1 text-3xl font-bold tabular-nums text-[#2f2358] sm:text-4xl">{b.priceLarge}</span>
+            <span className="mt-1 text-3xl font-bold tabular-nums text-[#012f23] sm:text-4xl">{b.priceLarge}</span>
           </div>
           <ChevronDown
-            className="h-7 w-7 shrink-0 text-[#3f2e73] transition-transform group-hover:translate-y-1 sm:h-8 sm:w-8"
+            className="h-7 w-7 shrink-0 text-[#025545] transition-transform group-hover:translate-y-1 sm:h-8 sm:w-8"
             aria-hidden
           />
         </div>
@@ -150,25 +150,25 @@ function SessionPassTicket({ cms, onRegister, titleId }) {
   return (
     <section
       id="session-pass-ticket"
-      className="relative scroll-mt-24 overflow-hidden rounded-3xl border border-[#3f2e73]/20 bg-white shadow-[0_18px_48px_-22px_rgba(63,46,115,0.45)] sm:scroll-mt-28"
+      className="relative scroll-mt-24 overflow-hidden rounded-3xl border border-[#025545]/20 bg-white shadow-[0_18px_48px_-22px_rgba(63,46,115,0.45)] sm:scroll-mt-28"
       aria-labelledby={titleId}
     >
       <div
-        className="pointer-events-none absolute right-0 top-0 h-16 w-16 bg-[#3f2e73]"
+        className="pointer-events-none absolute right-0 top-0 h-16 w-16 bg-[#025545]"
         style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#3f2e73] via-[#7b68b8] to-[#3f2e73]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#025545] via-[#7b68b8] to-[#025545]"
         aria-hidden
       />
 
       <div className="grid lg:grid-cols-[240px_1fr]">
-        <div className="relative border-b border-[#3f2e73]/15 bg-[#f4f1ff] p-6 lg:border-b-0 lg:border-r lg:border-[#3f2e73]/15">
-          <p className="text-[10px] font-semibold uppercase text-[#3f2e73]/70">{b.passLabel}</p>
+        <div className="relative border-b border-[#025545]/15 bg-[#f4f1ff] p-6 lg:border-b-0 lg:border-r lg:border-[#025545]/15">
+          <p className="text-[10px] font-semibold uppercase text-[#025545]/70">{b.passLabel}</p>
           <div className="mt-2 flex items-baseline gap-3">
             <span className="text-lg font-medium text-gray-400 line-through">{b.strikePrice}</span>
-            <span className="text-4xl font-bold text-[#2f2358]">{b.priceLarge}</span>
+            <span className="text-4xl font-bold text-[#012f23]">{b.priceLarge}</span>
           </div>
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
             <Gift className="h-3 w-3 shrink-0" aria-hidden />
@@ -188,14 +188,14 @@ function SessionPassTicket({ cms, onRegister, titleId }) {
             {b.subtitle}
           </p>
 
-          <div className="mt-5 grid gap-0 rounded-2xl border border-[#3f2e73]/14 bg-white sm:grid-cols-3">
+          <div className="mt-5 grid gap-0 rounded-2xl border border-[#025545]/14 bg-white sm:grid-cols-3">
             {(b.details || []).slice(0, 3).map((d, i) => (
               <div
                 key={d.label}
-                className={`p-4 sm:border-[#3f2e73]/12 ${i < 2 ? "sm:border-r" : ""} ${i > 0 ? "border-t sm:border-t-0" : ""}`}
+                className={`p-4 sm:border-[#025545]/12 ${i < 2 ? "sm:border-r" : ""} ${i > 0 ? "border-t sm:border-t-0" : ""}`}
               >
-                <p className="text-[10px] font-semibold uppercase text-[#3f2e73]/60">{d.label}</p>
-                <p className="mt-1 text-sm font-semibold text-[#2a1f52]">{formatSessionBannerDetailDisplay(d.label, d.value)}</p>
+                <p className="text-[10px] font-semibold uppercase text-[#025545]/60">{d.label}</p>
+                <p className="mt-1 text-sm font-semibold text-[#012f23]">{formatSessionBannerDetailDisplay(d.label, d.value)}</p>
               </div>
             ))}
           </div>
@@ -203,7 +203,7 @@ function SessionPassTicket({ cms, onRegister, titleId }) {
           <button
             type="button"
             onClick={onRegister}
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3f2e73] px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-[#3f2e73]/25 transition-all hover:bg-[#342560] hover:shadow-xl hover:shadow-[#3f2e73]/30 sm:w-auto"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#025545] px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-[#025545]/25 transition-all hover:bg-[#012f23] hover:shadow-xl hover:shadow-[#025545]/30 sm:w-auto"
           >
             {b.ctaText}
             <ChevronRight className="h-5 w-5 shrink-0" aria-hidden />
@@ -435,7 +435,7 @@ export default function WorkshopEventPageClient({
                 <button
                   type="button"
                   onClick={openRegisterModal}
-                  className={`inline-flex items-center gap-2 rounded-full bg-white font-semibold text-[#3f2e73] shadow-lg hover:bg-gray-50 transition-colors ${
+                  className={`inline-flex items-center gap-2 rounded-full bg-white font-semibold text-[#025545] shadow-lg hover:bg-gray-50 transition-colors ${
                     previewMode ? "px-4 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm" : "px-5 py-2.5 text-sm"
                   }`}
                 >
@@ -468,15 +468,15 @@ export default function WorkshopEventPageClient({
       {/* Content sections — CMS-like grids */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 sm:py-24 space-y-28 sm:space-y-32 lg:space-y-36">
         <section
-          className="relative overflow-hidden rounded-3xl border border-[#3f2e73]/20 bg-gradient-to-br from-[#f8f5ff] via-white to-[#eef6ff] p-6 sm:p-8"
+          className="relative overflow-hidden rounded-3xl border border-[#025545]/20 bg-gradient-to-br from-[#f8f5ff] via-white to-[#eef6ff] p-6 sm:p-8"
           aria-labelledby="what-is-this-heading"
           onClick={previewMode ? (e) => jumpToEditorSection("what-is-this", e) : undefined}
         >
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#3f2e73]/10 blur-2xl" aria-hidden />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#025545]/10 blur-2xl" aria-hidden />
           <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-[#7b68b8]/10 blur-xl" aria-hidden />
 
           <div className="relative">
-            <p className={`inline-flex rounded-full border border-[#3f2e73]/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
+            <p className={`inline-flex rounded-full border border-[#025545]/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
               {cms.whatIsThis.eyebrow}
             </p>
             <h2
@@ -495,7 +495,7 @@ export default function WorkshopEventPageClient({
                 const Icon = getEventPageLucideIcon(b.iconKey);
                 return (
                   <div key={b.text} className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#3f2e73]/10 text-[#3f2e73]">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#025545]/10 text-[#025545]">
                       <Icon className="h-4 w-4" />
                     </div>
                     <p className={`mt-3 text-gray-700 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{b.text}</p>
@@ -512,7 +512,7 @@ export default function WorkshopEventPageClient({
           onClick={previewMode ? (e) => jumpToEditorSection("speakers", e) : undefined}
         >
           <div className="mb-8 sm:mb-10">
-            <p className={`text-xs font-semibold uppercase text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.speakers.eyebrow}</p>
+            <p className={`text-xs font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.speakers.eyebrow}</p>
             <h2
               id="event-speakers-heading"
               className={`mt-3 text-gray-900 ${BLOG_SECTION_HEADING_CLASS}`}
@@ -523,14 +523,14 @@ export default function WorkshopEventPageClient({
           </div>
 
           <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <div className="text-xs font-medium text-[#3f2e73]">
+            <div className="text-xs font-medium text-[#025545]">
               {speakerIndex + 1} / {speakers.length}
             </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={goPrevSpeaker}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#3f2e73]/20 text-[#3f2e73] hover:bg-[#f4f1ff] transition-colors"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#025545]/20 text-[#025545] hover:bg-[#f4f1ff] transition-colors"
                 aria-label="Previous speaker"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -538,7 +538,7 @@ export default function WorkshopEventPageClient({
               <button
                 type="button"
                 onClick={goNextSpeaker}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#3f2e73]/20 text-[#3f2e73] hover:bg-[#f4f1ff] transition-colors"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#025545]/20 text-[#025545] hover:bg-[#f4f1ff] transition-colors"
                 aria-label="Next speaker"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -562,14 +562,14 @@ export default function WorkshopEventPageClient({
             {activeSpeaker ? (
             <div>
               <div className={`text-gray-900 ${BLOG_FEATURED_TITLE_CLASS}`} style={BLOG_FEATURED_TITLE_STYLE}>{activeSpeaker.name}</div>
-              <p className={`mt-2 text-sm font-medium text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
+              <p className={`mt-2 text-sm font-medium text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
                 {activeSpeaker.designation} · {activeSpeaker.experience}
               </p>
               <p className={`mt-4 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{activeSpeaker.details}</p>
               <div className="mt-4 space-y-2 text-xs sm:text-sm text-gray-700">
-                <p><span className="font-semibold text-[#2a1f52]">Languages:</span> {activeSpeaker.languages}</p>
-                <p><span className="font-semibold text-[#2a1f52]">Session focus:</span> {activeSpeaker.focus}</p>
-                <p><span className="font-semibold text-[#2a1f52]">Approach:</span> {activeSpeaker.style}</p>
+                <p><span className="font-semibold text-[#012f23]">Languages:</span> {activeSpeaker.languages}</p>
+                <p><span className="font-semibold text-[#012f23]">Session focus:</span> {activeSpeaker.focus}</p>
+                <p><span className="font-semibold text-[#012f23]">Approach:</span> {activeSpeaker.style}</p>
               </div>
             </div>
             ) : null}
@@ -594,7 +594,7 @@ export default function WorkshopEventPageClient({
                 type="button"
                 onClick={() => changeSpeaker(idx, idx > speakerIndex ? 1 : -1)}
                 className={`h-1.5 rounded-full transition-all ${
-                  idx === speakerIndex ? "w-8 bg-[#3f2e73]" : "w-4 bg-[#3f2e73]/25"
+                  idx === speakerIndex ? "w-8 bg-[#025545]" : "w-4 bg-[#025545]/25"
                 }`}
                 aria-label={`Go to speaker ${idx + 1}`}
               />
@@ -610,7 +610,7 @@ export default function WorkshopEventPageClient({
           onClick={previewMode ? (e) => jumpToEditorSection("why-it-matters", e) : undefined}
         >
           <div className="mx-auto max-w-4xl px-4 text-center sm:px-0">
-            <p className={`text-xs font-semibold uppercase text-[#3f2e73] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.whyItMatters.eyebrow}</p>
+            <p className={`text-xs font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.whyItMatters.eyebrow}</p>
             <h2
               id="why-it-matters-heading"
               className={`mt-3 text-gray-900 ${BLOG_FEATURED_TITLE_CLASS}`}
@@ -633,7 +633,7 @@ export default function WorkshopEventPageClient({
                     key={card.title}
                     className="min-w-0 rounded-2xl bg-[#F2F2F2] p-7 text-left transition-shadow hover:shadow-md sm:p-8"
                   >
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center text-[#3f2e73]" aria-hidden>
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center text-[#025545]" aria-hidden>
                       <Icon className="h-7 w-7" strokeWidth={1.5} />
                     </div>
                     <div className={`text-gray-900 ${BLOG_CARD_TITLE_CLASS}`} style={BLOG_CARD_TITLE_STYLE} role="heading" aria-level={3}>
@@ -650,7 +650,7 @@ export default function WorkshopEventPageClient({
             <button
               type="button"
               onClick={openRegisterModal}
-              className="inline-flex items-center rounded-full bg-[#3f2e73] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#342560] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3f2e73] focus-visible:ring-offset-2"
+              className="inline-flex items-center rounded-full bg-[#025545] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#012f23] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#025545] focus-visible:ring-offset-2"
             >
               {cms.whyItMatters.ctaLabel}
             </button>
@@ -663,22 +663,22 @@ export default function WorkshopEventPageClient({
           onClick={previewMode ? (e) => jumpToEditorSection("who-can-join", e) : undefined}
         >
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 text-[#3f2e73]">
+            <div className="inline-flex items-center gap-2 text-[#025545]">
               <Users className="h-5 w-5" />
               <h2 id="who-can-join-heading" className={`text-gray-900 ${BLOG_SECTION_HEADING_CLASS} mb-0`} style={BLOG_SECTION_HEADING_STYLE}>
                 {cms.whoCanJoin.heading}
               </h2>
             </div>
-            <span className="inline-flex items-center rounded-full bg-[#f4f1ff] px-3 py-1 text-xs font-semibold text-[#3f2e73]">
+            <span className="inline-flex items-center rounded-full bg-[#f4f1ff] px-3 py-1 text-xs font-semibold text-[#025545]">
               {cms.whoCanJoin.badge}
             </span>
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {(cms.whoCanJoin.columns || []).map((col) => (
-              <div key={col.label} className="border-l-2 border-[#3f2e73]/30 pl-4">
-                <p className="text-[11px] font-semibold uppercase text-[#3f2e73]/60">{col.label}</p>
-                <p className="mt-1 text-sm font-medium text-[#2a1f52]">{col.body}</p>
+              <div key={col.label} className="border-l-2 border-[#025545]/30 pl-4">
+                <p className="text-[11px] font-semibold uppercase text-[#025545]/60">{col.label}</p>
+                <p className="mt-1 text-sm font-medium text-[#012f23]">{col.body}</p>
               </div>
             ))}
           </div>
@@ -689,7 +689,7 @@ export default function WorkshopEventPageClient({
         </div>
 
         <section
-          className="rounded-3xl border border-[#3f2e73]/18 bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgba(63,46,115,0.08)]"
+          className="rounded-3xl border border-[#025545]/18 bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgba(63,46,115,0.08)]"
           onClick={previewMode ? (e) => jumpToEditorSection("take-back", e) : undefined}
         >
           <h2 className={`text-gray-900 ${BLOG_SECTION_HEADING_CLASS}`} style={BLOG_SECTION_HEADING_STYLE}>
@@ -703,11 +703,11 @@ export default function WorkshopEventPageClient({
             {(cms.takeBack.items || []).map((item) => {
               const Icon = getEventPageLucideIcon(item.iconKey);
               return (
-                <div key={item.text} className="flex items-start gap-3 rounded-2xl border border-[#3f2e73]/12 bg-[#faf8ff] p-4">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#3f2e73]/12 text-[#3f2e73]">
+                <div key={item.text} className="flex items-start gap-3 rounded-2xl border border-[#025545]/12 bg-[#f2fff1] p-4">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#025545]/12 text-[#025545]">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <p className={`text-sm sm:text-base text-[#2a1f52] ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{item.text}</p>
+                  <p className={`text-sm sm:text-base text-[#012f23] ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{item.text}</p>
                 </div>
               );
             })}
@@ -802,7 +802,7 @@ export default function WorkshopEventPageClient({
                             required
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#3f2e73]/20 focus:border-[#3f2e73] focus:ring-2 sm:text-sm"
+                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#025545]/20 focus:border-[#025545] focus:ring-2 sm:text-sm"
                             placeholder="As on your email / phone"
                           />
                         </div>,
@@ -818,7 +818,7 @@ export default function WorkshopEventPageClient({
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#3f2e73]/20 focus:border-[#3f2e73] focus:ring-2 sm:text-sm"
+                            className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#025545]/20 focus:border-[#025545] focus:ring-2 sm:text-sm"
                             placeholder="you@example.com"
                           />
                         </div>,
@@ -829,7 +829,7 @@ export default function WorkshopEventPageClient({
                               name="countryCode"
                               value={phoneCountryValue}
                               onChange={(e) => setPhoneCountryValue(e.target.value)}
-                              className="min-w-[11.5rem] max-w-[min(52vw,14rem)] shrink-0 rounded-xl border border-gray-200 bg-white px-2.5 py-3 text-[15px] text-gray-900 outline-none focus:border-[#3f2e73] focus:ring-2 ring-[#3f2e73]/20 sm:min-w-[13rem] sm:max-w-[15rem] sm:text-sm"
+                              className="min-w-[11.5rem] max-w-[min(52vw,14rem)] shrink-0 rounded-xl border border-gray-200 bg-white px-2.5 py-3 text-[15px] text-gray-900 outline-none focus:border-[#025545] focus:ring-2 ring-[#025545]/20 sm:min-w-[13rem] sm:max-w-[15rem] sm:text-sm"
                               aria-label="Country code"
                             >
                               {PHONE_COUNTRY_OPTIONS.map((c) => (
@@ -846,7 +846,7 @@ export default function WorkshopEventPageClient({
                               required
                               value={phone}
                               onChange={(e) => setPhone(e.target.value.replace(/[^\d+\s-]/g, ""))}
-                              className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#3f2e73]/20 focus:border-[#3f2e73] focus:ring-2 sm:text-sm"
+                              className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-[15px] leading-snug text-gray-900 outline-none ring-[#025545]/20 focus:border-[#025545] focus:ring-2 sm:text-sm"
                               placeholder="WhatsApp number (10 digits)"
                             />
                           </div>
@@ -881,7 +881,7 @@ export default function WorkshopEventPageClient({
                         <button
                           type="submit"
                           disabled={status === "loading"}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#3f2e73] px-4 py-3.5 text-[15px] font-semibold text-white shadow-md hover:bg-[#342560] disabled:opacity-60 transition-colors sm:text-sm"
+                          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#025545] px-4 py-3.5 text-[15px] font-semibold text-white shadow-md hover:bg-[#012f23] disabled:opacity-60 transition-colors sm:text-sm"
                         >
                           {status === "loading" ? (
                             <>
@@ -924,7 +924,7 @@ export default function WorkshopEventPageClient({
                     <button
                       type="button"
                       onClick={closeRegisterModal}
-                      className="mt-9 w-full rounded-xl bg-[#3f2e73] px-4 py-3.5 text-[15px] font-semibold text-white shadow-md hover:bg-[#342560] transition-colors sm:text-sm"
+                      className="mt-9 w-full rounded-xl bg-[#025545] px-4 py-3.5 text-[15px] font-semibold text-white shadow-md hover:bg-[#012f23] transition-colors sm:text-sm"
                     >
                       Close
                     </button>

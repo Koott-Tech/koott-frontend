@@ -148,7 +148,7 @@ export default function CreateEventPageCmsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-[#593494] text-white px-5 py-2.5 rounded-lg hover:bg-[#7351A9] disabled:opacity-50"
+            className="bg-[#189e4f] text-white px-5 py-2.5 rounded-lg hover:bg-[#189e4f] disabled:opacity-50"
           >
             {saving ? "Creating…" : "Create & edit content"}
           </button>

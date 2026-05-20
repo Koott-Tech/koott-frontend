@@ -9,8 +9,8 @@ export const DEFAULT_CHILD_SPEC_FU_TIER = '3';
  */
 export default function ChildSpecSessionSelect({ value, onChange, ariaLabel, options, compact = false }) {
   const selectClass = compact
-    ? 'appearance-none w-full cursor-pointer rounded-md border border-[#3f2e73]/40 bg-gradient-to-b from-[#faf8ff] to-[#f2ecff] py-0.5 pl-1.5 pr-6 text-[11px] font-semibold leading-tight tracking-tight text-[#3f2e73] shadow-sm transition-all hover:border-[#3f2e73] hover:from-[#f5f1ff] hover:to-[#eae4ff] focus:border-[#3f2e73] focus:outline-none focus:ring-1 focus:ring-[#3f2e73]/30'
-    : 'appearance-none w-full cursor-pointer rounded-lg border border-[#3f2e73]/40 bg-gradient-to-b from-[#faf8ff] to-[#f2ecff] py-2 pl-3 pr-9 text-xs font-semibold tracking-tight text-[#3f2e73] shadow-[0_1px_3px_rgba(63,46,115,0.1)] transition-all hover:border-[#3f2e73] hover:from-[#f5f1ff] hover:to-[#eae4ff] hover:shadow-[0_2px_8px_rgba(63,46,115,0.14)] focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/35';
+    ? 'appearance-none w-full cursor-pointer rounded-md border border-[#025545]/40 bg-gradient-to-b from-[#f2fff1] to-[#f2ecff] py-0.5 pl-1.5 pr-6 text-[11px] font-semibold leading-tight tracking-tight text-[#025545] shadow-sm transition-all hover:border-[#025545] hover:from-[#f2fff1] hover:to-[#d7fec5] focus:border-[#025545] focus:outline-none focus:ring-1 focus:ring-[#025545]/30'
+    : 'appearance-none w-full cursor-pointer rounded-lg border border-[#025545]/40 bg-gradient-to-b from-[#f2fff1] to-[#f2ecff] py-2 pl-3 pr-9 text-xs font-semibold tracking-tight text-[#025545] shadow-[0_1px_3px_rgba(63,46,115,0.1)] transition-all hover:border-[#025545] hover:from-[#f2fff1] hover:to-[#d7fec5] hover:shadow-[0_2px_8px_rgba(63,46,115,0.14)] focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/35';
 
   return (
     <div className={compact ? 'relative w-[7.75rem] shrink-0' : 'relative min-w-[10rem] shrink-0'}>
@@ -28,7 +28,7 @@ export default function ChildSpecSessionSelect({ value, onChange, ariaLabel, opt
         ))}
       </select>
       <span
-        className={`pointer-events-none absolute text-[#3f2e73] ${compact ? 'right-1 top-1/2 -translate-y-1/2' : 'right-2.5 top-1/2 -translate-y-1/2'}`}
+        className={`pointer-events-none absolute text-[#025545] ${compact ? 'right-1 top-1/2 -translate-y-1/2' : 'right-2.5 top-1/2 -translate-y-1/2'}`}
         aria-hidden
       >
         <svg

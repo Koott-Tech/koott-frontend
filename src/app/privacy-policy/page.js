@@ -12,7 +12,7 @@ export const metadata = {
         url: "https://www.koott.in/privacy-policy",
         images: [
             {
-                url: "https://www.koott.in/favicon.png",
+                url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
                 alt: "Koott logo",
@@ -24,7 +24,7 @@ export const metadata = {
         title: "Privacy Policy | Koott",
         description:
             "Understand how Koott by Koott Care Pvt. Ltd. collects, uses, and protects personal information for children and families.",
-        images: ["https://www.koott.in/favicon.png"],
+        images: ["https://www.koott.in/logo.png"],
     },
 };
 

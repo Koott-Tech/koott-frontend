@@ -120,7 +120,7 @@ export default function FinanceLayout({ children }) {
   if (authLoading) {
     return (
       <div className="fixed inset-0 w-screen h-screen flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -165,7 +165,7 @@ export default function FinanceLayout({ children }) {
         
         {/* Sidebar Panel */}
         <div 
-          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#3f2e73]/20 will-change-transform ${
+          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#025545]/20 will-change-transform ${
             isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           style={{ 
@@ -191,7 +191,7 @@ export default function FinanceLayout({ children }) {
               }}
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott - Finance Dashboard"
                 width={120}
                 height={40}
@@ -212,7 +212,7 @@ export default function FinanceLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73] text-white' 
+                      ? 'bg-[#025545] text-white' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                   onClick={() => {
@@ -243,7 +243,7 @@ export default function FinanceLayout({ children }) {
       </div>
 
       {/* Desktop sidebar (toggleable on lg and above) */}
-      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#3f2e73]/20 z-40 transition-transform duration-300 ease-in-out ${
+      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#025545]/20 z-40 transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full w-full">
@@ -255,7 +255,7 @@ export default function FinanceLayout({ children }) {
               aria-label="Koott - Go to finance dashboard"
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott - Finance Dashboard"
                 width={120}
                 height={40}
@@ -276,7 +276,7 @@ export default function FinanceLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73] text-white' 
+                      ? 'bg-[#025545] text-white' 
                       : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >

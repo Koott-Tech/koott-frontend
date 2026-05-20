@@ -179,7 +179,7 @@ const NotificationsPage = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-[#3f2e73]">{notifications.length}</div>
+                <div className="text-2xl font-bold text-[#025545]">{notifications.length}</div>
                 <div className="text-sm text-gray-600">Total</div>
               </div>
               <div className="text-center">
@@ -193,7 +193,7 @@ const NotificationsPage = () => {
                 onClick={() => setFilter(filter === 'all' ? 'unread' : 'all')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filter === 'unread'
-                    ? 'bg-[#3f2e73] text-white'
+                    ? 'bg-[#025545] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -231,7 +231,7 @@ const NotificationsPage = () => {
               <div
                 key={notification.id}
                 className={`bg-white rounded-lg shadow p-4 sm:p-6 transition-all hover:shadow-md ${
-                  !notification.is_read ? 'border-l-4 border-[#3f2e73]' : ''
+                  !notification.is_read ? 'border-l-4 border-[#025545]' : ''
                 }`}
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
@@ -241,7 +241,7 @@ const NotificationsPage = () => {
                         {notification.title}
                       </p>
                       {!notification.is_read && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#025545]/10 text-[#025545]">
                           New
                         </span>
                       )}
@@ -264,7 +264,7 @@ const NotificationsPage = () => {
                     {!notification.is_read && (
                       <button
                         onClick={() => markAsRead(notification.id)}
-                        className="p-2 text-[#3f2e73] hover:bg-[#3f2e73]/10 rounded-lg transition-colors"
+                        className="p-2 text-[#025545] hover:bg-[#025545]/10 rounded-lg transition-colors"
                         title="Mark as read"
                       >
                         ✓

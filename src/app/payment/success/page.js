@@ -25,7 +25,7 @@ function packageMetaFromSession(s) {
 
 // Success Animation Component (Google Pay style)
 function SuccessAnimationContent() {
-  const confettiColors = ['#22c55e', '#3f2e73', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const confettiColors = ['#22c55e', '#025545', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   // Optimize particles based on device capability
   const [particleCount, setParticleCount] = useState(20);
   const [isMobile, setIsMobile] = useState(false);
@@ -1291,7 +1291,7 @@ function PaymentSuccessContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-slate-50">
         <div
-          className="w-10 h-10 border-2 border-slate-200 border-t-[#3f2e73] rounded-full animate-spin mb-6"
+          className="w-10 h-10 border-2 border-slate-200 border-t-[#025545] rounded-full animate-spin mb-6"
           aria-hidden
         />
         <p className="text-slate-800 text-center font-medium text-lg">
@@ -1319,16 +1319,16 @@ function PaymentSuccessContent() {
             Please immediately contact our team through mail or phone for assistance.
           </p>
           <div className="space-y-2 mb-6 text-sm">
-            <a href={`mailto:${supportEmail}`} className="block text-[#3f2e73] font-medium hover:underline">
+            <a href={`mailto:${supportEmail}`} className="block text-[#025545] font-medium hover:underline">
               {supportEmail}
             </a>
-            <a href={`tel:+919539007766`} className="block text-[#3f2e73] font-medium hover:underline">
+            <a href={`tel:+919539007766`} className="block text-[#025545] font-medium hover:underline">
               {supportPhone}
             </a>
           </div>
           <button
             onClick={() => router.push('/profile/sessions')}
-            className="w-full px-6 py-3 bg-[#3f2e73] hover:bg-[#1d1733] text-white font-medium rounded-lg transition-colors"
+            className="w-full px-6 py-3 bg-[#025545] hover:bg-[#012f23] text-white font-medium rounded-lg transition-colors"
           >
             View Sessions
           </button>
@@ -1489,7 +1489,7 @@ function PaymentSuccessContent() {
                     width: '16px',
                     height: '16px',
                     border: '2px solid #e5e7eb',
-                    borderTop: '2px solid #3f2e73',
+                    borderTop: '2px solid #025545',
                     borderRadius: '50%',
                     animation: 'spin 0.8s linear infinite'
                   }}></div>
@@ -1525,12 +1525,12 @@ function PaymentSuccessContent() {
                   border: '1px solid #e5e7eb'
         }}>
                   <div style={{ marginBottom: '8px' }}>
-                    <strong style={{ color: '#3f2e73' }}>Therapist:</strong>{' '}
-                    <span style={{ color: '#3f2e73' }}>{sessionDetails.psychologistName}</span>
+                    <strong style={{ color: '#025545' }}>Therapist:</strong>{' '}
+                    <span style={{ color: '#025545' }}>{sessionDetails.psychologistName}</span>
                   </div>
                   <div style={{ marginBottom: '8px' }}>
-                    <strong style={{ color: '#3f2e73' }}>Booking</strong>{' '}
-                    <span style={{ color: '#3f2e73' }}>
+                    <strong style={{ color: '#025545' }}>Booking</strong>{' '}
+                    <span style={{ color: '#025545' }}>
                       {buildPaymentSuccessBookingSummary({
                         packageName: sessionDetails.packageName,
                         packageType: sessionDetails.packageType,
@@ -1555,18 +1555,18 @@ function PaymentSuccessContent() {
                     if (!dur) return null;
                     return (
                       <div style={{ marginBottom: '8px' }}>
-                        <strong style={{ color: '#3f2e73' }}>Session duration</strong>{' '}
-                        <span style={{ color: '#3f2e73' }}>{dur}</span>
+                        <strong style={{ color: '#025545' }}>Session duration</strong>{' '}
+                        <span style={{ color: '#025545' }}>{dur}</span>
                       </div>
                     );
                   })()}
                   <div style={{ marginBottom: '8px' }}>
-                    <strong style={{ color: '#3f2e73' }}>Date:</strong>{' '}
-                    <span style={{ color: '#3f2e73' }}>{formatDate(sessionDetails.date)}</span>
+                    <strong style={{ color: '#025545' }}>Date:</strong>{' '}
+                    <span style={{ color: '#025545' }}>{formatDate(sessionDetails.date)}</span>
                   </div>
                   <div style={{ marginBottom: '8px' }}>
-                    <strong style={{ color: '#3f2e73' }}>Time:</strong>{' '}
-                    <span style={{ color: '#3f2e73' }}>{formatTime(sessionDetails.time)}</span>
+                    <strong style={{ color: '#025545' }}>Time:</strong>{' '}
+                    <span style={{ color: '#025545' }}>{formatTime(sessionDetails.time)}</span>
                   </div>
                 </div>
               </>
@@ -1620,25 +1620,25 @@ function PaymentSuccessContent() {
           onClick={() => router.push('/profile/sessions')}
           style={{
             backgroundColor: 'transparent',
-            color: '#3f2e73',
+            color: '#025545',
             padding: '10px 24px',
             border: 'none',
             borderRadius: '24px',
             cursor: 'pointer',
             fontSize: '16px',
             fontWeight: '600',
-            boxShadow: 'inset 0 0 0 2px #3f2e73',
+            boxShadow: 'inset 0 0 0 2px #025545',
             transition: 'all 0.2s ease-in-out'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#3f2e73';
+            e.currentTarget.style.backgroundColor = '#025545';
             e.currentTarget.style.color = '#ffffff';
-            e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #3f2e73';
+            e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #025545';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = '#3f2e73';
-            e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #3f2e73';
+            e.currentTarget.style.color = '#025545';
+            e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #025545';
           }}
         >
           View Sessions
@@ -1646,7 +1646,7 @@ function PaymentSuccessContent() {
         <button
           onClick={() => router.push('/')}
           style={{
-            backgroundColor: '#3f2e73',
+            backgroundColor: '#025545',
             color: 'white',
             padding: '10px 28px',
             border: 'none',
@@ -1657,8 +1657,8 @@ function PaymentSuccessContent() {
             boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             transition: 'background-color 0.2s ease-in-out'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
         >
           Go Home
         </button>
@@ -1700,7 +1700,7 @@ function PaymentSuccessContent() {
           .vertical-divider {
             display: block;
             width: 2px;
-            background-color: #3f2e73;
+            background-color: #025545;
             flex-shrink: 0;
             align-self: stretch;
           }

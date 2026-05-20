@@ -210,7 +210,7 @@ export default function ProfilePage() {
     return (
       <div className="bg-white p-6">
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderBottomColor: '#025545' }}></div>
           <p className="text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -236,8 +236,8 @@ export default function ProfilePage() {
               className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
                 !profileForm.first_name ? 'border-red-300' : 'border-gray-300'
               }`}
-              style={{ '--tw-ring-color': '#3f2e73' }}
-              onFocus={(e) => { if (profileForm.first_name) { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; } }}
+              style={{ '--tw-ring-color': '#025545' }}
+              onFocus={(e) => { if (profileForm.first_name) { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; } }}
               onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
               placeholder="Enter your first name"
               required
@@ -253,8 +253,8 @@ export default function ProfilePage() {
               value={profileForm.last_name}
               onChange={handleProfileInputChange}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 border-gray-300"
-              style={{ '--tw-ring-color': '#3f2e73' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
+              style={{ '--tw-ring-color': '#025545' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
               placeholder="Enter your last name"
             />
@@ -271,8 +271,8 @@ export default function ProfilePage() {
               value={profileForm.country_code}
               onChange={handleProfileInputChange}
               className="border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2"
-              style={{ '--tw-ring-color': '#3f2e73' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
+              style={{ '--tw-ring-color': '#025545' }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
             >
               <option value="+91">🇮🇳 +91</option>
@@ -294,8 +294,8 @@ export default function ProfilePage() {
               className={`flex-1 border border-l-0 rounded-r-md px-3 py-2 focus:outline-none focus:ring-2 ${
                 !profileForm.phone_number ? 'border-red-300' : 'border-gray-300'
               }`}
-              style={{ '--tw-ring-color': '#3f2e73' }}
-              onFocus={(e) => { if (profileForm.phone_number) { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; } }}
+              style={{ '--tw-ring-color': '#025545' }}
+              onFocus={(e) => { if (profileForm.phone_number) { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; } }}
               onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
               placeholder="Enter your phone number"
               required
@@ -320,8 +320,8 @@ export default function ProfilePage() {
                   value={profileForm.child_name}
                   onChange={handleProfileInputChange}
                   className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 border-gray-300"
-                  style={{ '--tw-ring-color': '#3f2e73' }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
+                  style={{ '--tw-ring-color': '#025545' }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
                 />
               </div>
@@ -337,8 +337,8 @@ export default function ProfilePage() {
                   value={profileForm.child_age}
                   onChange={handleProfileInputChange}
                   className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 border-gray-300"
-                  style={{ '--tw-ring-color': '#3f2e73' }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = '#3f2e73'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
+                  style={{ '--tw-ring-color': '#025545' }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#025545'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)'; }}
                   onBlur={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}
                 />
               </div>
@@ -357,9 +357,9 @@ export default function ProfilePage() {
             type="submit"
             disabled={isSavingProfile}
             className="inline-flex items-center rounded-full px-3 md:px-4 py-2 text-sm md:text-base font-semibold text-white shadow-sm transition-colors duration-200 disabled:opacity-60"
-            style={{ backgroundColor: '#3f2e73' }}
-            onMouseEnter={(e) => !isSavingProfile && (e.currentTarget.style.backgroundColor = '#1d1733')}
-            onMouseLeave={(e) => !isSavingProfile && (e.currentTarget.style.backgroundColor = '#3f2e73')}
+            style={{ backgroundColor: '#025545' }}
+            onMouseEnter={(e) => !isSavingProfile && (e.currentTarget.style.backgroundColor = '#012f23')}
+            onMouseLeave={(e) => !isSavingProfile && (e.currentTarget.style.backgroundColor = '#025545')}
           >
             {isSavingProfile ? 'Saving...' : 'Save Profile'}
           </button>

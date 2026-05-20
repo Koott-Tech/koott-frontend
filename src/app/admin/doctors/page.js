@@ -356,7 +356,7 @@ export default function DoctorsPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -365,7 +365,7 @@ export default function DoctorsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -385,7 +385,7 @@ export default function DoctorsPage() {
         <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
         <button
           onClick={handleAddDoctor}
-            className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add Doctor
@@ -412,7 +412,7 @@ export default function DoctorsPage() {
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
               />
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function DoctorsPage() {
             <select
               value={filterSpecialty}
               onChange={(e) => setFilterSpecialty(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
             >
               <option value="all">All Specialties</option>
               {specialties.map(specialty => (
@@ -455,7 +455,7 @@ export default function DoctorsPage() {
               onDrop={(e) => handleDrop(e, filteredIndex)}
               className={`bg-white border-2 transition-all p-6 w-full rounded-[10px] ${
                 isDragging 
-                  ? 'opacity-50 border-[#3f2e73] shadow-lg' 
+                  ? 'opacity-50 border-[#025545] shadow-lg' 
                   : 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
               } ${isUpdatingOrder ? 'opacity-60 pointer-events-none' : ''}`}
           >
@@ -463,8 +463,8 @@ export default function DoctorsPage() {
               <div className="flex items-start gap-4">
                   {/* Order Number and Drag Handle – only this area is draggable */}
                   <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-[#3f2e73]/10 flex items-center justify-center border-2 border-[#3f2e73]/40">
-                      <span className="text-[#3f2e73] font-bold text-base">{displayOrder}</span>
+                    <div className="w-10 h-10 rounded-full bg-[#025545]/10 flex items-center justify-center border-2 border-[#025545]/40">
+                      <span className="text-[#025545] font-bold text-base">{displayOrder}</span>
                     </div>
                     <div
                       draggable={!isUpdatingOrder}
@@ -617,7 +617,7 @@ export default function DoctorsPage() {
             <div className="mt-6">
               <button
                 onClick={handleAddDoctor}
-                className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Doctor
@@ -645,7 +645,7 @@ export default function DoctorsPage() {
             {/* Header */}
             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                   {getDoctorImageUrl(selectedDoctor) ? (
                     <img
                       src={getDoctorImageUrl(selectedDoctor)}
@@ -653,7 +653,7 @@ export default function DoctorsPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <UserCheck className="w-5 h-5 text-[#3f2e73]" />
+                    <UserCheck className="w-5 h-5 text-[#025545]" />
                   )}
                 </div>
                 <div>
@@ -837,7 +837,7 @@ export default function DoctorsPage() {
                     setIsFullProfileOpen(false);
                     handleEditDoctor(selectedDoctor);
                   }}
-                  className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm font-medium"
                 >
                   Edit Profile
                 </button>

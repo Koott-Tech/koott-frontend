@@ -60,7 +60,7 @@ export default function PsychologistAssessments() {
     const progress = assessmentProgress[packageKey];
     if (!progress) return null;
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#025545]/10 text-[#025545]">
         {progress.completed}/{progress.total} sessions
       </span>
     );
@@ -318,7 +318,7 @@ export default function PsychologistAssessments() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      booked: { bg: 'bg-[#3f2e73]/10', text: 'text-[#3f2e73]', label: 'Booked' },
+      booked: { bg: 'bg-[#025545]/10', text: 'text-[#025545]', label: 'Booked' },
       pending: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Pending' },
       completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
       reserved: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Reserved' }
@@ -336,7 +336,7 @@ export default function PsychologistAssessments() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading assessments...</p>
         </div>
       </div>

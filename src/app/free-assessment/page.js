@@ -19,7 +19,7 @@ dayjs.extend(timezone);
 
 // Success Animation Component (Google Pay style)
 function SuccessAnimationContent() {
-  const confettiColors = ['#22c55e', '#3f2e73', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const confettiColors = ['#22c55e', '#025545', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
   // Optimize particles based on device capability
   const [particleCount, setParticleCount] = useState(20);
   const [isMobile, setIsMobile] = useState(false);
@@ -992,15 +992,15 @@ export default function FreeAssessmentPage() {
               <div className="mb-3 text-xs text-gray-600">
                 <div className="flex items-center justify-center space-x-4">
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-[#f0edff] border border-[#3f2e73] rounded mr-1"></div>
+                    <div className="w-3 h-3 bg-[#f2fff1] border border-[#025545] rounded mr-1"></div>
                     <span>Available</span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-[#eae4ff] rounded mr-1"></div>
+                    <div className="w-3 h-3 bg-[#d7fec5] rounded mr-1"></div>
                     <span>Today</span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-3 h-3 bg-[#3f2e73] rounded mr-1"></div>
+                    <div className="w-3 h-3 bg-[#025545] rounded mr-1"></div>
                     <span>Selected</span>
                   </div>
                 </div>
@@ -1086,18 +1086,18 @@ export default function FreeAssessmentPage() {
                         }}
                         className={`text-center py-1 rounded-lg transition-all duration-200 text-xs ${
                           isSelected
-                            ? 'bg-[#3f2e73] text-white font-bold shadow-lg cursor-pointer border border-[#3f2e73]'
+                            ? 'bg-[#025545] text-white font-bold shadow-lg cursor-pointer border border-[#025545]'
                             : // Only highlight if: isConfigured is true AND slots > 0 AND actually available
                             (isConfigured && availableSlotsCount > 0 && isActuallyAvailable)
                               ? (isToday 
-                              ? 'bg-[#6d5ba8] text-white font-semibold shadow-md cursor-pointer border border-[#6d5ba8]'
-                                  : 'bg-[#f0edff] text-[#3f2e73] font-semibold cursor-pointer border border-[#3f2e73] hover:bg-[#e3dcff]')
+                              ? 'bg-[#189e4f] text-white font-semibold shadow-md cursor-pointer border border-[#189e4f]'
+                                  : 'bg-[#f2fff1] text-[#025545] font-semibold cursor-pointer border border-[#025545] hover:bg-[#d7fec5]')
                               : // Today without config or slots - just show it's today, not highlighted
                             isToday
-                                ? 'bg-[#eae4ff] text-[#3f2e73] font-semibold cursor-pointer border border-[#d8ccff]'
+                                ? 'bg-[#d7fec5] text-[#025545] font-semibold cursor-pointer border border-[#d7fec5]'
                               : // Future date without config or slots - clickable but not highlighted
                             isAvailable
-                                ? 'text-[#3f2e73] cursor-pointer border border-transparent hover:bg-[#f6f3ff]'
+                                ? 'text-[#025545] cursor-pointer border border-transparent hover:bg-[#f2fff1]'
                               : // Past date
                             'text-gray-300 cursor-not-allowed'
                         }`}
@@ -1108,10 +1108,10 @@ export default function FreeAssessmentPage() {
                           <div
                             className={`w-2 h-2 rounded-full mx-auto mt-1 shadow-sm ${
                               isSelected 
-                                ? 'bg-[#f0edff]' 
+                                ? 'bg-[#f2fff1]' 
                                 : (isToday && isActuallyAvailable)
                                   ? 'bg-white'
-                                  : 'bg-[#3f2e73]'
+                                  : 'bg-[#025545]'
                             }`}
                           ></div>
                         )}
@@ -1179,10 +1179,10 @@ export default function FreeAssessmentPage() {
                             disabled={isFullyBooked}
                             className={`p-2 text-xs rounded-lg border transition-colors ${
                               isSelected
-                                ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
+                                ? 'bg-[#025545] text-white border-[#025545]'
                                 : isFullyBooked
                                   ? 'bg-red-100 text-red-600 border-red-300 cursor-not-allowed'
-                                  : 'bg-white text-[#3f2e73] border-[#3f2e73] hover:bg-[#f0edff]'
+                                  : 'bg-white text-[#025545] border-[#025545] hover:bg-[#f2fff1]'
                             }`}
                             title={isFullyBooked ? 'Fully booked' : `Available: ${remainingSlots} slots left`}
                           >
@@ -1213,7 +1213,7 @@ export default function FreeAssessmentPage() {
                   <button
                     onClick={bookAssessment}
                       disabled={loading || !canBookFreeAssessment || !selectedTime}
-                    className="w-full bg-[#3f2e73] text-white py-3 px-6 rounded-lg font-semibold transition-colors hover:bg-[#1d1733] disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-[#025545] text-white py-3 px-6 rounded-lg font-semibold transition-colors hover:bg-[#012f23] disabled:bg-gray-400 disabled:cursor-not-allowed"
                       title={!canBookFreeAssessment ? 'You have used all 3 free assessments' : !selectedTime ? 'Please select a time slot' : ''}
                   >
                     {loading ? 'Booking...' : 'Book Free Assessment'}
@@ -1354,9 +1354,9 @@ export default function FreeAssessmentPage() {
                       router.push('/profile/sessions');
                     }}
                     className="w-full py-3 px-4 text-base font-semibold text-white rounded-lg transition-colors duration-200"
-                    style={{ backgroundColor: '#3f2e73' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                    style={{ backgroundColor: '#025545' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                   >
                     view Bookings
                   </button>

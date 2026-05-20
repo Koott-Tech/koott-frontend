@@ -1280,17 +1280,17 @@ const Guide = () => {
                   fontSize: "1rem",
                   fontWeight: 500,
                   color: "#fff",
-                  backgroundColor: "#3f2e73",
+                  backgroundColor: "#025545",
                   border: "none",
                   borderRadius: "8px",
                   cursor: "pointer",
                   transition: "background-color 0.2s"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#1d1733";
+                  e.currentTarget.style.backgroundColor = "#012f23";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#3f2e73";
+                  e.currentTarget.style.backgroundColor = "#025545";
                 }}
               >
                 Try Again
@@ -1322,7 +1322,7 @@ const Guide = () => {
                       width: '100%',
                       fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
                       fontWeight: 600,
-                      color: '#3f2e73',
+                      color: '#025545',
                       marginTop: section.key === 'child_specialist' ? '0.25rem' : '2.25rem',
                       marginBottom: '0.75rem',
                       paddingLeft: 'clamp(1rem, 2vw, 2rem)',
@@ -1372,7 +1372,7 @@ const Guide = () => {
                       } else if (name.includes('doug') || name.includes('douglas')) {
                         imageSrc = '/doug.png';
                       } else if (name.includes('ashley') || name.includes('ash') || name.includes('sarah')) {
-                        imageSrc = '/mainlogo.webp';
+                        imageSrc = '/logo.png';
                       } else if (name.includes('child') || name.includes('teen') || name.includes('liana')) {
                         imageSrc = '/kids.png';
                       }
@@ -1663,9 +1663,9 @@ const Guide = () => {
                         marginTop: '12px',
                         width: '100%',
                         padding: '8px 16px',
-                        backgroundColor: '#3f2e73',
+                        backgroundColor: '#025545',
                         color: '#ffffff',
-                        border: '2px solid #3f2e73',
+                        border: '2px solid #025545',
                         borderRadius: '8px',
                         fontSize: '0.875rem',
                         fontWeight: 600,
@@ -1675,16 +1675,16 @@ const Guide = () => {
                       }}
                       onMouseEnter={(e) => {
                         if (typeof window !== 'undefined' && window.innerWidth > 767) {
-                          e.target.style.backgroundColor = '#6b5299';
-                          e.target.style.borderColor = '#6b5299';
+                          e.target.style.backgroundColor = '#189e4f';
+                          e.target.style.borderColor = '#189e4f';
                           e.target.style.transform = 'translateY(-1px)';
                           e.target.style.boxShadow = '0 4px 8px rgba(107, 82, 153, 0.3)';
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (typeof window !== 'undefined' && window.innerWidth > 767) {
-                          e.target.style.backgroundColor = '#3f2e73';
-                          e.target.style.borderColor = '#3f2e73';
+                          e.target.style.backgroundColor = '#025545';
+                          e.target.style.borderColor = '#025545';
                           e.target.style.transform = 'translateY(0)';
                           e.target.style.boxShadow = '0 2px 4px rgba(63, 46, 115, 0.2)';
                         }
@@ -2244,7 +2244,7 @@ const Guide = () => {
                   marginTop: '0px',
                   marginBottom: '4px'
                 }}>
-                  <p style={{ margin: '0 0 8px 0', color: '#3f2e73', fontWeight: 600, fontSize: '16px' }}>
+                  <p style={{ margin: '0 0 8px 0', color: '#025545', fontWeight: 600, fontSize: '16px' }}>
                     Consultant Psychologist
                   </p>
                   {doctors[selected]?.experience_years && (
@@ -2254,7 +2254,7 @@ const Guide = () => {
                   )}
                   <p style={{ margin: 0, color: '#4b5563', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span>Starting from</span>
-                    <span style={{ color: "#3f2e73", fontWeight: 600 }}>
+                    <span style={{ color: "#025545", fontWeight: 600 }}>
                       {doctors[selected]?.price ? `₹${doctors[selected].price}` : (doctors[selected]?.individual_session_price ? `₹${doctors[selected].individual_session_price}` : '₹—')}
                     </span>
                   </p>
@@ -2299,7 +2299,7 @@ const Guide = () => {
               <div className="doctor-modal-buttons-container" style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, padding: '16px 24px' }}>
                 <button
                   className="doctor-modal-button"
-                  style={{ background: 'transparent', border: 'none', color: '#3f2e73', fontWeight: 600, fontSize: '14px', padding: '6px 0', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#025545', fontWeight: 600, fontSize: '14px', padding: '6px 0', cursor: 'pointer' }}
                   onClick={() => {
                     const prevIndex = selected === 0 ? doctors.length - 1 : selected - 1;
                     setSelected(prevIndex);
@@ -2320,7 +2320,7 @@ const Guide = () => {
 
                 <button
                   className="doctor-modal-button find-guide-button"
-                  style={{ background: '#3f2e73', color: '#fff', border: 'none', borderRadius: 14, padding: '16px 120px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: '#025545', color: '#fff', border: 'none', borderRadius: 14, padding: '16px 120px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}
                   onClick={() => {
                     const doctor = doctors[selected];
                     if (doctor) {
@@ -2341,7 +2341,7 @@ const Guide = () => {
 
                 <button
                   className="doctor-modal-button"
-                  style={{ background: 'transparent', border: 'none', color: '#3f2e73', fontWeight: 600, fontSize: '14px', padding: '6px 0', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#025545', fontWeight: 600, fontSize: '14px', padding: '6px 0', cursor: 'pointer' }}
                   onClick={() => {
                     const nextIndex = selected === doctors.length - 1 ? 0 : selected + 1;
                     setSelected(nextIndex);

@@ -49,9 +49,9 @@ async function getPsychologistBySlug(slug: string) {
 
 // Same image as page: profile_picture_url || cover_image_url, then normalizeImageUrl; make absolute for OG
 function toAbsoluteOgImage(rawUrl: string | null | undefined): string {
-  if (!rawUrl || typeof rawUrl !== 'string') return 'https://www.koott.in/favicon.png';
+  if (!rawUrl || typeof rawUrl !== 'string') return 'https://www.koott.in/logo.png';
   const normalized = normalizeImageUrl(rawUrl);
-  if (!normalized) return 'https://www.koott.in/favicon.png';
+  if (!normalized) return 'https://www.koott.in/logo.png';
   if (normalized.startsWith('http://') || normalized.startsWith('https://')) return normalized;
   return `https://www.koott.in${normalized.startsWith('/') ? normalized : `/${normalized}`}`;
 }
@@ -127,7 +127,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       url: `https://www.koott.in/online-child-psychologist/${slug}`,
       images: [
         {
-          url: 'https://www.koott.in/favicon.png',
+          url: 'https://www.koott.in/logo.png',
           width: 1200,
           height: 630,
           alt: 'Koott',
@@ -138,7 +138,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       card: 'summary_large_image',
       title: fallbackTitle,
       description: 'Book an online session with an experienced child psychologist at Koott. Professional counseling and therapy for children.',
-      images: ['https://www.koott.in/favicon.png'],
+      images: ['https://www.koott.in/logo.png'],
     },
     alternates: {
       canonical: `https://www.koott.in/online-child-psychologist/${slug}`,

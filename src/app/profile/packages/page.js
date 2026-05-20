@@ -100,7 +100,7 @@ export default function PackagesPage() {
     return (
       <div className="absolute inset-0 w-full flex items-center justify-center z-10" style={{ minHeight: 'calc(100vh - 8rem)' }}>
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#025545' }}></div>
           <p className="text-gray-600">Loading packages...</p>
         </div>
       </div>
@@ -118,9 +118,9 @@ export default function PackagesPage() {
           <button
             onClick={() => router.push('/online-child-psychologist')}
             className="mt-4 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-            style={{ backgroundColor: '#3f2e73' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+            style={{ backgroundColor: '#025545' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
           >
             Browse Therapists
           </button>
@@ -168,7 +168,7 @@ export default function PackagesPage() {
                       </p>
                       <p className="text-sm text-gray-600">
                         <span className="font-medium">Remaining:</span> 
-                        <span className={`ml-1 ${pkg.remaining_sessions > 0 ? 'text-[#3f2e73]' : 'text-red-600'}`}>
+                        <span className={`ml-1 ${pkg.remaining_sessions > 0 ? 'text-[#025545]' : 'text-red-600'}`}>
                           {pkg.remaining_sessions}
                         </span>
                       </p>

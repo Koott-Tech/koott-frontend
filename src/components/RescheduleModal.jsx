@@ -446,8 +446,8 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                 {/* Calendar Header */}
                 <div className="text-center mb-3 sm:mb-4">
                   {loadingAvailability && (
-                    <div className="mt-2 flex items-center justify-center text-xs" style={{ color: '#3f2e73' }}>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 mr-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+                    <div className="mt-2 flex items-center justify-center text-xs" style={{ color: '#025545' }}>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 mr-2" style={{ borderBottomColor: '#025545' }}></div>
                       Loading availability...
                     </div>
                   )}
@@ -569,29 +569,29 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                                 // Free assessment styling - same as free assessment page
                                 // Only highlight if: isConfigured is true AND slots > 0 AND actually available
                                 isSelected
-                                  ? 'bg-[#3f2e73] text-white font-bold shadow-lg cursor-pointer border border-[#3f2e73]'
+                                  ? 'bg-[#025545] text-white font-bold shadow-lg cursor-pointer border border-[#025545]'
                                   : (isToday && isConfigured && availableSlotsCount > 0 && shouldHighlight)
-                                    ? 'bg-[#6d5ba8] text-white font-semibold shadow-md cursor-pointer border border-[#6d5ba8]'
+                                    ? 'bg-[#189e4f] text-white font-semibold shadow-md cursor-pointer border border-[#189e4f]'
                                     : isToday && (!isConfigured || availableSlotsCount === 0 || !shouldHighlight)
-                                      ? 'bg-[#eae4ff] text-[#3f2e73] font-semibold cursor-pointer border border-[#d8ccff]'
+                                      ? 'bg-[#d7fec5] text-[#025545] font-semibold cursor-pointer border border-[#d7fec5]'
                                       : (isConfigured && availableSlotsCount > 0 && shouldHighlight)
-                                        ? 'bg-[#f0edff] text-[#3f2e73] font-semibold cursor-pointer border border-[#3f2e73] hover:bg-[#e3dcff]'
+                                        ? 'bg-[#f2fff1] text-[#025545] font-semibold cursor-pointer border border-[#025545] hover:bg-[#d7fec5]'
                                         : isAvailable
-                                          ? 'text-[#3f2e73] cursor-pointer border border-transparent hover:bg-[#f6f3ff]'
+                                          ? 'text-[#025545] cursor-pointer border border-transparent hover:bg-[#f2fff1]'
                                           : 'text-gray-300 cursor-not-allowed'
                               )
                               : (
                                 // Regular session styling - match therapist profile calendar theme
                             isSelected 
-                                  ? 'bg-[#3f2e73] text-white font-bold shadow-lg cursor-pointer border border-[#3f2e73]'
+                                  ? 'bg-[#025545] text-white font-bold shadow-lg cursor-pointer border border-[#025545]'
                                   : (isToday && isActuallyAvailable)
-                                    ? 'bg-[#6d5ba8] text-white font-semibold shadow-md cursor-pointer border border-[#6d5ba8]'
+                                    ? 'bg-[#189e4f] text-white font-semibold shadow-md cursor-pointer border border-[#189e4f]'
                               : isToday
-                                      ? 'bg-[#eae4ff] text-[#3f2e73] font-semibold cursor-pointer border border-[#d8ccff]'
+                                      ? 'bg-[#d7fec5] text-[#025545] font-semibold cursor-pointer border border-[#d7fec5]'
                                       : isActuallyAvailable
-                                        ? 'bg-[#f0edff] text-[#3f2e73] font-semibold cursor-pointer border border-[#3f2e73] hover:bg-[#e3dcff]'
+                                        ? 'bg-[#f2fff1] text-[#025545] font-semibold cursor-pointer border border-[#025545] hover:bg-[#d7fec5]'
                                 : isAvailable
-                                          ? 'text-[#3f2e73] cursor-pointer border border-transparent hover:bg-[#f6f3ff]'
+                                          ? 'text-[#025545] cursor-pointer border border-transparent hover:bg-[#f2fff1]'
                                       : 'text-gray-300 cursor-not-allowed'
                               )
                           }`}
@@ -601,14 +601,14 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                           {shouldHighlight && session.session_type === 'free_assessment' && isConfigured && availableSlotsCount > 0 && (
                             <div
                               className={`w-2 h-2 rounded-full mx-auto mt-1 shadow-sm ${
-                                isSelected ? 'bg-[#f0edff]' : 'bg-[#3f2e73]'
+                                isSelected ? 'bg-[#f2fff1]' : 'bg-[#025545]'
                               }`}
                             ></div>
                           )}
                           {shouldHighlight && session.session_type !== 'free_assessment' && (
                             <div
                               className={`w-2 h-2 rounded-full mx-auto mt-1 shadow-sm ${
-                                isSelected ? 'bg-[#f0edff]' : 'bg-[#3f2e73]'
+                                isSelected ? 'bg-[#f2fff1]' : 'bg-[#025545]'
                               }`}
                             ></div>
                           )}
@@ -666,7 +666,7 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                       return (
                         <div className="flex items-center justify-center py-4 min-h-[200px]">
                           <div className="flex flex-col items-center justify-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 mb-3" style={{ borderBottomColor: '#3f2e73' }}></div>
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 mb-3" style={{ borderBottomColor: '#025545' }}></div>
                             <span className="text-gray-600 text-sm">Creating a safe place for you</span>
                           </div>
                         </div>
@@ -713,10 +713,10 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                               disabled={isFullyBooked}
                               className={`p-2 text-xs rounded-lg border transition-colors ${
                                 isSelected
-                                  ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
+                                  ? 'bg-[#025545] text-white border-[#025545]'
                                   : isFullyBooked
                                     ? 'bg-red-100 text-red-600 border-red-300 cursor-not-allowed'
-                                    : 'bg-white text-[#3f2e73] border-[#3f2e73] hover:bg-[#f0edff]'
+                                    : 'bg-white text-[#025545] border-[#025545] hover:bg-[#f2fff1]'
                               }`}
                               title={isFullyBooked ? 'Fully booked' : `Available: ${remainingSlots} slots left`}
                             >
@@ -781,8 +781,8 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                                 onClick={() => handleTimeSelect(time)}
                                 className={`p-1 sm:p-2 rounded-lg border text-xs transition-all duration-200 w-full h-8 sm:h-10 flex items-center justify-center ${
                                   selectedTime === time
-                                    ? 'border-[#3f2e73] bg-[#3f2e73] text-white font-bold shadow-lg'
-                                    : 'border-gray-300 bg-white hover:border-[#3f2e73] text-gray-700'
+                                    ? 'border-[#025545] bg-[#025545] text-white font-bold shadow-lg'
+                                    : 'border-gray-300 bg-white hover:border-[#025545] text-gray-700'
                                 }`}
                               >
                                 {time}
@@ -797,12 +797,12 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
               {error && (
                 <div className={`p-2 sm:p-3 rounded-lg ${
                   error.includes('request sent') || error.includes('success')
-                    ? 'bg-[#f0edff] border border-[#3f2e73]'
+                    ? 'bg-[#f2fff1] border border-[#025545]'
                     : 'bg-red-50 border border-red-200'
                 }`}>
                   <p className={`text-xs sm:text-sm ${
                     error.includes('request sent') || error.includes('success')
-                      ? 'text-[#3f2e73]'
+                      ? 'text-[#025545]'
                       : 'text-red-700'
                   }`}>{error}</p>
                 </div>
@@ -818,17 +818,17 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
                 style={selectedDate && selectedTime && !isRescheduling 
-                  ? { backgroundColor: '#3f2e73' }
+                  ? { backgroundColor: '#025545' }
                   : {}
                 }
                 onMouseEnter={(e) => {
                   if (selectedDate && selectedTime && !isRescheduling) {
-                    e.currentTarget.style.backgroundColor = '#1d1733';
+                    e.currentTarget.style.backgroundColor = '#012f23';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedDate && selectedTime && !isRescheduling) {
-                    e.currentTarget.style.backgroundColor = '#3f2e73';
+                    e.currentTarget.style.backgroundColor = '#025545';
                   }
                 }}
               >
@@ -892,7 +892,7 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
                 value={rescheduleReason}
                 onChange={(e) => setRescheduleReason(e.target.value)}
                 placeholder="Please provide a reason for rescheduling (optional)..."
-                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent resize-none"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545] focus:border-transparent resize-none"
                 rows={3}
               />
             </div>
@@ -907,7 +907,7 @@ export default function RescheduleModal({ isOpen, onClose, session, onReschedule
               <button
                 onClick={proceedWithReschedule}
                 disabled={isRescheduling}
-                className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#3f2e73] text-white rounded-lg font-medium hover:bg-[#2d1f52] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-[#025545] text-white rounded-lg font-medium hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isRescheduling ? (
                   <>

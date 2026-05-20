@@ -446,17 +446,17 @@ export default function AuthModal({
       <div className={`w-full max-w-[520px] rounded-xl bg-white shadow-xl py-3 transition-all duration-500 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         {/* Header with logo and close */}
         <div className="relative px-3 py-3">
-          <div className="w-36 h-10 mx-auto bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('/mainlogo.webp')" }} />
+          <div className="w-36 h-10 mx-auto bg-center bg-no-repeat bg-contain" style={{ backgroundImage: "url('/logo.png')" }} />
           <button aria-label="Close" onClick={closeAndReset} className="absolute right-3 top-3 text-gray-500 hover:text-gray-700">✕</button>
         </div>
 
         {/* Title removed as requested */}
 
         {error && (
-          <div className="mx-4 mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm" style={{ color: '#2C1A4A' }}>{error}</div>
+          <div className="mx-4 mt-2 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm" style={{ color: '#012f23' }}>{error}</div>
         )}
         {showEmailExistsMessage && (
-          <div className="mx-4 mt-2 p-3 text-sm" style={{ color: '#2C1A4A' }}>
+          <div className="mx-4 mt-2 p-3 text-sm" style={{ color: '#012f23' }}>
             <p className="mb-2">An account with this email already exists. Please login instead.</p>
             <button
               type="button"
@@ -467,7 +467,7 @@ export default function AuthModal({
                 // Pre-fill email in login form
                 setEmail(signup.email);
               }}
-              className="w-full rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white hover:bg-[#2d1f52] transition-colors"
+              className="w-full rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white hover:bg-[#012f23] transition-colors"
             >
               Go to Login
             </button>
@@ -485,17 +485,17 @@ export default function AuthModal({
             forgotStep === 1 ? (
               <form onSubmit={handleSendOTP} className="space-y-3">
                 <div>
-                  <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" placeholder="Email address" />
+                  <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" placeholder="Email address" />
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={()=>{ setShowForgot(false); setForgotStep(1); setError(""); }} className="flex-1 rounded-md border px-3 py-2 text-sm">Back to login</button>
-                  <button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Sending…' : 'Send OTP'}</button>
+                  <button type="submit" disabled={isLoading} className="flex-1 rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Sending…' : 'Send OTP'}</button>
                 </div>
               </form>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-3">
                 <div>
-                  <input type="text" value={otp} onChange={(e)=>setOtp(e.target.value)} maxLength={6} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" placeholder="OTP code (6 digits)" />
+                  <input type="text" value={otp} onChange={(e)=>setOtp(e.target.value)} maxLength={6} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" placeholder="OTP code (6 digits)" />
                 </div>
                 <div>
                   <div className="relative">
@@ -510,7 +510,7 @@ export default function AuthModal({
                         setResetPasswordValidation(validation);
                       }} 
                       required 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="New password" 
                     />
                     <button 
@@ -539,7 +539,7 @@ export default function AuthModal({
                       value={confirmNewPassword} 
                       onChange={(e)=>setConfirmNewPassword(e.target.value)} 
                       required 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="Confirm new password" 
                     />
                     <button 
@@ -553,7 +553,7 @@ export default function AuthModal({
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={()=>{ setForgotStep(1); setOtp(""); setNewPassword(""); setConfirmNewPassword(""); setError(""); setResetPasswordValidation({ valid: false, unmetRequirements: [] }); setShowNewPassword(false); setShowConfirmNewPassword(false); }} className="flex-1 rounded-md border px-3 py-2 text-sm">Back</button>
-                  <button type="submit" disabled={isLoading || !resetPasswordValidation.valid || newPassword !== confirmNewPassword} className="flex-1 rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Resetting…' : 'Reset Password'}</button>
+                  <button type="submit" disabled={isLoading || !resetPasswordValidation.valid || newPassword !== confirmNewPassword} className="flex-1 rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Resetting…' : 'Reset Password'}</button>
                 </div>
               </form>
             )
@@ -565,11 +565,11 @@ export default function AuthModal({
                   {/* <GoogleSignIn onSuccess={()=>closeAndReset()} onError={(err)=>setError(err?.message || 'Google Sign-In failed.')} />
                   <div className="flex items-center gap-3"><div className="h-px flex-1 bg-gray-200" /><div className="text-xs text-gray-500">or</div><div className="h-px flex-1 bg-gray-200" /></div> */}
                   <div>
-                    <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" placeholder="Email" />
+                    <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" placeholder="Email" />
                   </div>
                   <div>
                     <div className="relative">
-                      <input type={showPassword ? 'text':'password'} value={password} onChange={(e)=>setPassword(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#3f2e73]" placeholder="Password" />
+                      <input type={showPassword ? 'text':'password'} value={password} onChange={(e)=>setPassword(e.target.value)} required className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#025545]" placeholder="Password" />
                       <button type="button" onClick={()=>setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm">{showPassword ? '🙈' : '👁️'}</button>
                     </div>
                   </div>
@@ -580,13 +580,13 @@ export default function AuthModal({
                         className="h-4 w-4 cursor-pointer"
                         checked={rememberMe}
                         onChange={(e)=>setRememberMe(e.target.checked)}
-                        style={{ accentColor: '#3f2e73' }}
+                        style={{ accentColor: '#025545' }}
                       />
                       <span>Remember me</span>
                     </label>
-                    <button type="button" onClick={()=>{ setShowForgot(true); setForgotStep(1); setError(""); }} className="text-[#3f2e73] hover:text-black">Forgot password?</button>
+                    <button type="button" onClick={()=>{ setShowForgot(true); setForgotStep(1); setError(""); }} className="text-[#025545] hover:text-black">Forgot password?</button>
                   </div>
-                  <button type="submit" disabled={isLoading} className="w-full rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Signing in…' : loginButtonText}</button>
+                  <button type="submit" disabled={isLoading} className="w-full rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">{isLoading ? 'Signing in…' : loginButtonText}</button>
                   <div className="text-center mt-3 text-sm text-gray-600">
                     Don&apos;t have an account?{" "}
                     <button
@@ -599,7 +599,7 @@ export default function AuthModal({
                           setSignup(prev => ({ ...prev, email: email }));
                         }
                       }}
-                      className="text-[#3f2e73] hover:text-black font-medium"
+                      className="text-[#025545] hover:text-black font-medium"
                     >
                       Sign up
                     </button>
@@ -613,7 +613,7 @@ export default function AuthModal({
                     <button
                       type="button"
                       onClick={()=>{ setActiveTab("login"); setError(""); }}
-                      className="text-[#3f2e73] hover:text-black font-medium"
+                      className="text-[#025545] hover:text-black font-medium"
                     >
                       Login
                     </button>
@@ -625,7 +625,7 @@ export default function AuthModal({
                       value={signup.fullName} 
                       onChange={(e)=>setSignup(s=>({...s, fullName: e.target.value}))} 
                       required 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="Full Name *" 
                     />
                   </div>
@@ -635,7 +635,7 @@ export default function AuthModal({
                       type="text" 
                       value={signup.childName} 
                       onChange={(e)=>setSignup(s=>({...s, childName: e.target.value}))} 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="Child Name (Optional)" 
                     />
                   </div>
@@ -644,7 +644,7 @@ export default function AuthModal({
                     <select
                       value={signup.countryCode}
                       onChange={(e)=>setSignup(s=>({...s, countryCode: e.target.value}))}
-                      className="rounded-md border border-gray-300 px-2 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73] text-sm"
+                      className="rounded-md border border-gray-300 px-2 py-2 outline-none focus:ring-2 focus:ring-[#025545] text-sm"
                       style={{ width: '100px', flexShrink: 0 }}
                     >
                       <option value="+91">🇮🇳 +91</option>
@@ -700,7 +700,7 @@ export default function AuthModal({
                         value={signup.phoneNumber} 
                         onChange={(e)=>setSignup(s=>({...s, phoneNumber: e.target.value.replace(/\D/g, '')}))} 
                         required
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 pl-10 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 pl-10 outline-none focus:ring-2 focus:ring-[#025545]" 
                         placeholder="Mobile Number *" 
                       />
                       <span className="absolute left-3 top-1/2 -translate-y-1/2">
@@ -713,7 +713,7 @@ export default function AuthModal({
                         >
                           <path
                             d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
-                            fill="#3f2e73"
+                            fill="#025545"
                           />
                         </svg>
                       </span>
@@ -726,7 +726,7 @@ export default function AuthModal({
                       value={signup.email} 
                       onChange={(e)=>setSignup(s=>({...s, email: e.target.value}))} 
                       required 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="Email *" 
                     />
                   </div>
@@ -736,7 +736,7 @@ export default function AuthModal({
                       value={signup.clientMessage} 
                       onChange={(e)=>setSignup(s=>({...s, clientMessage: e.target.value}))} 
                       rows={3}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:ring-2 focus:ring-[#025545]" 
                       placeholder="Any message for us? (Optional)" 
                     />
                   </div>
@@ -754,7 +754,7 @@ export default function AuthModal({
                           setSignupPasswordValidation(validation);
                         }} 
                         required 
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#3f2e73]" 
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 outline-none focus:ring-2 focus:ring-[#025545]" 
                         placeholder="Password *" 
                       />
                       <button 
@@ -785,9 +785,9 @@ export default function AuthModal({
                         checked={signup.termsAccepted}
                         onChange={(e)=>setSignup(s=>({...s, termsAccepted: e.target.checked}))}
                         required
-                        style={{ accentColor: '#3f2e73', cursor: 'pointer' }}
+                        style={{ accentColor: '#025545', cursor: 'pointer' }}
                       />
-                      <span>I accept the <a href="/terms-and-conditions" target="_blank" className="text-[#3f2e73] hover:underline">Terms and Conditions</a> *</span>
+                      <span>I accept the <a href="/terms-and-conditions" target="_blank" className="text-[#025545] hover:underline">Terms and Conditions</a> *</span>
                     </label>
                     <label className="flex items-start gap-2 text-sm cursor-pointer">
                       <input
@@ -796,9 +796,9 @@ export default function AuthModal({
                         checked={signup.therapyAgreementAccepted}
                         onChange={(e)=>setSignup(s=>({...s, therapyAgreementAccepted: e.target.checked}))}
                         required
-                        style={{ accentColor: '#3f2e73', cursor: 'pointer' }}
+                        style={{ accentColor: '#025545', cursor: 'pointer' }}
                       />
-                      <span>I accept the <a href="/therapy-agreement" target="_blank" className="text-[#3f2e73] hover:underline">Therapy Agreement</a> *</span>
+                      <span>I accept the <a href="/therapy-agreement" target="_blank" className="text-[#025545] hover:underline">Therapy Agreement</a> *</span>
                     </label>
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
@@ -806,7 +806,7 @@ export default function AuthModal({
                         className="h-4 w-4 cursor-pointer"
                         checked={rememberMe}
                         onChange={(e)=>setRememberMe(e.target.checked)}
-                        style={{ accentColor: '#3f2e73' }}
+                        style={{ accentColor: '#025545' }}
                       />
                       <span>Remember me</span>
                     </label>
@@ -824,7 +824,7 @@ export default function AuthModal({
                       !signup.termsAccepted || 
                       !signup.therapyAgreementAccepted
                     } 
-                    className="w-full rounded-md bg-[#3f2e73] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed mb-3"
+                    className="w-full rounded-md bg-[#025545] px-3 py-2 text-sm font-semibold text-white disabled:opacity-60 disabled:cursor-not-allowed mb-3"
                   >
                     {isLoading ? 'Creating…' : signupButtonText}
                   </button>

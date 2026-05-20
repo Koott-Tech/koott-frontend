@@ -42,7 +42,7 @@ export default function SessionsPage() {
       return {}; // No handlers on mobile
     }
     return {
-      onMouseEnter: (e) => e.currentTarget.style.borderColor = '#3f2e73',
+      onMouseEnter: (e) => e.currentTarget.style.borderColor = '#025545',
       onMouseLeave: (e) => e.currentTarget.style.borderColor = '#e5e7eb'
     };
   };
@@ -193,7 +193,7 @@ export default function SessionsPage() {
                     : 'bg-purple-100 text-gray-600 hover:text-gray-900'
                 }`}
                 style={isActive ? { 
-                  backgroundColor: '#3f2e73',
+                  backgroundColor: '#025545',
                   transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out'
                 } : {
                   transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out'
@@ -226,7 +226,7 @@ export default function SessionsPage() {
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'reschedule_requested':
-        return 'bg-[#f0edff] text-[#3f2e73]'; // Theme color instead of yellow
+        return 'bg-[#f2fff1] text-[#025545]'; // Theme color instead of yellow
       case 'rescheduled':
         return 'bg-yellow-100 text-yellow-800';
       case 'expired':
@@ -246,14 +246,14 @@ export default function SessionsPage() {
 
   const getStatusStyle = (status) => {
     if (status?.toLowerCase() === 'scheduled' || status?.toLowerCase() === 'booked') {
-      return { backgroundColor: '#3f2e73', color: 'white' };
+      return { backgroundColor: '#025545', color: 'white' };
     }
     if (status?.toLowerCase() === 'reschedule_requested' || status?.toLowerCase() === 'rescheduled') {
       return {};
     }
     // Default fallback for unknown statuses
     if (!status || status.trim() === '') {
-      return { backgroundColor: '#3f2e73', color: 'white' };
+      return { backgroundColor: '#025545', color: 'white' };
     }
     return {};
   };
@@ -530,7 +530,7 @@ export default function SessionsPage() {
     return (
       <div className="absolute inset-0 w-full flex items-center justify-center z-10" style={{ minHeight: 'calc(100vh - 8rem)' }}>
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#025545' }}></div>
           <p className="text-gray-600">Loading sessions...</p>
         </div>
       </div>
@@ -558,7 +558,7 @@ export default function SessionsPage() {
           isLoadingPackages ? (
             <div className="absolute inset-0 w-full flex items-center justify-center z-10" style={{ minHeight: 'calc(100vh - 8rem)' }}>
               <div className="flex flex-col items-center justify-center text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#025545' }}></div>
                 <p className="text-gray-600">Loading packages...</p>
               </div>
             </div>
@@ -572,10 +572,10 @@ export default function SessionsPage() {
               <button
                 onClick={() => router.push('/online-child-psychologist')}
                 className="text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors duration-200 flex items-center gap-2 mx-auto cursor-pointer"
-                style={{ backgroundColor: '#3f2e73' }}
+                style={{ backgroundColor: '#025545' }}
                 {...(typeof window !== 'undefined' && window.innerWidth >= 1024 ? {
-                  onMouseEnter: (e) => e.currentTarget.style.backgroundColor = '#1d1733',
-                  onMouseLeave: (e) => e.currentTarget.style.backgroundColor = '#3f2e73'
+                  onMouseEnter: (e) => e.currentTarget.style.backgroundColor = '#012f23',
+                  onMouseLeave: (e) => e.currentTarget.style.backgroundColor = '#025545'
                 } : {})}
               >
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -619,13 +619,13 @@ export default function SessionsPage() {
                             </span>
                             <span 
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                              style={{ backgroundColor: '#3f2e73' }}
+                              style={{ backgroundColor: '#025545' }}
                             >
                               {pkg.status === 'active' ? 'Active' : pkg.status}
                             </span>
                           </div>
                           <span 
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${remainingSessions > 0 ? 'text-[#3f2e73] bg-purple-50 border border-purple-200' : 'text-red-600 bg-red-50 border border-red-200'} ${remainingSessionsForBooking > 0 && pkg.status === 'active' && completedSessions > 0 && !hasUpcomingSessionsForPackage(pkg.package_id) ? 'ml-auto mr-2' : ''}`}
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${remainingSessions > 0 ? 'text-[#025545] bg-purple-50 border border-purple-200' : 'text-red-600 bg-red-50 border border-red-200'} ${remainingSessionsForBooking > 0 && pkg.status === 'active' && completedSessions > 0 && !hasUpcomingSessionsForPackage(pkg.package_id) ? 'ml-auto mr-2' : ''}`}
                           >
                             Remaining: {remainingSessions}
                           </span>
@@ -686,9 +686,9 @@ export default function SessionsPage() {
                                 }
                               }}
                               className="flex-1 text-white px-2 py-1 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                              style={{ backgroundColor: '#3f2e73' }}
-                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                              style={{ backgroundColor: '#025545' }}
+                              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                             >
                               <Calendar className="h-3 w-3" />
                               Book Remaining Sessions
@@ -763,7 +763,7 @@ export default function SessionsPage() {
                                   </span>
                                   <span 
                                     className="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium text-white"
-                                    style={{ backgroundColor: '#3f2e73' }}
+                                    style={{ backgroundColor: '#025545' }}
                                   >
                                     {pkg.status === 'active' ? 'Active' : pkg.status}
                                   </span>
@@ -772,7 +772,7 @@ export default function SessionsPage() {
                                   </span>
                                 </div>
                                 <span 
-                                  className={`inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${remainingSessions > 0 ? 'text-[#3f2e73] bg-purple-50 border border-purple-200' : 'text-red-600 bg-red-50 border border-red-200'} ${remainingSessionsForBooking > 0 && pkg.status === 'active' && completedSessions > 0 && !hasUpcomingSessionsForPackage(pkg.package_id) ? 'mr-auto ml-4' : ''}`}
+                                  className={`inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-0.5 rounded-full text-xs font-medium ${remainingSessions > 0 ? 'text-[#025545] bg-purple-50 border border-purple-200' : 'text-red-600 bg-red-50 border border-red-200'} ${remainingSessionsForBooking > 0 && pkg.status === 'active' && completedSessions > 0 && !hasUpcomingSessionsForPackage(pkg.package_id) ? 'mr-auto ml-4' : ''}`}
                                 >
                                   Remaining: {remainingSessions}
                                 </span>
@@ -808,9 +808,9 @@ export default function SessionsPage() {
                                     }
                                   }}
                                   className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-                                  style={{ backgroundColor: '#3f2e73' }}
-                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                                  style={{ backgroundColor: '#025545' }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                                 >
                                   <Calendar className="h-4 w-4" />
                                   Book Remaining Sessions
@@ -856,10 +856,10 @@ export default function SessionsPage() {
             <button
               onClick={() => router.push('/online-child-psychologist')}
               className="text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium transition-colors duration-200 flex items-center gap-2 mx-auto cursor-pointer"
-              style={{ backgroundColor: '#3f2e73' }}
+              style={{ backgroundColor: '#025545' }}
               {...(typeof window !== 'undefined' && window.innerWidth >= 1024 ? {
-                onMouseEnter: (e) => e.currentTarget.style.backgroundColor = '#1d1733',
-                onMouseLeave: (e) => e.currentTarget.style.backgroundColor = '#3f2e73'
+                onMouseEnter: (e) => e.currentTarget.style.backgroundColor = '#012f23',
+                onMouseLeave: (e) => e.currentTarget.style.backgroundColor = '#025545'
               } : {})}
             >
               <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -912,7 +912,7 @@ export default function SessionsPage() {
                           {session.session_type === 'free_assessment' ? (
                             <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden">
                               <img 
-                                src="/favicon.png"
+                                src="/logo.png"
                                 alt="Free Assessment"
                                 className="w-full h-full object-cover"
                               />
@@ -1054,9 +1054,9 @@ export default function SessionsPage() {
                                       <button
                                         onClick={() => router.push(`/online-child-psychologist/${slug}?package_id=${session.package_id}`)}
                                         className="flex-1 text-white px-2 py-1 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
-                                        style={{ backgroundColor: '#3f2e73' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                                        style={{ backgroundColor: '#025545' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                                       >
                                         <Calendar className="h-3 w-3" />
                                         Book Next Session
@@ -1085,7 +1085,7 @@ export default function SessionsPage() {
                           {session.session_type === 'free_assessment' ? (
                             <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden">
                               <img 
-                                src="/favicon.png"
+                                src="/logo.png"
                                 alt="Free Assessment"
                                 className="w-full h-full object-cover"
                               />
@@ -1138,17 +1138,17 @@ export default function SessionsPage() {
                                             }}
                                           />
                                           {showTooltip === session.id && (
-                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-white border-2 border-[#3f2e73] text-gray-900 text-xs rounded-lg shadow-lg z-50 tooltip-container">
+                                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-white border-2 border-[#025545] text-gray-900 text-xs rounded-lg shadow-lg z-50 tooltip-container">
                                               <div className="space-y-1.5">
-                                                <p className="font-semibold mb-2 text-[#3f2e73]">Reschedule Request Rules:</p>
+                                                <p className="font-semibold mb-2 text-[#025545]">Reschedule Request Rules:</p>
                                                 <p>• If reschedule is within 24 hours of session OR</p>
                                                 <p>• If this is your 2nd or more reschedule</p>
                                                 <p className="mt-2 font-semibold">→ Admin approval is required</p>
                                                 <p className="mt-2">If approved by admin, your session will be rescheduled.</p>
-                                                <p className="mt-2 text-[#3f2e73]">If you don't receive a response, please contact us via WhatsApp.</p>
+                                                <p className="mt-2 text-[#025545]">If you don't receive a response, please contact us via WhatsApp.</p>
                                               </div>
                                               {/* Tooltip arrow */}
-                                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#3f2e73]"></div>
+                                              <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#025545]"></div>
                                             </div>
                                           )}
                                         </div>
@@ -1310,9 +1310,9 @@ export default function SessionsPage() {
                                           <button
                                             onClick={() => router.push(`/online-child-psychologist/${slug}?package_id=${session.package_id}`)}
                                             className="text-white px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 cursor-pointer"
-                                            style={{ backgroundColor: '#3f2e73' }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                                            style={{ backgroundColor: '#025545' }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                                           >
                                             <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                                             Book Next Session

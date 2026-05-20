@@ -329,7 +329,7 @@ export default function AdminEditSessionModal({
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300">
       <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-100 border border-white/20">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] flex-shrink-0">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md text-white shadow-inner">
               <Calendar className="h-6 w-6" />
@@ -373,7 +373,7 @@ export default function AdminEditSessionModal({
               {/* Psychologist Display with Assign Button */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <UserCheck className="h-4 w-4 text-[#3f2e73]" />
+                  <UserCheck className="h-4 w-4 text-[#025545]" />
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                     Assigned Specialist
                   </label>
@@ -381,7 +381,7 @@ export default function AdminEditSessionModal({
                 
                 {/* Current Doctor Display */}
                 <div className="group relative">
-                  <div className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white text-slate-900 font-bold text-sm shadow-sm group-hover:border-[#3f2e73]/30 transition-all">
+                  <div className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white text-slate-900 font-bold text-sm shadow-sm group-hover:border-[#025545]/30 transition-all">
                     {(() => {
                       if (psychologistId) {
                         const selectedPsych = psychologists.find(p => p.id === psychologistId);
@@ -419,7 +419,7 @@ export default function AdminEditSessionModal({
                         placeholder="Filter by name..."
                         value={searchPsychologist}
                         onChange={(e) => setSearchPsychologist(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2.5 border border-slate-100 rounded-xl bg-slate-50 focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all text-sm outline-none"
+                        className="w-full pl-10 pr-3 py-2.5 border border-slate-100 rounded-xl bg-slate-50 focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all text-sm outline-none"
                       />
                     </div>
                     <select
@@ -431,7 +431,7 @@ export default function AdminEditSessionModal({
                         }
                       }}
                       required
-                      className="w-full px-3 py-3 border border-slate-200 rounded-xl bg-white focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all text-sm outline-none font-medium cursor-pointer"
+                      className="w-full px-3 py-3 border border-slate-200 rounded-xl bg-white focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all text-sm outline-none font-medium cursor-pointer"
                       disabled={isLoading || isLoadingData}
                     >
                       <option value="">Select Specialist</option>
@@ -448,7 +448,7 @@ export default function AdminEditSessionModal({
               {/* Client Display (Read-only) */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <User className="h-4 w-4 text-[#3f2e73]" />
+                  <User className="h-4 w-4 text-[#025545]" />
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                     Client Reference
                   </label>
@@ -483,7 +483,7 @@ export default function AdminEditSessionModal({
             {/* Date and Time Group */}
             <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 text-[#3f2e73]" />
+                <Clock className="h-3.5 w-3.5 text-[#025545]" />
                 Schedule Settings
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -498,7 +498,7 @@ export default function AdminEditSessionModal({
                       value={scheduledDate}
                       onChange={(e) => setScheduledDate(e.target.value)}
                       required
-                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                       disabled={isLoading}
                     />
                   </div>
@@ -514,7 +514,7 @@ export default function AdminEditSessionModal({
                       value={scheduledTime}
                       onChange={(e) => setScheduledTime(e.target.value)}
                       required
-                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                       disabled={isLoading}
                     />
                   </div>
@@ -529,7 +529,7 @@ export default function AdminEditSessionModal({
                       type="date"
                       value={originalScheduledDate}
                       onChange={(e) => setOriginalScheduledDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold bg-slate-50 text-slate-500 focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                      className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold bg-slate-50 text-slate-500 focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                       disabled={isLoading}
                     />
                   </div>
@@ -541,7 +541,7 @@ export default function AdminEditSessionModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Tag className="h-4 w-4 text-[#3f2e73]" />
+                  <Tag className="h-4 w-4 text-[#025545]" />
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                     Life-cycle Status
                   </label>
@@ -550,7 +550,7 @@ export default function AdminEditSessionModal({
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   required
-                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none cursor-pointer"
+                  className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none cursor-pointer"
                   disabled={isLoading}
                 >
                   {availableStatuses.map(statusOption => (
@@ -564,7 +564,7 @@ export default function AdminEditSessionModal({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="h-4 w-4 text-[#3f2e73]" />
+                    <DollarSign className="h-4 w-4 text-[#025545]" />
                     <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                       Gross Price
                     </label>
@@ -577,7 +577,7 @@ export default function AdminEditSessionModal({
                       onChange={(e) => setPrice(e.target.value)}
                       min="0"
                       step="0.01"
-                      className="w-full pl-10 pr-4 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                      className="w-full pl-10 pr-4 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                       disabled={isLoading}
                     />
                   </div>
@@ -606,13 +606,13 @@ export default function AdminEditSessionModal({
             </div>
 
             {/* Payment Details Section */}
-            <div className="p-8 bg-[#3f2e73]/5 border border-[#3f2e73]/10 rounded-[2.5rem] space-y-8">
+            <div className="p-8 bg-[#025545]/5 border border-[#025545]/10 rounded-[2.5rem] space-y-8">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-bold text-[#3f2e73] flex items-center gap-3">
+                <div className="text-sm font-bold text-[#025545] flex items-center gap-3">
                   <CreditCard className="h-5 w-5" />
                   Financial Records
                 </div>
-                <div className="px-3 py-1 bg-white border border-[#3f2e73]/10 rounded-full text-[10px] font-bold text-[#3f2e73] uppercase tracking-widest">
+                <div className="px-3 py-1 bg-white border border-[#025545]/10 rounded-full text-[10px] font-bold text-[#025545] uppercase tracking-widest">
                   Secure Audit
                 </div>
               </div>
@@ -625,7 +625,7 @@ export default function AdminEditSessionModal({
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-semibold text-sm outline-none focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all"
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-semibold text-sm outline-none focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all"
                     disabled={isLoading}
                   >
                     <option value="cash">Cash Settlement</option>
@@ -645,7 +645,7 @@ export default function AdminEditSessionModal({
                     type="text"
                     value={transactionId}
                     onChange={(e) => setTransactionId(e.target.value)}
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm outline-none focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all"
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-bold text-sm outline-none focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all"
                     placeholder="Enter txn ID"
                     disabled={isLoading}
                   />
@@ -659,7 +659,7 @@ export default function AdminEditSessionModal({
                     type="text"
                     value={razorpayOrderId}
                     onChange={(e) => setRazorpayOrderId(e.target.value)}
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-mono text-xs focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-mono text-xs focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                     placeholder="order_..."
                     disabled={isLoading}
                   />
@@ -672,7 +672,7 @@ export default function AdminEditSessionModal({
                     type="text"
                     value={razorpayPaymentId}
                     onChange={(e) => setRazorpayPaymentId(e.target.value)}
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-mono text-xs focus:ring-4 focus:ring-[#3f2e73]/10 focus:border-[#3f2e73] transition-all outline-none"
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-mono text-xs focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                     placeholder="pay_..."
                     disabled={isLoading}
                   />
@@ -697,7 +697,7 @@ export default function AdminEditSessionModal({
             form={undefined /* attached via button below */}
             onClick={(e) => { e.preventDefault(); handleSubmit(e); }}
             disabled={isLoading || isLoadingData}
-            className="px-10 py-3 bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] text-white rounded-2xl hover:shadow-xl hover:shadow-[#3f2e73]/20 transition-all disabled:opacity-50 disabled:scale-[0.98] flex items-center gap-3 text-sm font-bold active:scale-95 shadow-lg shadow-[#3f2e73]/10"
+            className="px-10 py-3 bg-gradient-to-r from-[#025545] to-[#189e4f] text-white rounded-2xl hover:shadow-xl hover:shadow-[#025545]/20 transition-all disabled:opacity-50 disabled:scale-[0.98] flex items-center gap-3 text-sm font-bold active:scale-95 shadow-lg shadow-[#025545]/10"
           >
             {isLoading ? (
               <>

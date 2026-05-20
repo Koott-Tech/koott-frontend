@@ -36,7 +36,7 @@ export default function CareerPage() {
   if (isLoading) {
     return (
       <div className="w-full min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" aria-label="Loading" />
+        <Loader2 className="h-10 w-10 animate-spin text-[#025545]" aria-label="Loading" />
       </div>
     );
   }
@@ -64,12 +64,12 @@ export default function CareerPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-16">
         <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#3f2e73]/10 blur-3xl" />
+            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#025545]/10 blur-3xl" />
             <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full bg-gray-200/40 blur-3xl" />
           </div>
 
           <div className="relative p-6 sm:p-10">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-[#3f2e73]">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-wide text-[#025545]">
               <Sparkles className="h-4 w-4" />
               We’re hiring
             </div>
@@ -87,7 +87,7 @@ export default function CareerPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search roles by title, department, or location…"
-                  className="w-full rounded-xl border border-gray-200 bg-white/80 px-10 py-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/30"
+                  className="w-full rounded-xl border border-gray-200 bg-white/80 px-10 py-3 text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30"
                 />
               </div>
               <div className="text-xs text-gray-500">
@@ -124,14 +124,14 @@ export default function CareerPage() {
                 <li key={job.id}>
                   <Link
                     href={`/career/${job.slug}`}
-                    className="group block h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-[#3f2e73]/25 transition-all"
+                    className="group block h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-[#025545]/25 transition-all"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div
                           role="heading"
                           aria-level={2}
-                          className="text-xl sm:text-2xl font-semibold text-gray-900 group-hover:text-[#3f2e73] transition-colors"
+                          className="text-xl sm:text-2xl font-semibold text-gray-900 group-hover:text-[#025545] transition-colors"
                         >
                           {job.title}
                         </div>
@@ -140,13 +140,13 @@ export default function CareerPage() {
                             <p className="text-[13px] leading-5 text-gray-600 line-clamp-3">
                               {job.short_description}
                             </p>
-                            <div className="mt-1 text-[13px] font-medium text-[#3f2e73]">
+                            <div className="mt-1 text-[13px] font-medium text-[#025545]">
                               Read more
                             </div>
                           </div>
                         )}
                       </div>
-                      <span className="inline-flex items-center gap-1 text-sm font-medium text-[#3f2e73] shrink-0">
+                      <span className="inline-flex items-center gap-1 text-sm font-medium text-[#025545] shrink-0">
                         View
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </span>

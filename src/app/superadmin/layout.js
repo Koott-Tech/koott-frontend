@@ -166,7 +166,7 @@ export default function SuperAdminLayout({ children }) {
   if (authLoading) {
     return (
       <div className="fixed inset-0 w-screen h-screen flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -205,7 +205,7 @@ export default function SuperAdminLayout({ children }) {
         
         {/* Sidebar Panel */}
         <div 
-          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#3f2e73]/20 will-change-transform ${
+          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#025545]/20 will-change-transform ${
             isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
           } lg:left-0 lg:right-auto lg:translate-x-0`}
           style={{ 
@@ -322,7 +322,7 @@ export default function SuperAdminLayout({ children }) {
       </div>
 
       {/* Desktop sidebar (toggleable on lg and above) */}
-      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#3f2e73]/20 z-40 transition-transform duration-300 ease-in-out ${
+      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#025545]/20 z-40 transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full w-full">
@@ -334,7 +334,7 @@ export default function SuperAdminLayout({ children }) {
               aria-label="Koott - Go to super admin dashboard"
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott"
                 width={120}
                 height={40}

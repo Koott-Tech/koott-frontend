@@ -44,7 +44,7 @@ export default function Hero() {
                 <span className="hero-badge-text text-xs sm:text-sm">Convenient, proven online care for brighter future</span>
               </div>
               
-              <h1 className="hero-title mt-4 text-4xl md:text-5xl lg:text-6xl font-medium break-words" style={{ color: '#2C1A4A', fontWeight: 600}}>
+              <h1 className="hero-title mt-4 text-4xl md:text-5xl lg:text-6xl font-medium break-words" style={{ color: '#012f23', fontWeight: 600}}>
                 Your Partner in <br /> Child Counseling <br /> & Parenting Support
               </h1>
               <p className="hero-description p1 mt-6 md:mt-6 text-base md:text-lg">
@@ -53,11 +53,11 @@ export default function Hero() {
               <div className="hero-buttons mt-6 md:mt-8 flex flex-col items-center gap-4 sm:flex-row sm:gap-6 sm:justify-start">
                 <button
                   onClick={handleGetStartedClick}
-                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-normal text-white shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#593494]/40"
-                  style={{ backgroundColor: '#3f2e73' }}
+                  className="inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-normal text-white shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#189e4f]/40"
+                  style={{ backgroundColor: '#025545' }}
                   type="button"
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                 >
                   <span style={{ fontWeight: 500 }}>Get Started</span>
                 </button>

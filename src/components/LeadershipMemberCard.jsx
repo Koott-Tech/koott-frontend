@@ -41,7 +41,7 @@ export default function LeadershipMemberCard({
   // Natural height only when there is a photo; initials still use a fixed tile.
   const imageShellClass =
     naturalImageHeight && image
-      ? "w-full overflow-hidden rounded-[10px] bg-gradient-to-br from-[#3f2e73]/10 to-[#3f2e73]/5"
+      ? "w-full overflow-hidden rounded-[10px] bg-gradient-to-br from-[#025545]/10 to-[#025545]/5"
       : "h-80 w-full overflow-hidden rounded-[10px] leadership-image-container";
 
   return (
@@ -63,10 +63,10 @@ export default function LeadershipMemberCard({
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#3f2e73]/12 to-[#3f2e73]/5"
+            className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#025545]/12 to-[#025545]/5"
             aria-hidden
           >
-            <span className="text-4xl font-medium text-[#3f2e73] tracking-tight select-none">
+            <span className="text-4xl font-medium text-[#025545] tracking-tight select-none">
               {initialsFromName(name)}
             </span>
           </div>

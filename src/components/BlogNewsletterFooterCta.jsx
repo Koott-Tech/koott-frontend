@@ -85,11 +85,11 @@ export default function BlogNewsletterFooterCta() {
       <div
         className="w-full py-12 md:py-14 px-8 md:px-16 lg:px-24"
         style={{
-          background: "linear-gradient(to bottom, #f5f1ff, #eae4ff, #e8e0f5)",
+          background: "linear-gradient(to bottom, #f2fff1, #d7fec5, #d7fec5)",
         }}
       >
         <div className="text-center max-w-2xl mx-auto px-4">
-          <p className="text-sm font-semibold text-[#3f2e73] mb-2">Confused where to start</p>
+          <p className="text-sm font-semibold text-[#025545] mb-2">Confused where to start</p>
           <h4 className="mb-2 font-semibold text-gray-900 text-xl sm:text-[1.35rem] md:text-[1.5rem] leading-snug tracking-tight">
             Start Creating a Better Family Life Today
           </h4>
@@ -104,9 +104,9 @@ export default function BlogNewsletterFooterCta() {
               setOpen(true);
             }}
             className="text-white px-5 py-2.5 md:px-7 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200 shadow-sm"
-            style={{ backgroundColor: "#3f2e73" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1d1733")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3f2e73")}
+            style={{ backgroundColor: "#025545" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#012f23")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#025545")}
           >
             Subscribe to updates
           </button>
@@ -164,7 +164,7 @@ export default function BlogNewsletterFooterCta() {
                   <button
                     type="button"
                     onClick={close}
-                    className="mt-6 w-full rounded-xl bg-[#3f2e73] py-3 text-sm font-semibold text-white hover:bg-[#32285f]"
+                    className="mt-6 w-full rounded-xl bg-[#025545] py-3 text-sm font-semibold text-white hover:bg-[#012f23]"
                   >
                     OK
                   </button>
@@ -198,7 +198,7 @@ export default function BlogNewsletterFooterCta() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20"
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-[15px] text-gray-900 placeholder:text-gray-400 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/20"
                   />
 
                   <label className="flex cursor-pointer items-start gap-3 text-left text-sm leading-relaxed text-gray-600">
@@ -206,7 +206,7 @@ export default function BlogNewsletterFooterCta() {
                       type="checkbox"
                       checked={agreed}
                       onChange={(e) => setAgreed(e.target.checked)}
-                      className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-[#3f2e73] focus:ring-[#3f2e73]"
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-[#025545] focus:ring-[#025545]"
                     />
                     <span>I agree to receive emails (max 1/month). I can unsubscribe anytime.</span>
                   </label>
@@ -220,7 +220,7 @@ export default function BlogNewsletterFooterCta() {
                   <button
                     type="submit"
                     disabled={!agreed || submitting}
-                    className="w-full rounded-xl bg-[#3f2e73] py-3 text-[15px] font-semibold text-white shadow-sm hover:bg-[#32285f] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="w-full rounded-xl bg-[#025545] py-3 text-[15px] font-semibold text-white shadow-sm hover:bg-[#012f23] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {submitting ? "Saving…" : "Continue on WhatsApp"}
                   </button>

@@ -627,9 +627,9 @@ export default function BookingsPage() {
         if (isBookingPastDue(booking)) {
           return <Clock className="h-4 w-4 text-slate-500" />;
         }
-        return <Clock className="h-4 w-4 text-[#3f2e73]" />;
+        return <Clock className="h-4 w-4 text-[#025545]" />;
       default:
-        return <Clock className="h-4 w-4 text-[#3f2e73]" />;
+        return <Clock className="h-4 w-4 text-[#025545]" />;
     }
   };
 
@@ -656,7 +656,7 @@ export default function BookingsPage() {
         if (isBookingPastDue(booking)) {
           return 'bg-slate-100 text-slate-700';
         }
-        return 'bg-[#3f2e73]/10 text-[#3f2e73]';
+        return 'bg-[#025545]/10 text-[#025545]';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -862,7 +862,7 @@ export default function BookingsPage() {
   ) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -875,7 +875,7 @@ export default function BookingsPage() {
         <div>
           <div className="flex items-center gap-3">
             <h6>Bookings Management</h6>
-            <span className="inline-flex items-center rounded-full bg-[#3f2e73]/10 px-2.5 py-1 text-xs font-semibold text-[#3f2e73]">
+            <span className="inline-flex items-center rounded-full bg-[#025545]/10 px-2.5 py-1 text-xs font-semibold text-[#025545]">
               {totalInRange} {totalInRange === 1 ? 'booking' : 'bookings'}
               <span className="ml-1 font-normal opacity-70">
                 · in selected range{showWixView ? ' (Wix)' : ''}
@@ -891,14 +891,14 @@ export default function BookingsPage() {
             <>
               <button
                 onClick={() => setIsManualBookingOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73] transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Create Manual Booking
               </button>
               <button
                 onClick={() => setIsAddRecordOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73] transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Add record
@@ -920,7 +920,7 @@ export default function BookingsPage() {
                 type="button"
                 onClick={handleWixSync}
                 disabled={wixSyncing}
-                className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] disabled:opacity-50 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] disabled:opacity-50 transition-colors"
               >
                 {wixSyncing ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -961,7 +961,7 @@ export default function BookingsPage() {
                     placeholder="Search by client name or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -997,8 +997,8 @@ export default function BookingsPage() {
                     relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
                     transition-all duration-200 ease-out
                     ${isActive
-                      ? 'bg-[#3f2e73] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8 active:bg-[#3f2e73]/12'
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
                     }
                   `}
                 >
@@ -1028,8 +1028,8 @@ export default function BookingsPage() {
                     relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
                     transition-all duration-200 ease-out
                     ${isActive
-                      ? 'bg-[#3f2e73] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8 active:bg-[#3f2e73]/12'
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
                     }
                   `}
                 >
@@ -1080,7 +1080,7 @@ export default function BookingsPage() {
                   <tr>
                     <td colSpan={6} className="px-6 py-10 text-center">
                       <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                         <span className="text-sm font-medium">Processing...</span>
                       </div>
                     </td>
@@ -1145,7 +1145,7 @@ export default function BookingsPage() {
                           {canBookNext ? (
                             <button
                               onClick={() => openBookNextFromPackage(pkg)}
-                              className="inline-flex items-center px-3 py-1.5 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] transition-colors"
+                              className="inline-flex items-center px-3 py-1.5 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors"
                             >
                               Book next session
                             </button>
@@ -1191,7 +1191,7 @@ export default function BookingsPage() {
                   <tr>
                     <td colSpan={7} className="px-6 py-10 text-center">
                       <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                         <span className="text-sm font-medium">Loading…</span>
                       </div>
                     </td>
@@ -1212,7 +1212,7 @@ export default function BookingsPage() {
                             {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : '—')}
                           </div>
                           {row.session_type === 'package' && row.package_session_number && (
-                            <span className="text-[10px] font-semibold text-[#3f2e73] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                            <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
                               {row.package_session_number} of {row.session_count || '?'}
                             </span>
                           )}
@@ -1386,7 +1386,7 @@ export default function BookingsPage() {
                 <tr>
                   <td colSpan={8} className="px-6 py-10 text-center">
                     <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                      <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                       <span className="text-sm font-medium">Processing...</span>
                     </div>
                   </td>
@@ -1428,7 +1428,7 @@ export default function BookingsPage() {
                             const hasTotal = totalSessions > 0;
                             const hasSessionNum = sessionNumber !== undefined && sessionNumber !== null;
                             return (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#025545]/10 text-[#025545]">
                                 {packageLabel}
                                 {hasSessionNum && hasTotal && <span className="ml-1">({sessionNumber}/{totalSessions})</span>}
                                 {hasTotal && !hasSessionNum && <span className="ml-1">({totalSessions})</span>}
@@ -1682,8 +1682,8 @@ export default function BookingsPage() {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-[#025545]" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>Session Details</div>
@@ -1702,7 +1702,7 @@ export default function BookingsPage() {
             <div className="flex-1 overflow-y-auto p-6">
               {sessionDetailsLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" />
+                  <Loader2 className="h-10 w-10 animate-spin text-[#025545]" />
                 </div>
               ) : selectedSession ? (
               <div className="space-y-5">
@@ -1890,7 +1890,7 @@ export default function BookingsPage() {
                       {summary && (
                         <div>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session summary — visible to client</p>
-                          <div className="bg-[#3f2e73]/5 border border-[#3f2e73]/20 rounded-lg p-3">
+                          <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{summary}</p>
                           </div>
                         </div>
@@ -1898,7 +1898,7 @@ export default function BookingsPage() {
                       {report && (
                         <div>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session report — visible to client</p>
-                          <div className="bg-[#3f2e73]/5 border border-[#3f2e73]/20 rounded-lg p-3">
+                          <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{report}</p>
                           </div>
                         </div>
@@ -1927,7 +1927,7 @@ export default function BookingsPage() {
                   <button
                     type="button"
                     onClick={() => setIsBookNextOpen(true)}
-                    className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors text-sm font-medium"
+                    className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm font-medium"
                   >
                     Book next session
                   </button>
@@ -1935,7 +1935,7 @@ export default function BookingsPage() {
               </div>
               <button
                 onClick={() => setIsSessionDetailsOpen(false)}
-                className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+                className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
               >
                 Close
               </button>

@@ -125,7 +125,7 @@ export default function AdminEventPagesCmsListPage() {
         <button
           type="button"
           onClick={() => router.push(`${base}/create`)}
-          className="bg-[#593494] text-white px-6 py-3 rounded-lg hover:bg-[#7351A9] transition-colors duration-200"
+          className="bg-[#189e4f] text-white px-6 py-3 rounded-lg hover:bg-[#189e4f] transition-colors duration-200"
         >
           Create New Event Page
         </button>
@@ -144,7 +144,7 @@ export default function AdminEventPagesCmsListPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by slug or SEO title..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
             />
           </div>
           <div>
@@ -152,7 +152,7 @@ export default function AdminEventPagesCmsListPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#593494]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#189e4f]"
             >
               <option value="all">All status</option>
               <option value="published">Published</option>
@@ -169,7 +169,7 @@ export default function AdminEventPagesCmsListPage() {
             <button
               type="button"
               onClick={() => router.push(`${base}/create`)}
-              className="mt-4 bg-[#593494] text-white px-6 py-3 rounded-lg hover:bg-[#7351A9] transition-colors duration-200"
+              className="mt-4 bg-[#189e4f] text-white px-6 py-3 rounded-lg hover:bg-[#189e4f] transition-colors duration-200"
             >
               Create your first event page
             </button>

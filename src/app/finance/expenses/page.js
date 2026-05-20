@@ -236,7 +236,7 @@ export default function FinanceExpenses() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export default function FinanceExpenses() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors text-sm sm:text-base w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm sm:text-base w-full sm:w-auto justify-center"
           >
             <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
             Add Expense
@@ -271,7 +271,7 @@ export default function FinanceExpenses() {
                   onClick={() => setActiveTab('subscription')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === 'subscription'
-                      ? 'text-[#3f2e73] border-b-2 border-[#3f2e73] bg-purple-50'
+                      ? 'text-[#025545] border-b-2 border-[#025545] bg-purple-50'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
@@ -281,7 +281,7 @@ export default function FinanceExpenses() {
                   onClick={() => setActiveTab('additional')}
                   className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                     activeTab === 'additional'
-                      ? 'text-[#3f2e73] border-b-2 border-[#3f2e73] bg-purple-50'
+                      ? 'text-[#025545] border-b-2 border-[#025545] bg-purple-50'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
@@ -430,7 +430,7 @@ export default function FinanceExpenses() {
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -439,7 +439,7 @@ export default function FinanceExpenses() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   >
                     <option value="">Select category</option>
                     {categories.map((cat) => (
@@ -454,7 +454,7 @@ export default function FinanceExpenses() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -466,7 +466,7 @@ export default function FinanceExpenses() {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -474,7 +474,7 @@ export default function FinanceExpenses() {
                   <select
                     value={formData.payment_method}
                     onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   >
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
@@ -489,7 +489,7 @@ export default function FinanceExpenses() {
                     type="text"
                     value={formData.reference_number}
                     onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -498,13 +498,13 @@ export default function FinanceExpenses() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors"
+                    className="flex-1 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
                   >
                     Add Expense
                   </button>
@@ -556,7 +556,7 @@ export default function FinanceExpenses() {
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -565,7 +565,7 @@ export default function FinanceExpenses() {
                     value={formData.expense_type}
                     onChange={(e) => setFormData({ ...formData, expense_type: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   >
                     <option value="subscription">Subscription (Monthly Recurring)</option>
                     <option value="additional">Additional (One-time Investment)</option>
@@ -585,7 +585,7 @@ export default function FinanceExpenses() {
                       });
                     }}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   >
                     <option value="">Select category</option>
                     {categories.map((cat) => (
@@ -600,7 +600,7 @@ export default function FinanceExpenses() {
                       onChange={(e) => setFormData({ ...formData, custom_category: e.target.value })}
                       placeholder="Enter custom category name"
                       required
-                      className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                      className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                     />
                   )}
                 </div>
@@ -611,7 +611,7 @@ export default function FinanceExpenses() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -623,7 +623,7 @@ export default function FinanceExpenses() {
                     required
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -631,7 +631,7 @@ export default function FinanceExpenses() {
                   <select
                     value={formData.payment_method}
                     onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   >
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
@@ -646,7 +646,7 @@ export default function FinanceExpenses() {
                     type="text"
                     value={formData.reference_number}
                     onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -655,13 +655,13 @@ export default function FinanceExpenses() {
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors"
+                    className="flex-1 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
                   >
                     Update Expense
                   </button>
@@ -848,7 +848,7 @@ export default function FinanceExpenses() {
                       setShowViewModal(false);
                       setViewingExpense(null);
                     }}
-                    className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors"
+                    className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
                   >
                     Close
                   </button>

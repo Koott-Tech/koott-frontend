@@ -340,9 +340,9 @@ export default function FreeAssessmentsPage() {
       case 'cancelled':
         return <XCircle className="h-4 w-4 text-red-500" />;
       case 'booked':
-        return <Clock className="h-4 w-4 text-[#3f2e73]" />;
+        return <Clock className="h-4 w-4 text-[#025545]" />;
       default:
-        return <Clock className="h-4 w-4 text-[#3f2e73]" />;
+        return <Clock className="h-4 w-4 text-[#025545]" />;
     }
   };
 
@@ -353,7 +353,7 @@ export default function FreeAssessmentsPage() {
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       case 'booked':
-        return 'bg-[#3f2e73]/10 text-[#3f2e73]';
+        return 'bg-[#025545]/10 text-[#025545]';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -592,7 +592,7 @@ export default function FreeAssessmentsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -611,7 +611,7 @@ export default function FreeAssessmentsPage() {
           <button
             type="button"
             onClick={() => setIsAvailabilityModalOpen(true)}
-            className="mt-3 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] transition-colors"
+            className="mt-3 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Manage Availability
@@ -625,8 +625,8 @@ export default function FreeAssessmentsPage() {
               {/* Modal Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                  <div className="w-9 h-9 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>
@@ -692,8 +692,8 @@ export default function FreeAssessmentsPage() {
                           className={`
                             min-h-[60px] p-1 border border-slate-200 rounded cursor-pointer transition-colors
                             ${!day ? 'bg-slate-50' : ''}
-                            ${isToday(day) ? 'bg-[#3f2e73]/5 border-[#3f2e73]/40' : ''}
-                            ${isSelected(day) ? 'bg-[#3f2e73] text-white border-[#3f2e73]' : 'hover:bg-slate-50'}
+                            ${isToday(day) ? 'bg-[#025545]/5 border-[#025545]/40' : ''}
+                            ${isSelected(day) ? 'bg-[#025545] text-white border-[#025545]' : 'hover:bg-slate-50'}
                             ${hasAssessments && !isSelected(day) ? 'bg-green-50 border-green-300' : ''}
                           `}
                           title={day && hasTimeslots ? `${availabilityData[dateKey]} timeslot(s) configured` : ''}
@@ -717,7 +717,7 @@ export default function FreeAssessmentsPage() {
                                         isSelected(day) ? 'bg-white' : 
                                         assessment.status === 'completed' ? 'bg-green-500' :
                                         assessment.status === 'cancelled' ? 'bg-red-500' :
-                                        'bg-[#3f2e73]'
+                                        'bg-[#025545]'
                                       }`}
                                       title={`${assessment.status} - ${assessment.client?.first_name || 'N/A'}`}
                                     />
@@ -788,7 +788,7 @@ export default function FreeAssessmentsPage() {
                   placeholder="Search by client name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                 />
               </div>
             </div>
@@ -812,8 +812,8 @@ export default function FreeAssessmentsPage() {
                     relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
                     transition-all duration-200 ease-out
                     ${isActive
-                      ? 'bg-[#3f2e73] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8 active:bg-[#3f2e73]/12'
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
                     }
                   `}
                 >
@@ -1288,7 +1288,7 @@ export default function FreeAssessmentsPage() {
                 <button
                   onClick={handleConfirmComplete}
                   disabled={isCompleting}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#3f2e73] rounded-lg hover:bg-[#1d1733] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#025545] rounded-lg hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCompleting ? (
                     <>
@@ -1314,8 +1314,8 @@ export default function FreeAssessmentsPage() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>Free Assessment Details</div>
@@ -1439,7 +1439,7 @@ export default function FreeAssessmentsPage() {
                         href={selectedAssessment.meetLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#3f2e73] hover:bg-[#3f2e73]/5 break-all"
+                        className="block bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-[#025545] hover:bg-[#025545]/5 break-all"
                       >
                         {selectedAssessment.meetLink}
                       </a>
@@ -1452,7 +1452,7 @@ export default function FreeAssessmentsPage() {
               <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
                 <button
                   onClick={() => setIsDetailsOpen(false)}
-                  className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+                  className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
                 >
                   Close
                 </button>

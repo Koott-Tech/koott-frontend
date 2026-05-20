@@ -242,7 +242,7 @@ export default function AdminRescheduleModal({
       <div className="relative bg-white rounded-[2.5rem] shadow-[0_25px_70px_rgba(0,0,0,0.3)] max-w-5xl w-full max-h-[95vh] flex flex-col overflow-hidden transform transition-all duration-500 scale-100 border border-white/20 animate-in zoom-in-95">
         
         {/* Premium Header */}
-        <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] px-8 py-6">
+        <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-[#025545] to-[#189e4f] px-8 py-6">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -268,7 +268,7 @@ export default function AdminRescheduleModal({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
-                <User className="h-5 w-5 text-[#3f2e73]" />
+                <User className="h-5 w-5 text-[#025545]" />
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Client</p>
@@ -310,7 +310,7 @@ export default function AdminRescheduleModal({
               <div className="relative">
                 <div className="h-20 w-20 rounded-full border-4 border-indigo-100 animate-pulse" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" />
+                  <Loader2 className="h-10 w-10 animate-spin text-[#025545]" />
                 </div>
               </div>
               <span className="mt-6 text-slate-500 font-bold text-sm tracking-wide">Syncing availability matrix...</span>
@@ -329,7 +329,7 @@ export default function AdminRescheduleModal({
                 <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/40 p-6 overflow-hidden">
                   <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
-                      <CalendarDays className="h-5 w-5 text-[#3f2e73]" />
+                      <CalendarDays className="h-5 w-5 text-[#025545]" />
                       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Availability Matrix</h3>
                     </div>
                     <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl">
@@ -398,7 +398,7 @@ export default function AdminRescheduleModal({
                         let styleClasses = 'relative aspect-square flex flex-col items-center justify-center rounded-2xl text-xs font-bold transition-all duration-300 border-2 ';
                         
                         if (isSelected) {
-                          styleClasses += 'bg-[#3f2e73] text-white border-[#3f2e73] shadow-lg shadow-[#3f2e73]/30 scale-105 z-10';
+                          styleClasses += 'bg-[#025545] text-white border-[#025545] shadow-lg shadow-[#025545]/30 scale-105 z-10';
                         } else if (isClickable) {
                           styleClasses += isToday 
                             ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:border-indigo-400 hover:scale-105' 
@@ -455,7 +455,7 @@ export default function AdminRescheduleModal({
                           className={`
                             py-4 px-3 rounded-2xl text-center font-bold text-sm transition-all duration-300 border-2
                             ${selectedTime === time
-                              ? 'bg-[#3f2e73] text-white border-[#3f2e73] shadow-lg shadow-[#3f2e73]/20'
+                              ? 'bg-[#025545] text-white border-[#025545] shadow-lg shadow-[#025545]/20'
                               : 'bg-white text-slate-700 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30'
                             }
                           `}
@@ -501,7 +501,7 @@ export default function AdminRescheduleModal({
               px-10 py-3.5 rounded-2xl transition-all duration-300 flex items-center gap-3 text-sm font-black uppercase tracking-widest shadow-xl
               ${!selectedDate || !selectedTime || isLoading
                 ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] text-white hover:shadow-indigo-200 active:scale-95'
+                : 'bg-gradient-to-r from-[#025545] to-[#189e4f] text-white hover:shadow-indigo-200 active:scale-95'
               }
             `}
           >

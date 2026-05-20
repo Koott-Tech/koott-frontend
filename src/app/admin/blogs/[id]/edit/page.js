@@ -190,7 +190,7 @@ export default function EditBlogPage() {
     return (
       <div className="min-h-screen bg-[#fafbfc] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#3f2e73] border-t-transparent" />
+          <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#025545] border-t-transparent" />
           <p className="text-sm text-gray-500">Loading editor...</p>
         </div>
       </div>
@@ -257,7 +257,7 @@ export default function EditBlogPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={saving}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#2d2156] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
               >
                 <Save className="h-4 w-4" />
                 <span>{saving ? 'Saving...' : 'Save'}</span>

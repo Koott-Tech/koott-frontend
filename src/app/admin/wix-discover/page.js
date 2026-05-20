@@ -197,7 +197,7 @@ export default function AdminWixDiscoverPage() {
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Refresh
           </button>
           <button type="button" onClick={() => syncAndReload({ silentSuccess: false })} disabled={loading || syncing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3f2e73] text-white text-sm hover:bg-[#352863] disabled:opacity-40">
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#025545] text-white text-sm hover:bg-[#012f23] disabled:opacity-40">
             {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CloudDownload className="h-3.5 w-3.5" />}
             {syncing ? 'Syncing…' : 'Sync from Wix'}
           </button>
@@ -210,13 +210,13 @@ export default function AdminWixDiscoverPage() {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
           <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search client, therapist…"
-            className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15" />
+            className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
         </div>
         <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15" />
+          className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
         <span className="text-xs text-gray-400">–</span>
         <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15" />
+          className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm text-gray-700 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
         {(searchTerm || dateFrom || dateTo) && (
           <button type="button" onClick={() => { setSearchTerm(''); setDateFrom(''); setDateTo(''); setWixFilterType('all'); }}
             className="text-xs text-gray-400 hover:text-gray-600 px-1">Clear</button>
@@ -238,8 +238,8 @@ export default function AdminWixDiscoverPage() {
                   relative px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap
                   transition-all duration-200 ease-out
                   ${isActive
-                    ? 'bg-[#3f2e73] text-white shadow-sm'
-                    : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8'
+                    ? 'bg-[#025545] text-white shadow-sm'
+                    : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8'
                   }
                 `}
               >
@@ -278,7 +278,7 @@ export default function AdminWixDiscoverPage() {
                         {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID')}
                       </p>
                       {row.session_type === 'package' && row.package_session_number && (
-                        <span className="text-[10px] font-semibold text-[#3f2e73] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                        <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
                           {row.package_session_number} of {row.session_count || '?'}
                         </span>
                       )}
@@ -417,15 +417,15 @@ export default function AdminWixDiscoverPage() {
                   <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
                   {field.type === 'select' ? (
                     <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15">
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15">
                       {field.options.map(o => <option key={o} value={o}>{o}</option>)}
                     </select>
                   ) : field.type === 'textarea' ? (
                     <textarea value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      rows={3} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15" />
+                      rows={3} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
                   ) : (
                     <input type={field.type || 'text'} value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15" />
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
                   )}
                 </div>
               ))}
@@ -433,7 +433,7 @@ export default function AdminWixDiscoverPage() {
             <div className="flex justify-end gap-2 px-5 py-4 border-t">
               <button onClick={() => setEditingRow(null)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
               <button onClick={handleEditSave} disabled={actionLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3f2e73] text-white text-sm hover:bg-[#352863] disabled:opacity-40">
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#025545] text-white text-sm hover:bg-[#012f23] disabled:opacity-40">
                 {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save
               </button>
             </div>

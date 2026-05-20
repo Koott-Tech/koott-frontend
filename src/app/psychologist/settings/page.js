@@ -355,7 +355,7 @@ export default function PsychologistSettings() {
       return 'bg-purple-100 border-purple-300 text-purple-800';
     }
     if (lower.includes('talkspace') || lower.includes('counseling')) {
-      return 'bg-[#3f2e73]/10 border-[#3f2e73]/30 text-[#3f2e73]';
+      return 'bg-[#025545]/10 border-[#025545]/30 text-[#025545]';
     }
     if (lower.includes('meeting') || lower.includes('call')) {
       return 'bg-orange-100 border-orange-300 text-orange-800';
@@ -529,7 +529,7 @@ export default function PsychologistSettings() {
                     name="first_name"
                     value={profile.first_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                     required
                   />
                 </div>
@@ -544,7 +544,7 @@ export default function PsychologistSettings() {
                     name="last_name"
                     value={profile.last_name}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                     required
                   />
                 </div>
@@ -573,7 +573,7 @@ export default function PsychologistSettings() {
                       name="country_code"
                       value={profile.country_code}
                       onChange={handleInputChange}
-                      className="border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                      className="border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#025545] focus:border-[#025545]"
                     >
                       <option value="+91">🇮🇳 +91</option>
                       <option value="+1">🇺🇸 +1</option>
@@ -591,7 +591,7 @@ export default function PsychologistSettings() {
                       name="phone"
                       value={profile.phone}
                       onChange={handleInputChange}
-                      className="flex-1 border border-l-0 rounded-r-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                      className="flex-1 border border-l-0 rounded-r-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                       placeholder="Enter your phone number"
                     />
                   </div>
@@ -620,7 +620,7 @@ export default function PsychologistSettings() {
                     name="ug_college"
                     value={profile.ug_college}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                     placeholder="e.g., University of California"
                   />
                 </div>
@@ -635,7 +635,7 @@ export default function PsychologistSettings() {
                     name="pg_college"
                     value={profile.pg_college}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                     placeholder="e.g., Stanford University"
                   />
                 </div>
@@ -650,7 +650,7 @@ export default function PsychologistSettings() {
                     name="phd_college"
                     value={profile.phd_college}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                     placeholder="e.g., Harvard University"
                   />
                 </div>
@@ -674,7 +674,7 @@ export default function PsychologistSettings() {
                   name="area_of_expertise"
                   value={profile.area_of_expertise}
                   onChange={handleInputChange}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-[#025545] focus:border-[#025545]"
                   placeholder="e.g., Child Psychology, Family Therapy, Anxiety Disorders"
                 />
                 <p className="mt-1 text-xs text-gray-500">Separate multiple areas with commas</p>
@@ -690,7 +690,7 @@ export default function PsychologistSettings() {
                   value={profile.description}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#025545] focus:border-[#025545]"
                   placeholder="Describe the doctor's expertise and experience..."
                 />
                 <p className="mt-1 text-xs text-gray-500">This will be visible to potential clients</p>
@@ -731,7 +731,7 @@ export default function PsychologistSettings() {
                           type="button"
                           onClick={handleSyncNow}
                           disabled={isSyncing}
-                          className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73] disabled:opacity-50"
+                          className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] disabled:opacity-50"
                         >
                           {isSyncing ? (
                             <>
@@ -760,7 +760,7 @@ export default function PsychologistSettings() {
                     <button
                       type="button"
                       onClick={handleConnectGoogleCalendar}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#3f2e73] hover:bg-[#1d1733] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73]"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#025545] hover:bg-[#012f23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545]"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Connect Google Calendar
@@ -775,9 +775,9 @@ export default function PsychologistSettings() {
                 </div>
               </div>
               
-              <div className="mt-4 bg-[#3f2e73]/10 border border-[#3f2e73]/20 rounded-md p-4">
-                <p className="text-sm font-medium text-[#1d1733] mb-2">How it works:</p>
-                <ul className="text-xs text-[#3f2e73] space-y-1 list-disc list-inside">
+              <div className="mt-4 bg-[#025545]/10 border border-[#025545]/20 rounded-md p-4">
+                <p className="text-sm font-medium text-[#012f23] mb-2">How it works:</p>
+                <ul className="text-xs text-[#025545] space-y-1 list-disc list-inside">
                   <li>System syncs your calendar every 30 minutes automatically</li>
                   <li>Bookings from other platforms are detected and blocked here</li>
                   <li>Prevents double bookings across all your therapy platforms</li>
@@ -795,11 +795,11 @@ export default function PsychologistSettings() {
                       <button
                         onClick={fetchCalendarEvents}
                         disabled={isLoadingEvents}
-                        className="text-xs text-[#3f2e73] hover:text-[#1d1733] flex items-center gap-1"
+                        className="text-xs text-[#025545] hover:text-[#012f23] flex items-center gap-1"
                       >
                         {isLoadingEvents ? (
                           <>
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#3f2e73]"></div>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#025545]"></div>
                             Loading...
                           </>
                         ) : (
@@ -866,9 +866,9 @@ export default function PsychologistSettings() {
                                 key={day}
                                 onClick={() => setSelectedDate(date)}
                                 className={`aspect-square text-[10px] sm:text-xs rounded transition-colors ${
-                                  isToday ? 'bg-[#3f2e73]/10 font-bold' : ''
+                                  isToday ? 'bg-[#025545]/10 font-bold' : ''
                                 } ${
-                                  isSelected ? 'ring-1 sm:ring-2 ring-[#3f2e73]' : ''
+                                  isSelected ? 'ring-1 sm:ring-2 ring-[#025545]' : ''
                                 } ${
                                   eventsForDay.length > 0 ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-100'
                                 }`}

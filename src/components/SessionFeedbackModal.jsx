@@ -208,7 +208,7 @@ export default function SessionFeedbackModal({
             <button
               type="submit"
               disabled={isSubmitting || !feedback.trim() || rating === 0}
-              className="px-6 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

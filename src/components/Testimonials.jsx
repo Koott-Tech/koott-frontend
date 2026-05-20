@@ -75,7 +75,7 @@ const DEFAULT_PHOTOS = [
     text: "I thought therapy was only for people with big problems, but now I know it's just a space to talk and feel better. I feel safe to say anything, and it's helping me be more confident.",
     author: "12-year-old girl",
     bgImage: "/Our promise bg2.webp",
-    gradient: "linear-gradient(135deg, #ECEBFF 0%, #E0DEFF 50%, #D4D2FF 100%)",
+    gradient: "linear-gradient(135deg, #f2fff1 0%, #E0DEFF 50%, #D4D2FF 100%)",
     type: "text",
   },
   { src: "/TESTIMONIALS 3.webp", alt: "Happy child", type: "image" },
@@ -1033,7 +1033,7 @@ export default function Testimonials({
                 <>
                   <div className="absolute inset-0 flex items-center justify-center bg-black rounded-[10px]">
                     <img
-                      src={getYouTubeThumbnailUrl(desktopYouTubeUrl) || '/mainlogo.webp'}
+                      src={getYouTubeThumbnailUrl(desktopYouTubeUrl) || '/logo.png'}
                       alt="Testimonial video thumbnail"
                       className="absolute inset-0 w-full h-full object-cover rounded-[10px]"
                       style={{ transform: 'scale(1.22)', transformOrigin: 'center center' }}
@@ -1195,7 +1195,7 @@ export default function Testimonials({
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black rounded-[10px]">
                                   <img
-                                    src={getYouTubeThumbnailUrl(photo.src) || '/mainlogo.webp'}
+                                    src={getYouTubeThumbnailUrl(photo.src) || '/logo.png'}
                                     alt={photo.alt || "Testimonial video"}
                                     className="absolute inset-0 w-full h-full object-cover rounded-[10px]"
                                     onError={(e) => {
@@ -1354,7 +1354,7 @@ export default function Testimonials({
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black rounded-[10px]">
                                   <img
-                                    src={getYouTubeThumbnailUrl(photo.src) || '/mainlogo.webp'}
+                                    src={getYouTubeThumbnailUrl(photo.src) || '/logo.png'}
                                     alt={photo.alt || "Testimonial video"}
                                     className="absolute inset-0 w-full h-full object-cover rounded-[10px]"
                                     onError={(e) => {
@@ -1460,7 +1460,7 @@ export default function Testimonials({
 function QuoteCard({ quote, by, tone = "mint", className = "" }) {
   const toneClasses = {
     mint: "bg-[#E6F5EC] text-gray-900",
-    lavender: "bg-[#ECEBFF] text-gray-900",
+    lavender: "bg-[#f2fff1] text-gray-900",
     peach: "bg-[#FFF0E1] text-gray-900",
   };
   return (

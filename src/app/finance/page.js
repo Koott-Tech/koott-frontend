@@ -209,7 +209,7 @@ export default function FinanceDashboard() {
   if (isLoading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -268,7 +268,7 @@ export default function FinanceDashboard() {
   })) : [];
   
   // Chart colors
-  const COLORS = ['#3f2e73', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  const COLORS = ['#025545', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   // Export functionality
   const exportToExcel = async (period) => {
@@ -968,7 +968,7 @@ export default function FinanceDashboard() {
               <button
                 onClick={loadChartsData}
                 disabled={isLoadingCharts}
-                className="flex items-center gap-2 px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#2d1f52] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoadingCharts ? (
                   <>
@@ -1110,7 +1110,7 @@ export default function FinanceDashboard() {
                   <YAxis style={{ fontSize: '12px' }} />
                   <Tooltip formatter={(value) => `₹${value.toLocaleString('en-IN')}`} />
                   <Legend />
-                  <Bar dataKey="commission" fill="#3f2e73" name="Company Commission" />
+                  <Bar dataKey="commission" fill="#025545" name="Company Commission" />
                   <Bar dataKey="doctorWallet" fill="#10b981" name="Doctor Wallet" />
                 </BarChart>
               </ResponsiveContainer>
@@ -1129,7 +1129,7 @@ export default function FinanceDashboard() {
               {topDoctors.map((doctor, index) => (
                 <div key={doctor.id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-[#3f2e73] text-white flex items-center justify-center font-semibold mr-3">
+                    <div className="w-10 h-10 rounded-full bg-[#025545] text-white flex items-center justify-center font-semibold mr-3">
                       {index + 1}
                     </div>
                     <div>
@@ -1157,7 +1157,7 @@ export default function FinanceDashboard() {
             <div role="heading" aria-level="3" className="text-sm font-medium text-gray-900">Recent Bookings</div>
             <a
               href="/finance/sessions"
-              className="text-sm text-[#3f2e73] hover:underline font-medium"
+              className="text-sm text-[#025545] hover:underline font-medium"
             >
               View All
             </a>

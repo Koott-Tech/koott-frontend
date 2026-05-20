@@ -23,7 +23,7 @@ function CommissionAmountField({ id, label, value, onChange }) {
       <label htmlFor={id} className="block text-xs font-medium text-slate-700 leading-snug">
         {label}
       </label>
-      <div className="flex rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden transition-[box-shadow,border-color] focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#3f2e73]/25 focus-within:border-[#3f2e73]">
+      <div className="flex rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden transition-[box-shadow,border-color] focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#025545]/25 focus-within:border-[#025545]">
         <span
           className="inline-flex items-center shrink-0 px-3 py-2.5 bg-slate-50 text-slate-600 text-sm font-semibold tabular-nums border-r border-slate-200"
           aria-hidden
@@ -374,7 +374,7 @@ export default function FinanceDoctors() {
   if (isLoading && doctors.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -975,7 +975,7 @@ export default function FinanceDoctors() {
               <div className="flex items-center justify-end px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
                 <button
                   onClick={() => setIsDetailModalOpen(false)}
-                  className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+                  className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
                 >
                   Close
                 </button>

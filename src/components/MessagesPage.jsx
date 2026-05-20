@@ -428,7 +428,7 @@ export default function MessagesPage({ session = null }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <MessageSquare className="h-6 w-6" style={{ color: '#3f2e73' }} />
+          <MessageSquare className="h-6 w-6" style={{ color: '#025545' }} />
           <h5 className="text-gray-900">Messages</h5>
         </div>
       </div>
@@ -440,7 +440,7 @@ export default function MessagesPage({ session = null }) {
             <h6 className="text-gray-900 mb-3">Conversations</h6>
             {isLoading ? (
               <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderBottomColor: '#3f2e73' }}></div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderBottomColor: '#025545' }}></div>
               </div>
             ) : conversations.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -450,9 +450,9 @@ export default function MessagesPage({ session = null }) {
                 <button
                   onClick={() => window.location.href = '/profile/sessions'}
                   className="px-4 py-2 text-white rounded-lg transition-colors"
-                  style={{ backgroundColor: '#3f2e73' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                  style={{ backgroundColor: '#025545' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                 >
                   View Sessions
                 </button>
@@ -468,11 +468,11 @@ export default function MessagesPage({ session = null }) {
                         ? 'border'
                         : 'bg-white hover:bg-gray-100'
                     }`}
-                    style={selectedConversation?.id === conversation.id ? { backgroundColor: '#f5f3ff', borderColor: '#3f2e73' } : {}}
+                    style={selectedConversation?.id === conversation.id ? { backgroundColor: '#f2fff1', borderColor: '#025545' } : {}}
                   >
                     <div className="flex items-center justify-between space-x-6">
                       <div className="flex items-center space-x-6 flex-1 min-w-0">
-                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#f5f3ff' }}>
+                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#f2fff1' }}>
                           {conversation.psychologist?.cover_image_url ? (
                             <img 
                               src={normalizeImageUrl(conversation.psychologist.cover_image_url)}
@@ -480,7 +480,7 @@ export default function MessagesPage({ session = null }) {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <User className="h-6 w-6" style={{ color: '#3f2e73' }} />
+                            <User className="h-6 w-6" style={{ color: '#025545' }} />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -498,9 +498,9 @@ export default function MessagesPage({ session = null }) {
                           handleConversationSelect(conversation);
                         }}
                         className="text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 flex-shrink-0"
-                        style={{ backgroundColor: '#3f2e73' }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                        style={{ backgroundColor: '#025545' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                       >
                         Message
                       </button>
@@ -535,7 +535,7 @@ export default function MessagesPage({ session = null }) {
                   >
                     <ArrowLeft className="h-5 w-5 text-gray-600" />
                   </button>
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#f5f3ff' }}>
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#f2fff1' }}>
                     {selectedConversation.psychologist?.cover_image_url ? (
                       <img 
                         src={normalizeImageUrl(selectedConversation.psychologist.cover_image_url)}
@@ -543,7 +543,7 @@ export default function MessagesPage({ session = null }) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User className="h-5 w-5" style={{ color: '#3f2e73' }} />
+                      <User className="h-5 w-5" style={{ color: '#025545' }} />
                     )}
                   </div>
                   <div>
@@ -569,7 +569,7 @@ export default function MessagesPage({ session = null }) {
               <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ flex: '1 1 auto', overflowY: 'auto', minHeight: 0 }}>
                 {isLoading ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderBottomColor: '#3f2e73' }}></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 mx-auto" style={{ borderBottomColor: '#025545' }}></div>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -593,7 +593,7 @@ export default function MessagesPage({ session = null }) {
                               ? 'text-white'
                               : 'bg-gray-200 text-gray-900'
                           } ${message?.isOptimistic ? 'opacity-70' : ''}`}
-                          style={(message?.sender_type || '') === user?.role ? { backgroundColor: '#3f2e73' } : {}}
+                          style={(message?.sender_type || '') === user?.role ? { backgroundColor: '#025545' } : {}}
                         >
                           <p className="text-sm">{message?.content || 'Message content unavailable'}</p>
                           <div className="flex items-center justify-between mt-1">
@@ -602,7 +602,7 @@ export default function MessagesPage({ session = null }) {
                             </p>
                             {message?.isOptimistic && (
                               <div className="flex items-center space-x-1">
-                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#3f2e73' }}></div>
+                                <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#025545' }}></div>
                                 <span className="text-xs opacity-70">Sending...</span>
                               </div>
                             )}
@@ -629,9 +629,9 @@ export default function MessagesPage({ session = null }) {
                     onChange={handleInputChange}
                     placeholder={`Type a message to ${getConversationName(selectedConversation)}...`}
                     className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
-                    style={{ '--tw-ring-color': '#3f2e73' }}
+                    style={{ '--tw-ring-color': '#025545' }}
                     onFocus={(e) => { 
-                      e.currentTarget.style.borderColor = '#3f2e73'; 
+                      e.currentTarget.style.borderColor = '#025545'; 
                       e.currentTarget.style.boxShadow = '0 0 0 2px rgba(63, 46, 115, 0.2)';
                       // On mobile, scroll input into view when keyboard opens
                       if (window.innerWidth < 1024) {
@@ -646,9 +646,9 @@ export default function MessagesPage({ session = null }) {
                     type="submit"
                     disabled={!newMessage.trim() || isSending}
                     className="text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ backgroundColor: '#3f2e73' }}
-                    onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#1d1733')}
-                    onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#3f2e73')}
+                    style={{ backgroundColor: '#025545' }}
+                    onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#012f23')}
+                    onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.backgroundColor = '#025545')}
                   >
                     {isSending ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

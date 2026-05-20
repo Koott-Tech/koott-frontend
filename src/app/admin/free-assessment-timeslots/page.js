@@ -668,7 +668,7 @@ export default function FreeAssessmentTimeslotsPage() {
           <button
             type="button"
             onClick={() => setIsAvailabilityModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Manage Availability
@@ -752,7 +752,7 @@ export default function FreeAssessmentTimeslotsPage() {
                           <button
                             type="button"
                             onClick={() => handleEditDate(dateStr)}
-                            className="text-[#3f2e73] hover:text-[#1d1733] text-xs font-medium"
+                            className="text-[#025545] hover:text-[#012f23] text-xs font-medium"
                           >
                             Edit
                           </button>
@@ -834,7 +834,7 @@ export default function FreeAssessmentTimeslotsPage() {
                         {a.meetLink ? (
                           <button
                             onClick={() => window.open(a.meetLink, '_blank', 'noopener')}
-                            className="inline-flex items-center px-3 py-1.5 bg-[#3f2e73] text-white text-sm font-medium rounded hover:bg-[#1d1733] transition-colors"
+                            className="inline-flex items-center px-3 py-1.5 bg-[#025545] text-white text-sm font-medium rounded hover:bg-[#012f23] transition-colors"
                           >
                             Copy Meet
                           </button>
@@ -857,8 +857,8 @@ export default function FreeAssessmentTimeslotsPage() {
               {/* Modal Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                  <div className="w-9 h-9 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
                   </div>
                   <div>
                     <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>
@@ -884,13 +884,13 @@ export default function FreeAssessmentTimeslotsPage() {
                 <div className="flex items-center justify-center mb-5">
             <div className="flex items-center space-x-4">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
-                      step >= 1 ? 'bg-[#3f2e73] text-white' : 'bg-slate-200 text-slate-500'
+                      step >= 1 ? 'bg-[#025545] text-white' : 'bg-slate-200 text-slate-500'
               }`}>
                 1
               </div>
                     <div className="w-8 h-px bg-slate-200" />
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
-                      step >= 2 ? 'bg-[#3f2e73] text-white' : 'bg-slate-200 text-slate-500'
+                      step >= 2 ? 'bg-[#025545] text-white' : 'bg-slate-200 text-slate-500'
               }`}>
                 2
               </div>
@@ -991,7 +991,7 @@ export default function FreeAssessmentTimeslotsPage() {
                             hasTimeslots && isAvailable
                               ? 'bg-green-500 text-white hover:bg-green-600' 
                               : isToday && isAvailable
-                                ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-semibold'
+                                ? 'bg-[#025545]/10 text-[#025545] font-semibold'
                                 : isAvailable
                                         ? 'text-slate-700'
                                         : 'text-slate-300 bg-slate-50'
@@ -1039,7 +1039,7 @@ export default function FreeAssessmentTimeslotsPage() {
                   <button
                     type="button"
                     onClick={handleSelectAllDefaultSlots}
-                          className="px-3 py-2 text-[11px] font-medium text-white bg-[#3f2e73] rounded-lg shadow hover:bg-[#1d1733] transition-colors"
+                          className="px-3 py-2 text-[11px] font-medium text-white bg-[#025545] rounded-lg shadow hover:bg-[#012f23] transition-colors"
                   >
                     Select All Default Slots
                   </button>
@@ -1080,8 +1080,8 @@ export default function FreeAssessmentTimeslotsPage() {
                                 onClick={() => handleTimeSelect(timeKey)}
                                       className={`p-2 text-[11px] rounded-lg border transition-colors ${
                                   isSelected
-                                    ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
-                                          : 'bg-white text-slate-700 border-slate-200 hover:border-[#3f2e73]/40'
+                                    ? 'bg-[#025545] text-white border-[#025545]'
+                                          : 'bg-white text-slate-700 border-slate-200 hover:border-[#025545]/40'
                                 }`}
                               >
                                 {time}
@@ -1113,7 +1113,7 @@ export default function FreeAssessmentTimeslotsPage() {
                   type="button"
                   onClick={goToNextDate}
                   disabled={selectedTimes.length === 0 || loading}
-                        className="px-5 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed text-sm"
+                        className="px-5 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed text-sm"
                 >
                   {loading ? 'Saving...' : 'Next Date'}
                 </button>

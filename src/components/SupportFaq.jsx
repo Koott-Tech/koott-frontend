@@ -8,25 +8,25 @@ export default function SupportFaq() {
       title: "Care that feels safe",
       body:
         "Every child deserves a space where their feelings are seen and understood. Our child psychologists create a gentle, non-judgmental environment where kids can open up freely and feel supported.",
-      image: "/mainlogo.webp",
+      image: "/logo.png",
     },
     {
       title: "Guidance parents can trust",
       body:
         "We support parents with clear communication, practical tools, and expert guidance—so you never feel alone in understanding your child's emotions or navigating their well-being.",
-      image: "/mainlogo.webp",
+      image: "/logo.png",
     },
     {
       title: "Expertise made simple",
       body:
         "Our licensed child psychologists bring evidence-based care right to your home. Sessions are easy to access, child-friendly, and tailored to match your child's unique needs.",
-      image: "/mainlogo.webp",
+      image: "/logo.png",
     },
     {
       title: "Support at every stage",
       body:
         "Whether it's early emotional struggles, learning challenges, behaviour changes, or big life transitions, our child counseling services are here to guide your family—one steady step at a time.",
-      image: "/mainlogo.webp",
+      image: "/logo.png",
     },
   ];
 
@@ -37,7 +37,7 @@ export default function SupportFaq() {
   const [isImageTransitioning, setIsImageTransitioning] = useState(false);
 
   const gradients = [
-    "linear-gradient(180deg, #f5f3ff 0%, #ede9fe 50%, #ffffff 100%)",
+    "linear-gradient(180deg, #f2fff1 0%, #d7fec5 50%, #ffffff 100%)",
     "linear-gradient(180deg, #ecfdf5 0%, #d1fae5 50%, #ffffff 100%)",
     "linear-gradient(180deg, #fff7ed 0%, #ffedd5 50%, #ffffff 100%)",
     "linear-gradient(180deg, #ecfeff 0%, #cffafe 50%, #ffffff 100%)",

@@ -11,7 +11,7 @@ export default function ResourcesTeaser() {
 
   const resources = [
     {
-      src: "/mainlogo.webp",
+      src: "/logo.png",
       alt: "Therapy session",
       author: "Dr. Sarah Johnson",
       date: "Updated regularly",

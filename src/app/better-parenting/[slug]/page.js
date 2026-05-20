@@ -42,8 +42,8 @@ export async function generateMetadata({ params, searchParams }) {
         data.seo_description ||
         data.hero_subtext ||
         'Gentle, practical coaching to help parents support their child’s emotional and behavioural needs.';
-      // Always use favicon.png for social sharing (as per requirements)
-      const ogImage = 'https://www.koott.in/favicon.png';
+      // Always use logo.png for social sharing (as per requirements)
+      const ogImage = 'https://www.koott.in/logo.png';
 
       return {
         title,
@@ -155,8 +155,8 @@ export default async function BetterParentingDynamicPage({ params, searchParams 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
         <div className="max-w-md text-center">
-          <h1 className="text-5xl font-bold mb-4" style={{ color: '#3f2e73' }}>404</h1>
-          <h2 className="text-2xl font-semibold mb-3" style={{ color: '#3f2e73' }}>
+          <h1 className="text-5xl font-bold mb-4" style={{ color: '#025545' }}>404</h1>
+          <h2 className="text-2xl font-semibold mb-3" style={{ color: '#025545' }}>
             Better Parenting page not found
           </h2>
           <p className="text-gray-600 mb-6">
@@ -164,7 +164,7 @@ export default async function BetterParentingDynamicPage({ params, searchParams 
           </p>
           <a
             href="/"
-            className="inline-flex items-center justify-center w-full py-3 px-4 text-base font-semibold text-white rounded-lg transition-colors duration-200 bg-[#3f2e73] hover:bg-[#1d1733]"
+            className="inline-flex items-center justify-center w-full py-3 px-4 text-base font-semibold text-white rounded-lg transition-colors duration-200 bg-[#025545] hover:bg-[#012f23]"
           >
             Go back home
           </a>
@@ -219,7 +219,7 @@ export default async function BetterParentingDynamicPage({ params, searchParams 
         <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 md:gap-x-6 gap-y-4 md:gap-y-6 justify-items-stretch mt-8" style={{ columnGap: '2rem' }}>
           {displayTherapists.map((doc, idx) => {
             const imageSrc = normalizeImageUrlWithSize(
-              doc.cover_image_url || doc.profile_picture_url || '/mainlogo.webp',
+              doc.cover_image_url || doc.profile_picture_url || '/logo.png',
               400,
               80
             );

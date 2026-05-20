@@ -223,7 +223,7 @@ export default function AdminDashboard() {
       title: 'Total Clients',
       value: stats.totalUsers,
       icon: Users,
-      color: 'bg-[#3f2e73]',
+      color: 'bg-[#025545]',
       description: 'Registered clients on the platform'
     },
     {
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
       title: 'Upcoming Bookings',
       value: stats.bookingStatuses?.upcoming || 0,
       icon: CalendarCheck,
-      color: 'bg-[#3f2e73]',
+      color: 'bg-[#025545]',
       description: 'All confirmed future sessions',
       subValue: stats.totalBookings > 0 
         ? `${((stats.bookingStatuses?.upcoming || 0) / stats.totalBookings * 100).toFixed(1)}% of total`
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
     </div>
   );
   }
@@ -393,7 +393,7 @@ export default function AdminDashboard() {
           return (
             <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 sm:p-3 rounded-lg bg-[#3f2e73] text-white flex-shrink-0">
+                <div className="p-2 sm:p-3 rounded-lg bg-[#025545] text-white flex-shrink-0">
                   <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <p className="text-xs sm:text-sm font-medium text-gray-600">{stat.title}</p>
@@ -424,7 +424,7 @@ export default function AdminDashboard() {
             return (
               <div key={index} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 rounded-lg bg-[#3f2e73] text-white flex-shrink-0">
+                  <div className="p-2 rounded-lg bg-[#025545] text-white flex-shrink-0">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
                   <p className="text-xs sm:text-sm font-medium text-gray-600">{card.title}</p>
@@ -443,7 +443,7 @@ export default function AdminDashboard() {
             <div>
               <h6>Recent Activity</h6>
             </div>
-          <a href="/admin/bookings" className="text-xs sm:text-sm text-[#3f2e73] hover:text-[#1d1733]">
+          <a href="/admin/bookings" className="text-xs sm:text-sm text-[#025545] hover:text-[#012f23]">
             View All
           </a>
         </div>
@@ -476,8 +476,8 @@ export default function AdminDashboard() {
 
               return (
                 <div key={booking.id} className="flex items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 rounded-lg bg-[#3f2e73]/10 mr-2 sm:mr-3 flex-shrink-0">
-                    <Calendar className="h-4 w-4 text-[#3f2e73]" />
+                  <div className="p-1.5 rounded-lg bg-[#025545]/10 mr-2 sm:mr-3 flex-shrink-0">
+                    <Calendar className="h-4 w-4 text-[#025545]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">

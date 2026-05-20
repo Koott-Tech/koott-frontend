@@ -12,7 +12,7 @@ export const metadata = {
         url: "https://www.koott.in/refund-policy",
         images: [
             {
-                url: "https://www.koott.in/favicon.png",
+                url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
                 alt: "Koott logo",
@@ -24,7 +24,7 @@ export const metadata = {
         title: "Refund & Cancellation Policy | Koott",
         description:
             "Review Koott by Koott Care Pvt. Ltd.'s policies on refunds, cancellations, eligibility, timelines, and liabilities for counselling and wellness services.",
-        images: ["https://www.koott.in/favicon.png"],
+        images: ["https://www.koott.in/logo.png"],
     },
 };
 

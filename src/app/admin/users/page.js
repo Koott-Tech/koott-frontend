@@ -190,7 +190,7 @@ export default function UsersPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -214,7 +214,7 @@ export default function UsersPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -228,7 +228,7 @@ export default function UsersPage() {
           <div className="flex items-center gap-3">
             <h6>Users Management</h6>
             {totalUsers > 0 && (
-              <span className="px-3 py-1 bg-[#3f2e73]/10 text-[#3f2e73] rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-[#025545]/10 text-[#025545] rounded-full text-sm font-medium">
                 {totalUsers} {totalUsers === 1 ? 'User' : 'Users'}
               </span>
             )}
@@ -239,7 +239,7 @@ export default function UsersPage() {
         </div>
         <button
           onClick={handleAddUser}
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors"
+          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add User
@@ -255,7 +255,7 @@ export default function UsersPage() {
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
           />
         </div>
       </div>
@@ -412,7 +412,7 @@ export default function UsersPage() {
             <div className="mt-6">
               <button
                 onClick={handleAddUser}
-                className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add User
@@ -487,8 +487,8 @@ export default function UsersPage() {
             {/* Header */}
             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-[#3f2e73]" />
+                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                  <User className="w-5 h-5 text-[#025545]" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-800 tracking-tight" role="heading" aria-level={1}>
@@ -608,7 +608,7 @@ export default function UsersPage() {
                     setIsFullProfileOpen(false);
                     handleEditUser(selectedUser);
                   }}
-                  className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors text-sm font-medium"
+                  className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm font-medium"
                 >
                   Edit Profile
                 </button>

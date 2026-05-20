@@ -78,7 +78,7 @@ export default function BetterParentingAdminPage() {
           <h5 className="font-bold text-gray-900">Better Parenting</h5>
           <p className="text-gray-600 mt-2">Manage Better Parenting pages</p>
         </div>
-        <button onClick={() => router.push('/admin/better-parenting/create')} className="bg-[#593494] text-white px-6 py-3 rounded-lg hover:bg-[#7351A9]">Create New</button>
+        <button onClick={() => router.push('/admin/better-parenting/create')} className="bg-[#189e4f] text-white px-6 py-3 rounded-lg hover:bg-[#189e4f]">Create New</button>
       </div>
 
       {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">{error}</div>}

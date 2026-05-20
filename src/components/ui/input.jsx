@@ -6,7 +6,7 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
     <input
       type={type}
       className={cn(
-        "flex h-9 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-shadow placeholder:text-gray-400 focus-visible:border-[#3f2e73] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#3f2e73]/20 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-9 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-shadow placeholder:text-gray-400 focus-visible:border-[#025545] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[#025545]/20 disabled:cursor-not-allowed disabled:opacity-50",
         type === "search" &&
           "[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none",
         type === "file" &&

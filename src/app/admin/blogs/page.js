@@ -167,7 +167,7 @@ export default function BlogsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -184,7 +184,7 @@ export default function BlogsPage() {
             </div>
             <Link
               href="/admin/blogs/new"
-              className="bg-[#3f2e73] text-white px-4 py-2 rounded-lg hover:bg-[#1d1733] flex items-center space-x-2"
+              className="bg-[#025545] text-white px-4 py-2 rounded-lg hover:bg-[#012f23] flex items-center space-x-2"
             >
               <Plus className="h-5 w-5" />
               <span>New Blog</span>
@@ -198,7 +198,7 @@ export default function BlogsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
-              <Globe className="h-8 w-8 text-[#3f2e73]" />
+              <Globe className="h-8 w-8 text-[#025545]" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Blogs</p>
                 <p className="number-bold">{blogs?.length || 0}</p>
@@ -251,7 +251,7 @@ export default function BlogsPage() {
                   placeholder="Search blogs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-[#025545]"
                 />
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function BlogsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-[#3f2e73]"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-[#025545]"
               >
                 <option value="all">All Status</option>
                 <option value="published">Published</option>
@@ -303,7 +303,7 @@ export default function BlogsPage() {
                 {isLoading ? (
                   <tr>
                     <td colSpan="7" className="px-6 py-4 text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3f2e73] mx-auto"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#025545] mx-auto"></div>
                     </td>
                   </tr>
                 ) : blogs.length === 0 ? (
@@ -319,7 +319,7 @@ export default function BlogsPage() {
                         <p className="text-gray-500 mb-4">Create your first blog post to get started</p>
                         <Link
                           href="/admin/blogs/new"
-                          className="bg-[#3f2e73] text-white px-4 py-2 rounded-lg hover:bg-[#1d1733] inline-flex items-center space-x-2"
+                          className="bg-[#025545] text-white px-4 py-2 rounded-lg hover:bg-[#012f23] inline-flex items-center space-x-2"
                         >
                           <Plus className="h-4 w-4" />
                           <span>Create First Blog</span>

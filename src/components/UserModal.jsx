@@ -224,7 +224,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                   onChange={handleChange}
                   required
                   placeholder="John"
-                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
                 />
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
                 />
               </div>
             </div>
@@ -259,7 +259,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                 onChange={handleChange}
                 required
                 placeholder="john@example.com"
-                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
               />
             </div>
           </div>
@@ -272,7 +272,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
               <select
                 value={formData.country_code}
                 onChange={(e) => setFormData((prev) => ({ ...prev, country_code: e.target.value }))}
-                className="px-3 py-2.5 border border-slate-200 rounded-l-lg text-sm bg-slate-50 focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] min-w-[7rem]"
+                className="px-3 py-2.5 border border-slate-200 rounded-l-lg text-sm bg-slate-50 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] min-w-[7rem]"
               >
                 {COUNTRY_CODES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
@@ -284,7 +284,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                 value={formData.phone}
                 onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
                 placeholder="9876543210"
-                className="flex-1 px-3 py-2.5 border border-slate-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                className="flex-1 px-3 py-2.5 border border-slate-200 border-l-0 rounded-r-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
               />
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                 value={formData.child_name}
                 onChange={handleChange}
                 placeholder="Child's name"
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
               />
             </div>
             <div>
@@ -315,7 +315,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                 min={1}
                 max={18}
                 placeholder="1–18"
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
               />
             </div>
           </div>
@@ -335,7 +335,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                   required
                   minLength={6}
                   placeholder="Minimum 6 characters"
-                  className="w-full px-3 py-2.5 pr-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                  className="w-full px-3 py-2.5 pr-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
                 />
                 <button
                   type="button"
@@ -364,7 +364,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
                   onChange={handleChange}
                   minLength={6}
                   placeholder="Optional"
-                  className="w-full px-3 py-2.5 pr-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+                  className="w-full px-3 py-2.5 pr-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
                 />
                 <button
                   type="button"
@@ -386,7 +386,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
               id="is_active"
               checked={formData.is_active}
               onChange={handleChange}
-              className="w-4 h-4 rounded border-slate-300 text-[#3f2e73] focus:ring-[#3f2e73]/20"
+              className="w-4 h-4 rounded border-slate-300 text-[#025545] focus:ring-[#025545]/20"
             />
             <label htmlFor="is_active" className="text-sm font-medium text-slate-700">
               Active account
@@ -404,7 +404,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
             </button>
             <button
               type="submit"
-              className="px-4 py-2.5 bg-[#3f2e73] text-white rounded-lg text-sm font-medium hover:bg-[#1d1733] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2.5 bg-[#025545] text-white rounded-lg text-sm font-medium hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
               {loading ? 'Saving...' : mode === 'add' ? 'Add User' : 'Save Changes'}

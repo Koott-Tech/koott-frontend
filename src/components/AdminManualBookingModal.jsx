@@ -739,8 +739,8 @@ export default function AdminManualBookingModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-[#3f2e73]" />
+            <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+              <Calendar className="h-5 w-5 text-[#025545]" />
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>
@@ -793,7 +793,7 @@ export default function AdminManualBookingModal({
                         child_age: ''
                       });
                     }}
-                    className="text-sm text-[#3f2e73] hover:text-[#1d1733] font-medium"
+                    className="text-sm text-[#025545] hover:text-[#012f23] font-medium"
                   >
                     {isNewClient ? '← Select Existing Client' : '+ New Client'}
                   </button>
@@ -814,7 +814,7 @@ export default function AdminManualBookingModal({
                         value={newClientData.email}
                         onChange={(e) => handleNewClientInputChange('email', e.target.value)}
                         required
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="client@example.com"
                       />
                     </div>
@@ -829,7 +829,7 @@ export default function AdminManualBookingModal({
                         value={newClientData.first_name}
                         onChange={(e) => handleNewClientInputChange('first_name', e.target.value)}
                         required
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="John"
                       />
                     </div>
@@ -843,7 +843,7 @@ export default function AdminManualBookingModal({
                         type="text"
                         value={newClientData.last_name}
                         onChange={(e) => handleNewClientInputChange('last_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="Doe (optional)"
                       />
                     </div>
@@ -857,7 +857,7 @@ export default function AdminManualBookingModal({
                         <select
                           value={newClientData.country_code}
                           onChange={(e) => handleNewClientInputChange('country_code', e.target.value)}
-                          className="px-3 py-2 border border-slate-200 rounded-l-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm bg-slate-50 min-w-[7rem]"
+                          className="px-3 py-2 border border-slate-200 rounded-l-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm bg-slate-50 min-w-[7rem]"
                         >
                           <option value="+91">🇮🇳 +91</option>
                           <option value="+1">🇺🇸 +1</option>
@@ -911,7 +911,7 @@ export default function AdminManualBookingModal({
                           value={newClientData.phone_number}
                           onChange={(e) => handleNewClientInputChange('phone_number', e.target.value.replace(/\D/g, ''))}
                           required
-                          className="flex-1 px-3 py-2 border border-slate-200 border-l-0 rounded-r-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                          className="flex-1 px-3 py-2 border border-slate-200 border-l-0 rounded-r-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                           placeholder="9876543210"
                         />
                       </div>
@@ -926,7 +926,7 @@ export default function AdminManualBookingModal({
                         type="text"
                         value={newClientData.child_name}
                         onChange={(e) => handleNewClientInputChange('child_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="Child's name (optional)"
                       />
                     </div>
@@ -942,7 +942,7 @@ export default function AdminManualBookingModal({
                         onChange={(e) => handleNewClientInputChange('child_age', e.target.value)}
                         min="1"
                         max="18"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="Age 1-18 (optional)"
                       />
                     </div>
@@ -958,7 +958,7 @@ export default function AdminManualBookingModal({
                           type={showNewClientPassword ? 'text' : 'password'}
                           value={newClientData.password}
                           onChange={(e) => handleNewClientInputChange('password', e.target.value)}
-                          className="w-full px-3 py-2 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                          className="w-full px-3 py-2 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                           placeholder="Leave blank to auto-generate; if set, client uses this to log in"
                         />
                         <button
@@ -987,13 +987,13 @@ export default function AdminManualBookingModal({
                     placeholder="Search client by name or email..."
                     value={searchClient}
                     onChange={(e) => setSearchClient(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   />
                   <select
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   >
                     <option value="">Select a client</option>
                     {filteredClients.map(client => (
@@ -1018,13 +1018,13 @@ export default function AdminManualBookingModal({
                   placeholder="Search psychologist by name or email..."
                   value={searchPsychologist}
                   onChange={(e) => setSearchPsychologist(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 />
                 <select
                   value={psychologistId}
                   onChange={(e) => setPsychologistId(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 >
                   <option value="">Select a psychologist</option>
                   {filteredPsychologists.map(psych => (
@@ -1046,7 +1046,7 @@ export default function AdminManualBookingModal({
                 <select
                   value={packageId}
                   onChange={(e) => setPackageId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 >
                   <option value="">Individual Session</option>
                   {packages.map(pkg => (
@@ -1092,7 +1092,7 @@ export default function AdminManualBookingModal({
 
                   {loadingAvailability && (
                     <div className="text-center py-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#3f2e73] mx-auto"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#025545] mx-auto"></div>
                     </div>
                   )}
 
@@ -1146,11 +1146,11 @@ export default function AdminManualBookingModal({
                             }}
                             className={`text-center py-1 rounded-lg transition-all duration-200 text-xs cursor-pointer ${
                               isSelected
-                                ? 'bg-[#3f2e73] text-white font-bold shadow-lg'
+                                ? 'bg-[#025545] text-white font-bold shadow-lg'
                                 : (isToday && isActuallyAvailable)
                                   ? 'bg-green-500 text-white font-semibold shadow-md border-2 border-green-600 hover:bg-green-600'
                                   : isToday
-                                    ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-semibold'
+                                    ? 'bg-[#025545]/10 text-[#025545] font-semibold'
                                   : isActuallyAvailable
                                     ? 'bg-green-500 text-white font-semibold shadow-md border-2 border-green-600 hover:bg-green-600'
                                   : isAvailable
@@ -1191,8 +1191,8 @@ export default function AdminManualBookingModal({
                               onClick={() => handleTimeSelect(time)}
                               className={`px-3 py-2 rounded-lg border transition-colors text-xs ${
                                 selectedTime === time
-                                  ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
-                                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#3f2e73]'
+                                  ? 'bg-[#025545] text-white border-[#025545]'
+                                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#025545]'
                               }`}
                             >
                               {formatTime(time)}
@@ -1247,7 +1247,7 @@ export default function AdminManualBookingModal({
                 min="0"
                 step="0.01"
                 required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 placeholder="Enter amount"
               />
               </div>
@@ -1261,7 +1261,7 @@ export default function AdminManualBookingModal({
                   onChange={(e) => setTherapistCommission(e.target.value)}
                   min="0"
                   step="0.01"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   placeholder="0.00"
                 />
               </div>
@@ -1276,7 +1276,7 @@ export default function AdminManualBookingModal({
                 onChange={(e) => setPaymentReceivedDate(e.target.value)}
                 max={(function(){ const n=new Date(); const y=n.getFullYear(); const m=String(n.getMonth()+1).padStart(2,'0'); const d=String(n.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; })()}
                 required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
               />
               <p className="mt-1 text-xs text-slate-500">Date when payment was received manually</p>
               </div>
@@ -1289,7 +1289,7 @@ export default function AdminManualBookingModal({
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
               >
                 <option value="cash">Cash</option>
                 <option value="card">Card (Debit/Credit)</option>
@@ -1311,13 +1311,13 @@ export default function AdminManualBookingModal({
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
                   onChange={handlePaymentScreenshotChange}
-                  className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-[#3f2e73] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[#1d1733]"
+                  className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-[#025545] file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-[#012f23]"
                 />
                 <p className="mt-1 text-xs text-slate-500">
                   Upload a screenshot of the payment confirmation. Optional, but useful for manual entries.
                 </p>
                 {isUploadingPaymentScreenshot && (
-                  <p className="mt-2 text-xs text-[#3f2e73] flex items-center gap-2">
+                  <p className="mt-2 text-xs text-[#025545] flex items-center gap-2">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     Uploading screenshot...
                   </p>
@@ -1342,7 +1342,7 @@ export default function AdminManualBookingModal({
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 >
                   <option value="booked">Booked</option>
                   <option value="completed">Completed</option>
@@ -1365,7 +1365,7 @@ export default function AdminManualBookingModal({
                   type="url"
                   value={meetLink}
                   onChange={(e) => setMeetLink(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   placeholder="https://meet.google.com/xxx-xxxx-xxx (if created in another email)"
                 />
                 <p className="mt-1 text-xs text-slate-500">Paste the Meet link if the meeting was already created elsewhere</p>
@@ -1381,7 +1381,7 @@ export default function AdminManualBookingModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 placeholder="Any additional notes about this booking..."
               />
             </div>
@@ -1392,7 +1392,7 @@ export default function AdminManualBookingModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+              className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
               disabled={isLoading}
             >
               Cancel
@@ -1400,7 +1400,7 @@ export default function AdminManualBookingModal({
             <button
               type="submit"
               disabled={isLoading || isLoadingData || isSubmittingRef.current || isUploadingPaymentScreenshot}
-              className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium shadow-sm"
+              className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium shadow-sm"
               style={{ cursor: (isLoading || isLoadingData || isSubmittingRef.current || isUploadingPaymentScreenshot) ? 'not-allowed' : 'pointer' }}
             >
               {isLoading ? (
@@ -1501,9 +1501,9 @@ export default function AdminManualBookingModal({
                       onClose();
                     }}
                     className="w-full py-3 px-4 text-base font-semibold text-white rounded-lg transition-colors duration-200"
-                    style={{ backgroundColor: '#3f2e73' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                    style={{ backgroundColor: '#025545' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                   >
                     Close
                   </button>

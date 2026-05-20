@@ -1299,7 +1299,7 @@ export default function DoctorModal({
             </p>
             <button
               onClick={handleClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-[#3f2e73] hover:bg-[#3f2e73]/10 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-[#025545] hover:bg-[#025545]/10 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1318,7 +1318,7 @@ export default function DoctorModal({
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm ${
                   errors.firstName ? 'border-red-400' : 'border-slate-200'
                 }`}
                 placeholder="Enter first name"
@@ -1336,7 +1336,7 @@ export default function DoctorModal({
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm ${
                   errors.lastName ? 'border-red-400' : 'border-slate-200'
                 }`}
                 placeholder="Enter last name"
@@ -1354,7 +1354,7 @@ export default function DoctorModal({
                 <select
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
-                  className="w-28 rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 outline-none focus:ring-2 focus:ring-[#3f2e73]/20 text-sm"
+                  className="w-28 rounded-lg border border-slate-200 px-3 py-2 bg-slate-50 outline-none focus:ring-2 focus:ring-[#025545]/20 text-sm"
                 >
                   <option value="+91">🇮🇳 +91</option>
                 </select>
@@ -1362,7 +1362,7 @@ export default function DoctorModal({
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value.replace(/[^\d]/g, ''))}
-                  className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm ${
+                  className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm ${
                     errors.phone ? 'border-red-400' : 'border-slate-200'
                   }`}
                   placeholder="Enter phone number"
@@ -1382,7 +1382,7 @@ export default function DoctorModal({
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm ${
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm ${
                   errors.email ? 'border-red-400' : 'border-slate-200'
                 }`}
                 placeholder="Enter email address"
@@ -1400,7 +1400,7 @@ export default function DoctorModal({
                 type="text"
                 value={formData.designation}
                 onChange={(e) => handleInputChange('designation', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 placeholder="e.g., Consultant Psychologist"
               />
             </div>
@@ -1413,17 +1413,17 @@ export default function DoctorModal({
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
-                      <div className="px-3 py-2 border border-slate-200 rounded-lg bg-[#3f2e73]/5 w-full">
+                      <div className="px-3 py-2 border border-slate-200 rounded-lg bg-[#025545]/5 w-full">
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-[#3f2e73] rounded-full flex-shrink-0"></div>
-                          <span className="text-sm text-[#3f2e73] font-medium">Password is set and secure</span>
+                          <div className="w-2 h-2 bg-[#025545] rounded-full flex-shrink-0"></div>
+                          <span className="text-sm text-[#025545] font-medium">Password is set and secure</span>
                         </div>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowPasswordReset(!showPasswordReset)}
-                      className="px-4 py-2 bg-[#3f2e73] hover:bg-[#1d1733] text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                      className="px-4 py-2 bg-[#025545] hover:bg-[#012f23] text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
                     >
                       {showPasswordReset ? 'Cancel Reset' : 'Reset Password'}
                     </button>
@@ -1434,7 +1434,7 @@ export default function DoctorModal({
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                         placeholder="Enter new password"
                       />
                       <p className="text-xs text-gray-600">
@@ -1469,7 +1469,7 @@ export default function DoctorModal({
                 <button
                   type="button"
                   onClick={() => removeImage('coverImage')}
-                  className="absolute -top-2 -right-2 bg-[#3f2e73] text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-[#1d1733] transition-colors"
+                  className="absolute -top-2 -right-2 bg-[#025545] text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-[#012f23] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1484,7 +1484,7 @@ export default function DoctorModal({
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleImageUpload('coverImage', e.target.files[0])}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#3f2e73]/10 file:text-[#3f2e73] hover:file:bg-[#3f2e73]/20"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#025545]/10 file:text-[#025545] hover:file:bg-[#025545]/20"
               />
               <p className="text-xs text-gray-500 mt-1">Recommended: 16:9 ratio, max 5MB</p>
             </div>
@@ -1506,14 +1506,14 @@ export default function DoctorModal({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+              className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm"
+              className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm"
             >
               {isSubmitting ? 'Saving...' : mode === 'add' ? 'Add Doctor' : 'Update Doctor'}
             </button>

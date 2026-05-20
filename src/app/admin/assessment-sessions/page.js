@@ -146,7 +146,7 @@ export default function AssessmentSessionsPage() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'booked': { bg: 'bg-[#3f2e73]/10', text: 'text-[#3f2e73]', label: 'Booked' },
+      'booked': { bg: 'bg-[#025545]/10', text: 'text-[#025545]', label: 'Booked' },
       'reserved': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Reserved' },
       'completed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
       'pending': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pending' },
@@ -192,7 +192,7 @@ export default function AssessmentSessionsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading assessment sessions...</p>
         </div>
       </div>
@@ -228,7 +228,7 @@ export default function AssessmentSessionsPage() {
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600">In Progress</div>
-          <div className="text-2xl font-bold text-[#3f2e73]">{inProgressAssessments}</div>
+          <div className="text-2xl font-bold text-[#025545]">{inProgressAssessments}</div>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
           <div className="text-sm text-gray-600">Pending</div>
@@ -248,7 +248,7 @@ export default function AssessmentSessionsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by client name or email..."
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3f2e73]"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#025545]"
               />
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function AssessmentSessionsPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3f2e73]"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#025545]"
             >
               <option value="all">All Assessments</option>
               <option value="completed">Completed (3/3)</option>
@@ -300,7 +300,7 @@ export default function AssessmentSessionsPage() {
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                           <Package className="h-4 w-4" />
-                          <span className="font-medium text-[#3f2e73]">
+                          <span className="font-medium text-[#025545]">
                             {group.completed}/{group.total} sessions completed
                           </span>
                         </div>
@@ -386,7 +386,7 @@ export default function AssessmentSessionsPage() {
                               <div className="ml-11 mt-2">
                                 <button
                                   onClick={() => handleViewDetails(session)}
-                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-[#3f2e73] hover:bg-[#1d1733] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73]"
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-[#025545] hover:bg-[#012f23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545]"
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View Details
@@ -412,7 +412,7 @@ export default function AssessmentSessionsPage() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
               <div className="flex items-center gap-3">
-                <FileText className="w-6 h-6 text-[#3f2e73]" />
+                <FileText className="w-6 h-6 text-[#025545]" />
                 <h4>Assessment Session Details</h4>
               </div>
               <button
@@ -453,7 +453,7 @@ export default function AssessmentSessionsPage() {
               {/* Client Info */}
               <div>
                 <h5 className="mb-3 flex items-center gap-2">
-                  <User className="h-5 w-5 text-[#3f2e73]" />
+                  <User className="h-5 w-5 text-[#025545]" />
                   Client Information
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

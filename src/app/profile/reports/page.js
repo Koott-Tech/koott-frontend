@@ -27,7 +27,7 @@ export default function ReportsPage() {
       return {}; // No handlers on mobile
     }
     return {
-      onMouseEnter: (e) => e.currentTarget.style.borderColor = '#3f2e73',
+      onMouseEnter: (e) => e.currentTarget.style.borderColor = '#025545',
       onMouseLeave: (e) => e.currentTarget.style.borderColor = '#e5e7eb'
     };
   };
@@ -39,13 +39,13 @@ export default function ReportsPage() {
     }
     return {
       onMouseEnter: (e) => {
-        e.currentTarget.style.color = '#1d1733';
-        e.currentTarget.style.borderColor = '#1d1733';
-        e.currentTarget.style.backgroundColor = '#f5f3ff';
+        e.currentTarget.style.color = '#012f23';
+        e.currentTarget.style.borderColor = '#012f23';
+        e.currentTarget.style.backgroundColor = '#f2fff1';
       },
       onMouseLeave: (e) => {
-        e.currentTarget.style.color = '#3f2e73';
-        e.currentTarget.style.borderColor = '#3f2e73';
+        e.currentTarget.style.color = '#025545';
+        e.currentTarget.style.borderColor = '#025545';
         e.currentTarget.style.backgroundColor = 'transparent';
       }
     };
@@ -174,7 +174,7 @@ export default function ReportsPage() {
     return (
       <div className="absolute inset-0 w-full flex items-center justify-center z-10" style={{ minHeight: 'calc(100vh - 8rem)' }}>
         <div className="flex flex-col items-center justify-center text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#3f2e73' }}></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mb-4" style={{ borderBottomColor: '#025545' }}></div>
           <p className="text-gray-600">Loading reports...</p>
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function ReportsPage() {
     <>
       <div className="bg-white p-4 sm:p-6">
         <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#3f2e73' }} />
+          <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" style={{ color: '#025545' }} />
           <h4 className="text-gray-900 text-lg sm:text-xl">Session Reports</h4>
         </div>
         
@@ -237,7 +237,7 @@ export default function ReportsPage() {
                       <button
                         onClick={() => handleViewFullReport(session)}
                         className="flex-1 text-xs font-medium cursor-pointer transition-colors px-3 py-2 rounded-lg border text-center"
-                        style={{ color: '#3f2e73', borderColor: '#3f2e73' }}
+                        style={{ color: '#025545', borderColor: '#025545' }}
                         {...getButtonHoverHandlers()}
                       >
                         View Complete Report
@@ -290,7 +290,7 @@ export default function ReportsPage() {
                       <button
                         onClick={() => handleViewFullReport(session)}
                         className="text-sm font-medium cursor-pointer transition-colors px-3 py-1.5 rounded-lg border"
-                        style={{ color: '#3f2e73', borderColor: '#3f2e73' }}
+                        style={{ color: '#025545', borderColor: '#025545' }}
                         {...getButtonHoverHandlers()}
                       >
                         View Complete Report

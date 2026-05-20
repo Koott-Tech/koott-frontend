@@ -292,7 +292,7 @@ export default function FinancePayouts() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -335,7 +335,7 @@ export default function FinancePayouts() {
               onClick={() => setActiveTab('pending')}
               className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium ${
                 activeTab === 'pending'
-                  ? 'text-[#3f2e73] border-b-2 border-[#3f2e73]'
+                  ? 'text-[#025545] border-b-2 border-[#025545]'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -345,7 +345,7 @@ export default function FinancePayouts() {
               onClick={() => setActiveTab('completed')}
               className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium ${
                 activeTab === 'completed'
-                  ? 'text-[#3f2e73] border-b-2 border-[#3f2e73]'
+                  ? 'text-[#025545] border-b-2 border-[#025545]'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -561,7 +561,7 @@ export default function FinancePayouts() {
                 <div>
                   <div className="text-sm font-medium text-gray-700 mb-2">Doctor</div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#3f2e73] flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-[#025545] flex items-center justify-center text-white font-semibold">
                       {selectedPayout.psychologist?.first_name?.[0] || <User className="h-5 w-5" />}
                     </div>
                     <div>

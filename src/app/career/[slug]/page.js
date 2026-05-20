@@ -39,7 +39,7 @@ export default function CareerDetailPage() {
   if (isLoading) {
     return (
       <div className="w-full min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" aria-label="Loading" />
+        <Loader2 className="h-10 w-10 animate-spin text-[#025545]" aria-label="Loading" />
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function CareerDetailPage() {
           <p className="text-gray-600">{error || 'Job not found'}</p>
           <Link
             href="/career"
-            className="mt-4 inline-flex items-center gap-2 text-[#3f2e73] font-medium hover:underline"
+            className="mt-4 inline-flex items-center gap-2 text-[#025545] font-medium hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to careers
@@ -73,7 +73,7 @@ export default function CareerDetailPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-16">
         <Link
           href="/career"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#3f2e73] text-sm font-medium"
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-[#025545] text-sm font-medium"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to careers
@@ -123,7 +123,7 @@ export default function CareerDetailPage() {
               <div className="space-y-6">
                 {job.description && (
                   <section>
-                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#3f2e73]/70">
+                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#025545]/70">
                       About
                     </div>
                     <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap leading-6">
@@ -134,7 +134,7 @@ export default function CareerDetailPage() {
 
                 {job.responsibilities && parseBullets(job.responsibilities).length > 0 && (
                   <section>
-                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#3f2e73]/70">
+                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#025545]/70">
                       Responsibilities
                     </div>
                     <ul className="mt-2 space-y-1">
@@ -150,7 +150,7 @@ export default function CareerDetailPage() {
 
                 {job.requirements && parseBullets(job.requirements).length > 0 && (
                   <section>
-                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#3f2e73]/70">
+                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#025545]/70">
                       Requirements
                     </div>
                     <ul className="mt-2 space-y-1">
@@ -166,7 +166,7 @@ export default function CareerDetailPage() {
 
                 {job.benefits && parseBullets(job.benefits).length > 0 && (
                   <section>
-                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#3f2e73]/70">
+                    <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#025545]/70">
                       Benefits
                     </div>
                     <ul className="mt-2 space-y-1">
@@ -186,7 +186,7 @@ export default function CareerDetailPage() {
               <>
                 <div className="border-t border-gray-200" />
                 <div className="p-6 sm:p-8">
-                  <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#3f2e73]/70">
+                  <div className="text-xs sm:text-sm font-semibold uppercase tracking-[0.14em] text-[#025545]/70">
                     Apply
                   </div>
                   <p className="mt-1 text-sm text-gray-600">
@@ -197,7 +197,7 @@ export default function CareerDetailPage() {
                     {job.application_email ? (
                       <a
                         href={`mailto:${job.application_email}`}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 hover:border-[#3f2e73]/30 transition-colors"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 hover:border-[#025545]/30 transition-colors"
                       >
                         Apply via email
                         <Mail className="h-4 w-4 text-gray-600" />
@@ -209,7 +209,7 @@ export default function CareerDetailPage() {
                         href={job.application_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#3f2e73] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d1733] transition-colors"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#025545] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#012f23] transition-colors"
                       >
                         Apply on form
                         <ExternalLink className="h-4 w-4" />

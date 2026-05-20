@@ -145,7 +145,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       number: "01",
       title: currentContent.step1.title,
       description: currentContent.step1.description,
-      gradient: "conic-gradient(at 50% 50%, #f5f3ff 0deg, #ede9fe 120deg, #e9d5ff 240deg, #f5f3ff 360deg)",
+      gradient: "conic-gradient(at 50% 50%, #f2fff1 0deg, #d7fec5 120deg, #e9d5ff 240deg, #f2fff1 360deg)",
       tags: currentContent.step1.tags || []
     },
     {
@@ -172,9 +172,9 @@ export default function ProcessSteps({ therapyType = "individual" }) {
   ];
 
   const avatars = [
-    "/mainlogo.webp",
+    "/logo.png",
     "/360_F_262015638_nxpC4t1wbe8cLiVX3eholwctgVItTqF6.webp",
-    "/mainlogo.webp",
+    "/logo.png",
     "/360_F_262015638_nxpC4t1wbe8cLiVX3eholwctgVItTqF6.webp",
   ];
 
@@ -331,7 +331,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
                             </div>
                             <div className="relative h-28 w-40 overflow-hidden rounded-md">
                               <Image
-                                src="/mainlogo.webp"
+                                src="/logo.png"
                                 alt="provider"
                                 fill
                                 className="object-cover"

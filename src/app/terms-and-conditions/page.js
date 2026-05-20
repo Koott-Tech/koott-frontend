@@ -12,7 +12,7 @@ export const metadata = {
         url: "https://www.koott.in/terms-and-conditions",
         images: [
             {
-                url: "https://www.koott.in/favicon.png",
+                url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
                 alt: "Koott logo",
@@ -24,7 +24,7 @@ export const metadata = {
         title: "Terms and Conditions | Koott",
         description:
             "Review the Terms and Conditions governing the use of Koott by Koott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
-        images: ["https://www.koott.in/favicon.png"],
+        images: ["https://www.koott.in/logo.png"],
     },
 };
 

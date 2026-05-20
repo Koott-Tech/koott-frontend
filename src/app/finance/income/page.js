@@ -156,7 +156,7 @@ export default function FinanceIncome() {
   if (isLoading && income.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -173,7 +173,7 @@ export default function FinanceIncome() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] transition-colors"
+            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Income
@@ -212,7 +212,7 @@ export default function FinanceIncome() {
                   <tr>
                     <td colSpan={6} className="px-6 py-10 text-center">
                       <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                         <span className="text-sm font-medium">Processing...</span>
                       </div>
                     </td>
@@ -292,26 +292,26 @@ export default function FinanceIncome() {
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Date</label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Income Source</label>
-                  <select value={formData.income_source} onChange={(e) => setFormData({ ...formData, income_source: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent">
+                  <select value={formData.income_source} onChange={(e) => setFormData({ ...formData, income_source: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent">
                     <option value="">Select source</option>
                     {sources.map((source) => (<option key={source.id} value={source.name}>{source.name}</option>))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Description</label>
-                  <input type="text" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="text" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Amount</label>
-                  <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required min="0" step="0.01" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required min="0" step="0.01" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Method</label>
-                  <select value={formData.payment_method} onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent">
+                  <select value={formData.payment_method} onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent">
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
                     <option value="cheque">Cheque</option>
@@ -321,15 +321,15 @@ export default function FinanceIncome() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Reference Number</label>
-                  <input type="text" value={formData.reference_number} onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="text" value={formData.reference_number} onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Notes</label>
-                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#3f2e73] rounded-lg hover:bg-[#1d1733] transition-colors">Add Income</button>
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#025545] rounded-lg hover:bg-[#012f23] transition-colors">Add Income</button>
                 </div>
               </form>
             </div>
@@ -354,26 +354,26 @@ export default function FinanceIncome() {
               <form onSubmit={handleUpdate} className="flex-1 overflow-y-auto p-6 space-y-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Date</label>
-                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Income Source</label>
-                  <select value={formData.income_source} onChange={(e) => setFormData({ ...formData, income_source: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent">
+                  <select value={formData.income_source} onChange={(e) => setFormData({ ...formData, income_source: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent">
                     <option value="">Select source</option>
                     {sources.map((source) => (<option key={source.id} value={source.name}>{source.name}</option>))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Description</label>
-                  <input type="text" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="text" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Amount</label>
-                  <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required min="0" step="0.01" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required min="0" step="0.01" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Method</label>
-                  <select value={formData.payment_method} onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent">
+                  <select value={formData.payment_method} onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent">
                     <option value="bank_transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
                     <option value="cheque">Cheque</option>
@@ -383,15 +383,15 @@ export default function FinanceIncome() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Reference Number</label>
-                  <input type="text" value={formData.reference_number} onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <input type="text" value={formData.reference_number} onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Notes</label>
-                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent" />
+                  <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent" />
                 </div>
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button type="button" onClick={() => { setShowEditModal(false); setEditingIncome(null); setFormData(defaultFormData); }} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#3f2e73] rounded-lg hover:bg-[#1d1733] transition-colors">Update Income</button>
+                  <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-[#025545] rounded-lg hover:bg-[#012f23] transition-colors">Update Income</button>
                 </div>
               </form>
             </div>

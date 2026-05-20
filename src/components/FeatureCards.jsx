@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function FeatureCards() {
   const cards = [
     {
-      src: "/mainlogo.webp",
+      src: "/logo.png",
       title: "Accessible Anywhere",
       description: "Connect with licensed experts from the comfort of your home.",
     },

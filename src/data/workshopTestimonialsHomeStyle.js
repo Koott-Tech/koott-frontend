@@ -19,7 +19,7 @@ export const WORKSHOP_TESTIMONIALS_PHOTOS = [
     text: "Doing it together with my child made a difference — it wasn’t a lecture, it felt like play with a purpose.",
     author: "Father of two",
     bgImage: "/Our promise bg2.webp",
-    gradient: "linear-gradient(135deg, #ECEBFF 0%, #E0DEFF 50%, #D4D2FF 100%)",
+    gradient: "linear-gradient(135deg, #f2fff1 0%, #E0DEFF 50%, #D4D2FF 100%)",
     type: "text",
   },
   { src: "/TESTIMONIALS 3.webp", alt: "Happy child after a session", type: "image" },

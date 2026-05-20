@@ -30,13 +30,13 @@ function Calendar({
     ),
     weekday: "size-9 p-0 text-xs font-medium text-gray-400",
     day_button:
-      "relative flex size-9 items-center justify-center whitespace-nowrap rounded-lg p-0 text-gray-900 outline-offset-2 group-[[data-selected]:not(.range-middle)]:[transition-property:color,background-color,border-radius,box-shadow] group-[[data-selected]:not(.range-middle)]:duration-150 focus:outline-none group-data-[disabled]:pointer-events-none focus-visible:z-10 hover:bg-gray-100 group-data-[selected]:bg-[#3f2e73] hover:text-gray-900 group-data-[selected]:text-white group-data-[disabled]:text-gray-300 group-data-[disabled]:line-through group-data-[outside]:text-gray-300 group-data-[outside]:group-data-[selected]:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3f2e73]/70",
+      "relative flex size-9 items-center justify-center whitespace-nowrap rounded-lg p-0 text-gray-900 outline-offset-2 group-[[data-selected]:not(.range-middle)]:[transition-property:color,background-color,border-radius,box-shadow] group-[[data-selected]:not(.range-middle)]:duration-150 focus:outline-none group-data-[disabled]:pointer-events-none focus-visible:z-10 hover:bg-gray-100 group-data-[selected]:bg-[#025545] hover:text-gray-900 group-data-[selected]:text-white group-data-[disabled]:text-gray-300 group-data-[disabled]:line-through group-data-[outside]:text-gray-300 group-data-[outside]:group-data-[selected]:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#025545]/70",
     day: "group size-9 px-0 text-sm",
     range_start: "range-start",
     range_end: "range-end",
     range_middle: "range-middle",
     today:
-      "*:after:pointer-events-none *:after:absolute *:after:bottom-1 *:after:start-1/2 *:after:z-10 *:after:size-[3px] *:after:-translate-x-1/2 *:after:rounded-full *:after:bg-[#3f2e73] [&[data-selected]:not(.range-middle)>*]:after:bg-white [&[data-disabled]>*]:after:bg-gray-300 *:after:transition-colors",
+      "*:after:pointer-events-none *:after:absolute *:after:bottom-1 *:after:start-1/2 *:after:z-10 *:after:size-[3px] *:after:-translate-x-1/2 *:after:rounded-full *:after:bg-[#025545] [&[data-selected]:not(.range-middle)>*]:after:bg-white [&[data-disabled]>*]:after:bg-gray-300 *:after:transition-colors",
     outside: "text-gray-400 data-selected:bg-gray-100 data-selected:text-gray-400",
     hidden: "invisible",
     week_number: "size-9 p-0 text-xs font-medium text-gray-400",

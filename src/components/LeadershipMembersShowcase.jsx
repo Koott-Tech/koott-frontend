@@ -219,7 +219,7 @@ export default function LeadershipMembersShowcase({
               <div className="text-center mb-16">
                 <h2
                   className={headerTitleClassName}
-                  style={{ color: "#1d1733" }}
+                  style={{ color: "#012f23" }}
                 >
                   {sectionTitle}
                 </h2>

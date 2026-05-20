@@ -41,9 +41,9 @@ export default function AssessmentInfoCard({ cmsData = {} }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-full px-6 py-3 text-sm md:text-base font-semibold text-white shadow-sm transition-colors"
-                style={{ backgroundColor: '#3f2e73' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d1733'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#3f2e73'; }}
+                style={{ backgroundColor: '#025545' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#012f23'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#025545'; }}
               >
                 Book Assessment Now
               </a>

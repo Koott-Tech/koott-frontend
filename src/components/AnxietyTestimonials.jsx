@@ -107,7 +107,7 @@ export default function AnxietyTestimonials() {
               </p>
               <div className="mt-3 text-xs text-gray-600 font-medium">Priya, Parent of a 9-year-old</div>
             </div>
-            <div className="rounded-[10px] bg-[#ECEBFF] border border-gray-200 p-4" style={{height: '314px'}}>
+            <div className="rounded-[10px] bg-[#f2fff1] border border-gray-200 p-4" style={{height: '314px'}}>
               <p className="text-[15px] leading-relaxed text-gray-900">
                 "We were unsure about online sessions, but they worked wonders. My daughter now looks forward to her therapy, and I've learned how to support her anxiety better."
               </p>
@@ -124,7 +124,7 @@ export default function AnxietyTestimonials() {
 
           {/* Third column: split 40% top (text review), 60% bottom (image) */}
           <div className="h-[640px] rounded-[10px] overflow-hidden flex flex-col p-1 gap-3">
-            <div className="rounded-[10px] bg-[#ECEBFF] border border-gray-200 p-3 flex flex-col" style={{height: '231px', marginBottom: '0'}}>
+            <div className="rounded-[10px] bg-[#f2fff1] border border-gray-200 p-3 flex flex-col" style={{height: '231px', marginBottom: '0'}}>
               <p className="text-[13px] leading-snug text-gray-900">
                 "At first I was nervous, but my therapist made me feel safe. We play games and talk about my worries. Now I'm not scared to go to school."
               </p>

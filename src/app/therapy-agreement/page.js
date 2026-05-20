@@ -12,7 +12,7 @@ export const metadata = {
         url: "https://www.koott.in/therapy-agreement",
         images: [
             {
-                url: "https://www.koott.in/favicon.png",
+                url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
                 alt: "Koott logo",
@@ -24,7 +24,7 @@ export const metadata = {
         title: "Therapy Agreement | Koott",
         description:
             "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of Koott by Koott Care Pvt. Ltd.",
-        images: ["https://www.koott.in/favicon.png"],
+        images: ["https://www.koott.in/logo.png"],
     },
 };
 

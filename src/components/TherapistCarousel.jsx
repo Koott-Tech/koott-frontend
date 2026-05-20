@@ -125,7 +125,7 @@ export default function TherapistCarousel({ therapists = [] }) {
       >
         {therapists.map((doc, idx) => {
           const imageSrc = normalizeImageUrlWithSize(
-            doc.cover_image_url || doc.profile_picture_url || '/mainlogo.webp',
+            doc.cover_image_url || doc.profile_picture_url || '/logo.png',
             400,
             80
           );

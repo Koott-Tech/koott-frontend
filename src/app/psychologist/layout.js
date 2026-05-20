@@ -59,7 +59,7 @@ export default function PsychologistLayout({ children }) {
   if (authLoading) {
     return (
       <div className="fixed inset-0 w-screen h-screen flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -102,7 +102,7 @@ export default function PsychologistLayout({ children }) {
         
         {/* Sidebar Panel */}
         <div 
-          className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl border-r border-[#3f2e73]/20 will-change-transform ${
+          className={`fixed inset-y-0 left-0 w-64 bg-white shadow-xl border-r border-[#025545]/20 will-change-transform ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
           } lg:translate-x-0`}
           style={{ 
@@ -128,7 +128,7 @@ export default function PsychologistLayout({ children }) {
               }}
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott"
                 width={120}
                 height={40}
@@ -148,8 +148,8 @@ export default function PsychologistLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 text-gray-700 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                      : 'hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                      ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                      : 'hover:bg-[#025545]/10 hover:text-[#025545]'
                   }`}
                   onClick={() => {
                     // Close mobile sidebar on navigation
@@ -180,7 +180,7 @@ export default function PsychologistLayout({ children }) {
       </div>
 
       {/* Desktop sidebar (always visible on lg and above) */}
-      <div className="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#3f2e73]/20 z-40">
+      <div className="hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#025545]/20 z-40">
         <div className="flex flex-col h-full w-full">
           {/* Logo/Brand */}
           <div className="p-6 border-b border-gray-200">
@@ -190,7 +190,7 @@ export default function PsychologistLayout({ children }) {
               aria-label="Koott - Go to psychologist dashboard"
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott"
                 width={120}
                 height={40}
@@ -210,8 +210,8 @@ export default function PsychologistLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 text-gray-700 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                      : 'hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                      ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                      : 'hover:bg-[#025545]/10 hover:text-[#025545]'
                   }`}
                 >
                   <Icon className="h-5 w-5 mr-3" />

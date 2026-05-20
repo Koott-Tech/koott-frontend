@@ -45,8 +45,8 @@ export default function EditEventPageCmsPage() {
     const node = document.querySelector(`[data-editor-section="${sectionKey}"]`);
     if (!node) return;
     node.scrollIntoView({ behavior: "smooth", block: "start" });
-    node.classList.add("ring-2", "ring-[#3f2e73]/30");
-    window.setTimeout(() => node.classList.remove("ring-2", "ring-[#3f2e73]/30"), 1100);
+    node.classList.add("ring-2", "ring-[#025545]/30");
+    window.setTimeout(() => node.classList.remove("ring-2", "ring-[#025545]/30"), 1100);
   }, []);
 
   const load = useCallback(async () => {
@@ -128,7 +128,7 @@ export default function EditEventPageCmsPage() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-[#593494]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#189e4f]" />
       </div>
     );
   }
@@ -137,7 +137,7 @@ export default function EditEventPageCmsPage() {
     return (
       <div className="p-8">
         <p className="text-red-600">{error}</p>
-        <button type="button" className="mt-4 text-[#593494] underline" onClick={() => router.push(base)}>
+        <button type="button" className="mt-4 text-[#189e4f] underline" onClick={() => router.push(base)}>
           Back to list
         </button>
       </div>
@@ -164,7 +164,7 @@ export default function EditEventPageCmsPage() {
             type="button"
             disabled={saving}
             onClick={save}
-            className="rounded-lg bg-[#593494] px-4 py-2 text-sm font-medium text-white hover:bg-[#7351A9] disabled:opacity-50"
+            className="rounded-lg bg-[#189e4f] px-4 py-2 text-sm font-medium text-white hover:bg-[#189e4f] disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>
@@ -176,7 +176,7 @@ export default function EditEventPageCmsPage() {
             <div
               role="heading"
               aria-level={3}
-              className="border-b border-gray-100 pb-2 text-[#3f2e73]"
+              className="border-b border-gray-100 pb-2 text-[#025545]"
               style={{
                 fontSize: "0.8125rem",
                 lineHeight: "1.25rem",

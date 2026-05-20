@@ -82,7 +82,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border border-slate-200/80">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
           <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-            <Edit2 className="h-4 w-4 text-[#3f2e73]" />
+            <Edit2 className="h-4 w-4 text-[#025545]" />
             {therapist.psychologist?.id ? 'Edit Profile' : 'Link to Profile'}
           </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -105,7 +105,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                 required
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -114,7 +114,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
               />
             </div>
           </div>
@@ -126,7 +126,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
             />
           </div>
 
@@ -136,7 +136,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
               type="text"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
             />
           </div>
 
@@ -147,7 +147,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
               required
               value={formData.designation}
               onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
             />
           </div>
 
@@ -158,7 +158,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                 type="number"
                 value={formData.experience_years}
                 onChange={(e) => setFormData({ ...formData, experience_years: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -167,7 +167,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                 type="text"
                 value={formData.area_of_expertise}
                 onChange={(e) => setFormData({ ...formData, area_of_expertise: e.target.value })}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
               />
             </div>
           </div>
@@ -178,7 +178,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#3f2e73] focus:ring-2 focus:ring-[#3f2e73]/10 outline-none"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/10 outline-none"
             />
           </div>
 
@@ -194,7 +194,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                   <button
                     type="button"
                     onClick={() => setShowPasswordReset(!showPasswordReset)}
-                    className="px-3 py-1.5 bg-[#3f2e73] hover:bg-[#2d2152] text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
+                    className="px-3 py-1.5 bg-[#025545] hover:bg-[#012f23] text-white rounded-lg text-xs font-medium transition-colors whitespace-nowrap"
                   >
                     {showPasswordReset ? 'Cancel Reset' : 'Reset Password'}
                   </button>
@@ -205,7 +205,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73] text-sm"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                       placeholder="Enter new password"
                     />
                     <p className="text-[10px] text-gray-500">
@@ -232,7 +232,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-2 bg-[#3f2e73] text-white px-8 py-2 rounded-xl hover:bg-[#2d2152] disabled:opacity-50 transition-all text-sm font-medium flex items-center justify-center gap-2"
+              className="flex-2 bg-[#025545] text-white px-8 py-2 rounded-xl hover:bg-[#012f23] disabled:opacity-50 transition-all text-sm font-medium flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {therapist.psychologist?.id ? 'Update Profile' : 'Link Profile'}
@@ -287,7 +287,7 @@ export default function WixTherapistsPage() {
     <div className="p-4 md:p-8 max-w-[1280px] mx-auto space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <UserCheck className="h-5 w-5 text-[#3f2e73]" />
+          <UserCheck className="h-5 w-5 text-[#025545]" />
           <div>
             <div className="text-xl font-semibold text-gray-900">Koott Therapists</div>
             <p className="text-xs text-slate-500 mt-0.5 max-w-xl">
@@ -298,14 +298,14 @@ export default function WixTherapistsPage() {
         <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
           <button
             onClick={() => setIsManualBookingOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-[#3f2e73] text-white text-sm font-medium rounded-lg hover:bg-[#1d1733] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Create Manual Booking
           </button>
           <button
             onClick={() => setIsAddRecordOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73] transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
           >
             <Calendar className="h-4 w-4 mr-2" />
             Add record
@@ -328,7 +328,7 @@ export default function WixTherapistsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search therapist name or email..."
-          className="w-full max-w-sm rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#3f2e73] focus:outline-none focus:ring-2 focus:ring-[#3f2e73]/15"
+          className="w-full max-w-sm rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
         />
         <div className="text-sm text-gray-500 flex flex-col sm:flex-row sm:items-center sm:gap-3">
           <span>{filtered.length} from bookings</span>
@@ -421,7 +421,7 @@ export default function WixTherapistsPage() {
                     className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors text-sm font-medium ${
                       isLinked
                         ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        : 'bg-[#3f2e73] text-white hover:bg-[#2d2152]'
+                        : 'bg-[#025545] text-white hover:bg-[#012f23]'
                     }`}
                   >
                     <Edit2 className="h-4 w-4" />

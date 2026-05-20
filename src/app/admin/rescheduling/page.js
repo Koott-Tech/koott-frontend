@@ -245,7 +245,7 @@ export default function AdminReschedulingPage() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545]"></div>
         </div>
       </div>
     );
@@ -282,7 +282,7 @@ export default function AdminReschedulingPage() {
             onClick={() => setFilter('all')}
             className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
               filter === 'all'
-                ? 'border-[#3f2e73] text-[#3f2e73]'
+                ? 'border-[#025545] text-[#025545]'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -382,7 +382,7 @@ export default function AdminReschedulingPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewDetails(request)}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-[#3f2e73] bg-[#3f2e73]/10 hover:bg-[#3f2e73]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3f2e73]"
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-[#025545] bg-[#025545]/10 hover:bg-[#025545]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545]"
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -511,7 +511,7 @@ export default function AdminReschedulingPage() {
                   
                   {/* Psychologist Info */}
                   {psychologist && (
-                    <div className="bg-[#3f2e73]/5 rounded-lg p-4">
+                    <div className="bg-[#025545]/5 rounded-lg p-4">
                       <h3 className="text-xs font-semibold text-gray-900 mb-2" style={{ fontSize: '0.7rem', fontWeight: '600' }}>Psychologist Information</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 text-sm">
                         <div><span className="text-gray-600">Psychologist:</span> <span className="font-medium text-gray-900">{psychologistName}</span></div>

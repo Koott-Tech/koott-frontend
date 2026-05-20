@@ -229,7 +229,7 @@ export default function HeroSection({ therapyType = "individual", cmsData = null
                      <div className="flex flex-col xl:grid xl:grid-cols-2 xl:items-start">
              {/* Content Area */}
                           <div className="cms-hero-content-area p-8 md:p-12 pb-20 md:pb-24 pt-14 md:pt-20 mt-2 md:mt-21 space-y-6 order-1 lg:order-1">
-                            <h1 className="cms-hero-title text-[2.5rem] md:text-5xl lg:text-6xl font-medium text-[#1d1733] leading-none md:leading-[1.2] lg:leading-[1.2] md:whitespace-pre-line text-center xl:text-left pt-8 md:pt-0">
+                            <h1 className="cms-hero-title text-[2.5rem] md:text-5xl lg:text-6xl font-medium text-[#012f23] leading-none md:leading-[1.2] lg:leading-[1.2] md:whitespace-pre-line text-center xl:text-left pt-8 md:pt-0">
                  {currentContent.title}
                </h1>
               
@@ -239,9 +239,9 @@ export default function HeroSection({ therapyType = "individual", cmsData = null
               
               <div className="flex flex-col sm:flex-row gap-4 items-center md:items-center justify-center md:justify-start">
                 <button className="text-white font-medium px-6 py-2.5 rounded-full transition-colors duration-200 shadow-lg w-fit"
-                  style={{ backgroundColor: '#3f2e73' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1d1733')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3f2e73')}
+                  style={{ backgroundColor: '#025545' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#012f23')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#025545')}
                   onClick={() => setShowGuide(true)}
                 >
                   Get started

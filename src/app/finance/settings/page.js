@@ -95,7 +95,7 @@ export default function FinanceSettings() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function FinanceSettings() {
               <h3 className="text-sm sm:text-base font-semibold text-gray-900">Expense Categories</h3>
               <button
                 onClick={() => setShowCategoryModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm"
               >
                 <Plus className="h-4 w-4" />
                 Add Category
@@ -142,7 +142,7 @@ export default function FinanceSettings() {
               <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827' }}>Income Sources</h3>
               <button
                 onClick={() => setShowSourceModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm"
               >
                 <Plus className="h-4 w-4" />
                 Add Source
@@ -187,13 +187,13 @@ export default function FinanceSettings() {
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors"
+                    className="flex-1 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
                   >
                     Add Category
                   </button>
@@ -233,13 +233,13 @@ export default function FinanceSettings() {
                     value={sourceName}
                     onChange={(e) => setSourceName(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                   />
                 </div>
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#2d1f52] transition-colors"
+                    className="flex-1 px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors"
                   >
                     Add Source
                   </button>

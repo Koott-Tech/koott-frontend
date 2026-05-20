@@ -44,7 +44,7 @@ const pageMetadata = {
     description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support.',
     images: [
       {
-        url: 'https://www.koott.in/favicon.png',
+        url: 'https://www.koott.in/logo.png',
         width: 1200,
         height: 630,
         alt: 'Koott logo',
@@ -55,7 +55,7 @@ const pageMetadata = {
     card: 'summary_large_image',
     title: 'Child Psychology Services & Online Counseling | Koott',
     description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support.',
-    images: ['https://www.koott.in/favicon.png'],
+    images: ['https://www.koott.in/logo.png'],
     creator: '@koott',
   },
   alternates: {
@@ -70,8 +70,8 @@ const structuredData = {
   name: 'Koott - Child Psychology Services',
   description: 'Professional child psychology services and online counseling for children and families. Expert child psychologists providing therapy for anxiety, behavior, ADHD, and emotional support.',
   url: 'https://www.koott.in',
-  logo: 'https://www.koott.in/mainlogo.webp',
-  image: 'https://www.koott.in/mainlogo.webp',
+  logo: 'https://www.koott.in/logo.png',
+  image: 'https://www.koott.in/logo.png',
   telephone: '+91-XXXXXXXXXX',
   address: {
     '@type': 'PostalAddress',
@@ -1224,7 +1224,7 @@ export default function AdsLandingPage() {
                     <span className="hero-badge-text text-xs sm:text-sm">Convenient, proven online care for brighter future</span>
                   </div>
                   
-                  <h1 className="hero-title mt-4 text-4xl md:text-5xl lg:text-6xl font-medium break-words" style={{ color: '#2C1A4A', fontWeight: 600}}>
+                  <h1 className="hero-title mt-4 text-4xl md:text-5xl lg:text-6xl font-medium break-words" style={{ color: '#012f23', fontWeight: 600}}>
                     Trusted by 840+ parents becoming family again.
                   </h1>
                   <p className="hero-description p1 mt-3 md:mt-3 text-base md:text-lg">
@@ -1242,21 +1242,21 @@ export default function AdsLandingPage() {
                     `}} />
                     <button
                       onClick={handleGetStartedClick}
-                      className="hero-book-button inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-normal text-white shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#593494]/40 flex-shrink-0"
-                      style={{ backgroundColor: '#3f2e73' }}
+                      className="hero-book-button inline-flex items-center justify-center rounded-full px-6 py-3 text-base font-normal text-white shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#189e4f]/40 flex-shrink-0"
+                      style={{ backgroundColor: '#025545' }}
                       type="button"
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                     >
                       <span style={{ fontWeight: 500 }}>Book a Free Session Now</span>
                     </button>
                     <div ref={counterRef} className="text-center flex-shrink-0 counter-container">
                       <p className="text-gray-800 counter-sentence flex items-center justify-center gap-1 flex-wrap">
-                        <TrendingUp size={14} style={{ color: '#3f2e73', strokeWidth: 2.5 }} />
+                        <TrendingUp size={14} style={{ color: '#025545', strokeWidth: 2.5 }} />
                         Booked by{' '}
                         <span className="inline-flex items-center" style={{ gap: 0 }}>
                           {shouldAnimateCounter ? (
-                            <span className="inline-flex items-center" style={{  color: '#3f2e73', minWidth: '2.5ch' }}>
+                            <span className="inline-flex items-center" style={{  color: '#025545', minWidth: '2.5ch' }}>
                               <Counter 
                                 key={`counter-${sessionCount}-${shouldAnimateCounter}`}
                                 start={0} 
@@ -1268,9 +1268,9 @@ export default function AdsLandingPage() {
                               />
                             </span>
                           ) : (
-                            <span className="inline-block" style={{ fontWeight: 400, color: '#3f2e73', minWidth: '2.5ch' }}>0</span>
+                            <span className="inline-block" style={{ fontWeight: 400, color: '#025545', minWidth: '2.5ch' }}>0</span>
                           )}
-                          <span style={{ color: '#3f2e73', marginLeft: '-2px' }}>+</span>
+                          <span style={{ color: '#025545', marginLeft: '-2px' }}>+</span>
                         </span>
                         {' '}parents Today, book yours.
                       </p>
@@ -1649,11 +1649,11 @@ export default function AdsLandingPage() {
                       } else if (nameLower.includes('doug') || nameLower.includes('douglas')) {
                         imageSrc = '/doug.png';
                       } else if (nameLower.includes('ashley') || nameLower.includes('ash') || nameLower.includes('sarah')) {
-                        imageSrc = '/mainlogo.webp';
+                        imageSrc = '/logo.png';
                       } else if (nameLower.includes('child') || nameLower.includes('teen') || nameLower.includes('liana')) {
                         imageSrc = '/kids.png';
                       } else {
-                        imageSrc = '/mainlogo.webp';
+                        imageSrc = '/logo.png';
                       }
                     }
                     
@@ -1933,9 +1933,9 @@ export default function AdsLandingPage() {
                               marginTop: '12px',
                               width: '100%',
                               padding: '8px 16px',
-                              backgroundColor: '#3f2e73',
+                              backgroundColor: '#025545',
                               color: '#ffffff',
-                              border: '2px solid #3f2e73',
+                              border: '2px solid #025545',
                               borderRadius: '8px',
                               fontSize: '0.875rem',
                               fontWeight: 600,
@@ -1945,16 +1945,16 @@ export default function AdsLandingPage() {
                             }}
                             onMouseEnter={(e) => {
                               if (typeof window !== 'undefined' && window.innerWidth > 767) {
-                                e.target.style.backgroundColor = '#6b5299';
-                                e.target.style.borderColor = '#6b5299';
+                                e.target.style.backgroundColor = '#189e4f';
+                                e.target.style.borderColor = '#189e4f';
                               e.target.style.transform = 'translateY(-1px)';
                                 e.target.style.boxShadow = '0 4px 8px rgba(107, 82, 153, 0.3)';
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (typeof window !== 'undefined' && window.innerWidth > 767) {
-                              e.target.style.backgroundColor = '#3f2e73';
-                              e.target.style.borderColor = '#3f2e73';
+                              e.target.style.backgroundColor = '#025545';
+                              e.target.style.borderColor = '#025545';
                               e.target.style.transform = 'translateY(0)';
                               e.target.style.boxShadow = '0 2px 4px rgba(63, 46, 115, 0.2)';
                               }
@@ -1999,7 +1999,7 @@ export default function AdsLandingPage() {
           <HowItWorks 
             heading={
               <>
-                Your <span style={{ color: '#3f2e73', fontStyle: 'italic' }}>Little one</span> deserves{'\n'}
+                Your <span style={{ color: '#025545', fontStyle: 'italic' }}>Little one</span> deserves{'\n'}
                 <span className="how-it-works-mobile-break">care</span> & support
               </>
             }

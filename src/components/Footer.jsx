@@ -216,20 +216,20 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                     }
                 }
                 .copyright-symbol {
-                    color: #3f2e73 !important;
+                    color: #025545 !important;
                 }
                 p .copyright-symbol {
-                    color: #3f2e73 !important;
+                    color: #025545 !important;
                 }
                 .p2 .copyright-symbol {
-                    color: #3f2e73 !important;
+                    color: #025545 !important;
                 }
             `}</style>
             {/* New section above footer */}
             {isHomePage ? (
                 // Home page footer wrapper design (match CMS heading/paragraph styles)
                 <div className="w-full py-12 md:py-16 px-8 md:px-16 lg:px-24" style={{ 
-                    background: 'linear-gradient(to bottom, #faf9ff, #e0d8ff)'
+                    background: 'linear-gradient(to bottom, #f2fff1, #e0d8ff)'
                 }}>
                     <div className="text-center max-w-full mx-auto px-4">
                         <h4 className="footer-heading mb-2 font-semibold max-w-full" style={{ lineHeight: '1.1' }}>
@@ -249,7 +249,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
             ) : isEventsPage ? (
                 // Events pages footer wrapper design
                 <div className="w-full py-12 md:py-14 px-8 md:px-16 lg:px-24" style={{
-                    background: 'linear-gradient(to bottom, #f5f1ff, #eae4ff, #e8e0f5)'
+                    background: 'linear-gradient(to bottom, #f2fff1, #d7fec5, #d7fec5)'
                 }}>
                     <div className="text-center max-w-4xl mx-auto px-4">
                         <h4 className="footer-heading mb-2 font-semibold">
@@ -260,9 +260,9 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                         </p>
                         <button
                             className="text-white px-5 py-2 md:px-7 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200 shadow-sm"
-                            style={{ backgroundColor: '#3f2e73' }}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1d1733')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3f2e73')}
+                            style={{ backgroundColor: '#025545' }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#012f23')}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#025545')}
                             onClick={() => router.push('/events/Koott-summer-workshops-2026#register')}
                         >
                             Register now
@@ -274,7 +274,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
             ) : (
                 // CMS pages footer wrapper design (current design)
                 <div className="w-full py-12 md:py-14 px-8 md:px-16 lg:px-24" style={{ 
-                    background: 'linear-gradient(to bottom, #f5f1ff, #eae4ff, #e8e0f5)'
+                    background: 'linear-gradient(to bottom, #f2fff1, #d7fec5, #d7fec5)'
                 }}>
                     <div className="text-center max-w-4xl mx-auto px-4">
                         <h4 className="footer-heading mb-2 font-semibold">
@@ -291,23 +291,23 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                             <a
                                 href={pathname === '/about' ? "/#choose-your-guide" : "https://wa.me/919539007766?text=Hi%20Koott%2C%20I%27d%20like%20to%20know%20more%20about%20your%20services."}
                                 className="px-4 py-2 md:px-6 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200"
-                                style={{ backgroundColor: 'transparent', color: '#3f2e73', boxShadow: 'inset 0 0 0 2px #3f2e73' }}
+                                style={{ backgroundColor: 'transparent', color: '#025545', boxShadow: 'inset 0 0 0 2px #025545' }}
                                 onClick={(e) => {
                                     if (pathname === '/about') {
                                         e.preventDefault();
                                         window.location.href = '/#choose-your-guide';
                                     }
                                 }}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3f2e73'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #3f2e73'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#3f2e73'; e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #3f2e73'; }}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#025545'; e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #025545'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#025545'; e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #025545'; }}
                             >
                                 {pathname === '/about' ? 'Start Your Care' : 'WhatsApp Us'}
                             </a>
                             <button 
                                 className="text-white px-5 py-2 md:px-7 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200 shadow-sm" 
-                                style={{ backgroundColor: '#3f2e73' }}
-                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                                style={{ backgroundColor: '#025545' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                                 onClick={() => router.push('/online-child-psychologist')}
                             >
                                 {pathname === '/about' ? 'Join Our Team' : 'Book  Now'}
@@ -583,7 +583,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                         </div>
                         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 text-white/90 text-sm mt-6">
                             <p className="p2 text-center xl:text-left">
-                                <span style={{ color: '#3f2e73', display: 'inline-block', marginRight: '2px' }}>©</span> Koott by Koott Care Pvt. Ltd. All rights reserved
+                                <span style={{ color: '#025545', display: 'inline-block', marginRight: '2px' }}>©</span> Koott by Koott Care Pvt. Ltd. All rights reserved
                             </p>
                             <div className="flex flex-wrap items-center justify-center xl:justify-end gap-x-6 gap-y-3">
                                 <a href="/terms-and-conditions" className="hover:text-white transition-colors">TERMS AND CONDITIONS</a>

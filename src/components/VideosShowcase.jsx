@@ -441,7 +441,7 @@ export default function VideosShowcase({ cmsData = null }) {
                       ) : (
                             <div className="absolute inset-0 w-full h-full overflow-hidden">
                               <img
-                                src={thumbnailUrl || youtubeThumb || '/mainlogo.webp'}
+                                src={thumbnailUrl || youtubeThumb || '/logo.png'}
                                 alt={displayVideos[i]?.title ? `${displayVideos[i].title} - Video review thumbnail` : 'Child counseling video review thumbnail'}
                                 className="absolute inset-0 w-full h-full object-cover"
                                 style={{ 
@@ -500,7 +500,7 @@ export default function VideosShowcase({ cmsData = null }) {
                           {playingVideo !== i && (
                             <div className="absolute inset-0 w-full h-full overflow-hidden">
                               <img
-                                src={thumbnailUrl || '/mainlogo.webp'}
+                                src={thumbnailUrl || '/logo.png'}
                                 alt={displayVideos[i]?.title ? `${displayVideos[i].title} - Video review thumbnail` : 'Child counseling video review thumbnail'}
                                 className="absolute inset-0 w-full h-full object-cover"
                                 style={{ 

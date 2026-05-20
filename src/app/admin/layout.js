@@ -102,7 +102,7 @@ export default function AdminLayout({ children }) {
   if (authLoading) {
     return (
       <div className="fixed inset-0 w-screen h-screen flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function AdminLayout({ children }) {
         
         {/* Sidebar Panel */}
         <div 
-          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#3f2e73]/20 will-change-transform ${
+          className={`fixed inset-y-0 right-0 w-64 bg-white shadow-xl border-l border-[#025545]/20 will-change-transform ${
             isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
           } lg:left-0 lg:right-auto lg:translate-x-0`}
           style={{ 
@@ -172,7 +172,7 @@ export default function AdminLayout({ children }) {
                   <div key={item.name}>
                     <button
                       onClick={() => setIsCmsMenuOpen(!isCmsMenuOpen)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-gray-700 rounded-lg hover:bg-[#3f2e73]/10 hover:text-[#3f2e73] transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 text-gray-700 rounded-lg hover:bg-[#025545]/10 hover:text-[#025545] transition-colors"
                     >
                       <div className="flex items-center">
                         <Icon className="h-5 w-5 mr-3" />
@@ -197,8 +197,8 @@ export default function AdminLayout({ children }) {
                               href={subItem.href}
                               className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${
                                 isSubActive 
-                                  ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                                  : 'text-gray-600 hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                                  ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                                  : 'text-gray-600 hover:bg-[#025545]/10 hover:text-[#025545]'
                               }`}
                               onClick={() => {
                                 // Close mobile sidebar on navigation
@@ -226,8 +226,8 @@ export default function AdminLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                      : 'text-gray-700 hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                      ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                      : 'text-gray-700 hover:bg-[#025545]/10 hover:text-[#025545]'
                   }`}
                   onClick={() => {
                     // Close mobile sidebar on navigation
@@ -258,7 +258,7 @@ export default function AdminLayout({ children }) {
       </div>
 
       {/* Desktop sidebar (toggleable on lg and above) */}
-      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#3f2e73]/20 z-40 transition-transform duration-300 ease-in-out ${
+      <div className={`hidden lg:flex fixed inset-y-0 left-0 w-64 bg-white shadow-lg border-r border-[#025545]/20 z-40 transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full w-full">
@@ -270,7 +270,7 @@ export default function AdminLayout({ children }) {
               aria-label="Koott - Go to admin dashboard"
             >
               <img 
-                src="/mainlogo.webp"
+                src="/logo.png"
                 alt="Koott"
                 width={120}
                 height={40}
@@ -290,7 +290,7 @@ export default function AdminLayout({ children }) {
                   <div key={item.name}>
                     <button
                       onClick={() => setIsCmsMenuOpen(!isCmsMenuOpen)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-gray-700 rounded-lg hover:bg-[#3f2e73]/10 hover:text-[#3f2e73] transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 text-gray-700 rounded-lg hover:bg-[#025545]/10 hover:text-[#025545] transition-colors"
                     >
                       <div className="flex items-center">
                         <Icon className="h-5 w-5 mr-3" />
@@ -315,8 +315,8 @@ export default function AdminLayout({ children }) {
                               href={subItem.href}
                               className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${
                                 isSubActive 
-                                  ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                                  : 'text-gray-600 hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                                  ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                                  : 'text-gray-600 hover:bg-[#025545]/10 hover:text-[#025545]'
                               }`}
                             >
                               <SubIcon className="h-4 w-4 mr-3" />
@@ -338,8 +338,8 @@ export default function AdminLayout({ children }) {
                   href={item.href}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                     isActive 
-                      ? 'bg-[#3f2e73]/10 text-[#3f2e73] font-medium' 
-                      : 'text-gray-700 hover:bg-[#3f2e73]/10 hover:text-[#3f2e73]'
+                      ? 'bg-[#025545]/10 text-[#025545] font-medium' 
+                      : 'text-gray-700 hover:bg-[#025545]/10 hover:text-[#025545]'
                   }`}
                 >
                   <Icon className="h-5 w-5 mr-3" />

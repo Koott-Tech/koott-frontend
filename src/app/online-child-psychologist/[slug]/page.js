@@ -94,7 +94,7 @@ function BookingLoadingAnimation() {
           width: '100px',
           height: '100px',
           borderRadius: '20px',
-          backgroundColor: '#f5f1ff',
+          backgroundColor: '#f2fff1',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -122,7 +122,7 @@ function BookingLoadingAnimation() {
             width="18"
             height="18"
             rx="2"
-            stroke="#3f2e73"
+            stroke="#025545"
             strokeWidth="2"
             fill="none"
             initial={{ pathLength: 0 }}
@@ -134,7 +134,7 @@ function BookingLoadingAnimation() {
             y1="2"
             x2="8"
             y2="6"
-            stroke="#3f2e73"
+            stroke="#025545"
             strokeWidth="2"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
@@ -146,7 +146,7 @@ function BookingLoadingAnimation() {
             y1="2"
             x2="16"
             y2="6"
-            stroke="#3f2e73"
+            stroke="#025545"
             strokeWidth="2"
             strokeLinecap="round"
             initial={{ pathLength: 0 }}
@@ -157,7 +157,7 @@ function BookingLoadingAnimation() {
             cx="12"
             cy="14"
             r="3"
-            stroke="#3f2e73"
+            stroke="#025545"
             strokeWidth="2"
             fill="none"
             initial={{ scale: 0, opacity: 0 }}
@@ -181,7 +181,7 @@ function BookingLoadingAnimation() {
           gap: '8px',
           fontSize: '20px',
           fontWeight: '600',
-          color: '#3f2e73',
+          color: '#025545',
           willChange: 'transform, opacity'
         }}
       >
@@ -918,9 +918,9 @@ const TherapistProfileContent = ({ slug, packageId }) => {
   // Theme-aligned bubble colors: each section has its own palette, cycles per bubble
   const SPECIALIZATION_BUBBLE_COLORS = [
     { bg: '#f3e8ff', text: '#5b21b6' },
-    { bg: '#ede9fe', text: '#4c1d95' },
+    { bg: '#d7fec5', text: '#4c1d95' },
     { bg: '#e0e7ff', text: '#3730a3' },
-    { bg: '#f5f3ff', text: '#3f2e73' }
+    { bg: '#f2fff1', text: '#025545' }
   ];
   const LANGUAGES_BUBBLE_COLORS = [
     { bg: '#ccfbf1', text: '#0f766e' },
@@ -1856,7 +1856,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
             <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545] mx-auto mb-4"></div>
           <p className="font-bold text-gray-800 mb-4">Loading Psychologist Profile...</p>
         </div>
       </div>
@@ -1871,7 +1871,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
           <p className="text-gray-600 mb-4">{error || 'Unable to load doctor information'}</p>
           <button 
             onClick={() => router.push('/online-child-psychologist')}
-            className="bg-[#3f2e73] hover:bg-[#1d1733] text-white px-6 py-2 rounded-lg transition-colors duration-200"
+            className="bg-[#025545] hover:bg-[#012f23] text-white px-6 py-2 rounded-lg transition-colors duration-200"
           >
             Back to Psychologists
           </button>
@@ -1926,7 +1926,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
       <div className="bg-white shadow-lg" style={{ marginTop: 0, paddingTop: 0 }}>
         <div className="w-full">
           {/* Top Section with Green Background */}
-          <div className="w-screen max-w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-6 md:px-12 pt-2 md:pt-3 pb-2 md:pb-3 therapist-header-padding" style={{ zIndex: 0, background: 'linear-gradient(to bottom, #f5f1ff, #eae4ff)', marginTop: 0, paddingTop: '24px' }}>
+          <div className="w-screen max-w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-6 md:px-12 pt-2 md:pt-3 pb-2 md:pb-3 therapist-header-padding" style={{ zIndex: 0, background: 'linear-gradient(to bottom, #f2fff1, #d7fec5)', marginTop: 0, paddingTop: '24px' }}>
             
             {/* Mobile: Profile Picture at top */}
             <div className="relative z-10 flex items-center justify-center md:hidden h-full mt-20" style={{ pointerEvents: 'auto' }}>
@@ -1945,7 +1945,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                         const name = selectedDoctor.name?.toLowerCase() || '';
                         if (name.includes('irene') || name.includes('marium')) return '/irene.jpeg';
                         if (name.includes('doug') || name.includes('douglas')) return '/doug.png';
-                        if (name.includes('ashley') || name.includes('ash')) return '/mainlogo.webp';
+                        if (name.includes('ashley') || name.includes('ash')) return '/logo.png';
                         if (name.includes('child') || name.includes('teen')) return '/kids.png';
                         return null;
                       })()}
@@ -1991,7 +1991,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                 {/* Experience text - Mobile positioning */}
                 {selectedDoctor.experience_years && (
                 <div className="absolute bottom-2 -right-2 bg-white/90 backdrop-blur-sm rounded-lg px-1.5 py-0.5 shadow-lg min-w-[90px]">
-                  <p className="text-[10px] font-medium" style={{ color: '#3f2e73' }}>
+                  <p className="text-[10px] font-medium" style={{ color: '#025545' }}>
                       <span className="font-semibold">{selectedDoctor.experience_years}+ yrs</span>
                   </p>
                 </div>
@@ -2035,7 +2035,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                       const name = selectedDoctor.name?.toLowerCase() || '';
                       if (name.includes('irene') || name.includes('marium')) return '/irene.jpeg';
                       if (name.includes('doug') || name.includes('douglas')) return '/doug.png';
-                      if (name.includes('ashley') || name.includes('ash')) return '/mainlogo.webp';
+                      if (name.includes('ashley') || name.includes('ash')) return '/logo.png';
                       if (name.includes('child') || name.includes('teen')) return '/kids.png';
                       return null;
                     })()}
@@ -2081,7 +2081,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
               {/* Experience text - Desktop positioning */}
               {selectedDoctor.experience_years && (
                 <div className="absolute bottom-4 -right-8 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg min-w-[140px]">
-                  <p className="text-xs font-medium" style={{ color: '#3f2e73' }}>
+                  <p className="text-xs font-medium" style={{ color: '#025545' }}>
                     <span className="font-semibold">{selectedDoctor.experience_years}+ years of experience</span>
                 </p>
               </div>
@@ -2116,7 +2116,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
             <div className="flex gap-2 md:gap-4">
               <button 
                   onClick={scrollToCalendar}
-                  className="bg-[#3f2e73] hover:bg-[#1d1733] text-white font-semibold py-2 px-4 md:py-3 md:px-8 rounded-full transition-colors duration-200 shadow-lg text-sm md:text-base"
+                  className="bg-[#025545] hover:bg-[#012f23] text-white font-semibold py-2 px-4 md:py-3 md:px-8 rounded-full transition-colors duration-200 shadow-lg text-sm md:text-base"
               >
                 BOOK SESSION
               </button>
@@ -2230,8 +2230,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                   <p className="text-gray-600 text-sm">Select a date and time that works for you</p>
                 )}
                 {loadingAvailability && (
-                  <div className="mt-2 flex items-center justify-center text-xs" style={{ color: '#3f2e73' }}>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 mr-2" style={{ borderColor: '#3f2e73' }}></div>
+                  <div className="mt-2 flex items-center justify-center text-xs" style={{ color: '#025545' }}>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 mr-2" style={{ borderColor: '#025545' }}></div>
                     Loading availability...
                   </div>
                 )}
@@ -2328,15 +2328,15 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                         }}
                         className={`text-center py-1 rounded-lg transition-all duration-200 text-xs ${
                           isSelected
-                            ? 'bg-[#3f2e73] text-white font-bold shadow-lg cursor-pointer border border-[#3f2e73]'
+                            ? 'bg-[#025545] text-white font-bold shadow-lg cursor-pointer border border-[#025545]'
                             : (isToday && isActuallyAvailable)
-                              ? 'bg-[#6d5ba8] text-white font-semibold shadow-md cursor-pointer border border-[#6d5ba8]'
+                              ? 'bg-[#189e4f] text-white font-semibold shadow-md cursor-pointer border border-[#189e4f]'
                               : isToday
-                                ? 'bg-[#eae4ff] text-[#3f2e73] font-semibold cursor-pointer border border-[#d8ccff]'
+                                ? 'bg-[#d7fec5] text-[#025545] font-semibold cursor-pointer border border-[#d7fec5]'
                               : isActuallyAvailable
-                                ? 'bg-[#f0edff] text-[#3f2e73] font-semibold cursor-pointer border border-[#3f2e73] hover:bg-[#e3dcff]'
+                                ? 'bg-[#f2fff1] text-[#025545] font-semibold cursor-pointer border border-[#025545] hover:bg-[#d7fec5]'
                               : isAvailable
-                                ? 'text-[#3f2e73] cursor-pointer border border-transparent hover:bg-[#f6f3ff]'
+                                ? 'text-[#025545] cursor-pointer border border-transparent hover:bg-[#f2fff1]'
                                 : 'text-gray-300 cursor-not-allowed'
                         }`}
                         title={isPsychologistAvailable && !isPastDate ? (isToday ? 'Today - Available for booking' : 'Available for booking') : isAvailable ? 'Click to check availability' : 'Past date'}
@@ -2346,10 +2346,10 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                           <div
                             className={`w-2 h-2 rounded-full mx-auto mt-1 shadow-sm ${
                               isSelected 
-                                ? 'bg-[#f0edff]' 
+                                ? 'bg-[#f2fff1]' 
                                 : (isToday && isActuallyAvailable)
                                   ? 'bg-white'
-                                  : 'bg-[#3f2e73]'
+                                  : 'bg-[#025545]'
                             }`}
                           ></div>
                         )}
@@ -2408,7 +2408,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                         {/* Available Time Slots */}
                         {availableSlots.length > 0 ? (
                           <div className="space-y-2">
-                            <p className="text-sm font-medium text-[#3f2e73]">
+                            <p className="text-sm font-medium text-[#025545]">
                               Available Times
                               <span className="ml-1">
                                 (IST)
@@ -2421,8 +2421,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                   onClick={() => handleTimeSelect(time)}
                                   className={`p-2 rounded-lg border text-xs transition-all duration-200 w-full h-10 flex items-center justify-center ${
                                     selectedTime === time
-                                      ? 'border-[#3f2e73] bg-[#3f2e73] text-white font-bold shadow-lg' 
-                                      : 'border-gray-300 bg-white hover:border-[#3f2e73] text-gray-700'
+                                      ? 'border-[#025545] bg-[#025545] text-white font-bold shadow-lg' 
+                                      : 'border-gray-300 bg-white hover:border-[#025545] text-gray-700'
                                   }`}
                                 >
                                   {time}
@@ -2467,7 +2467,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                   // Show package information when booking remaining sessions
                   <div>
                     <p className="font-semibold text-gray-800 mb-3 text-sm">Your Package</p>
-                    <div className="p-4 rounded-lg border border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md">
+                    <div className="p-4 rounded-lg border border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md">
                       <div className="flex justify-between items-start mb-2">
                         <div className="text-left">
                           <span className="font-semibold text-base">
@@ -2476,7 +2476,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                 ? clientPackage.package_type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
                                 : 'Package')}
                           </span>
-                          <span className="ml-2 text-xs bg-[#eae4ff] text-[#3f2e73] px-2 py-1 rounded-full">
+                          <span className="ml-2 text-xs bg-[#d7fec5] text-[#025545] px-2 py-1 rounded-full">
                             Remaining Sessions
                           </span>
                         </div>
@@ -2493,19 +2493,19 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                 ) : (
                   // Show package selection for new bookings
                   <>
-                    <p className="text-sm font-medium text-[#3f2e73] mb-3">Select Package</p>
+                    <p className="text-sm font-medium text-[#025545] mb-3">Select Package</p>
                     
                     {/* Child specialist before psychiatrist so titles like Neuropsychiatrist still get CS packages */}
                     {isChildSpecialistDoctor ? (
                       loadingPackages ? (
                         <div className="text-center py-6">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3f2e73] mx-auto" />
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#025545] mx-auto" />
                           <p className="text-gray-500 text-xs mt-2">Loading session options…</p>
                         </div>
                       ) : childSpecInitPackages.length > 0 ? (
                       <div className="space-y-3">
                         <div>
-                          <p className="text-sm font-semibold text-[#3f2e73] mb-2">Initial session</p>
+                          <p className="text-sm font-semibold text-[#025545] mb-2">Initial session</p>
                           <div className="space-y-1">
                             {childSpecInitPackages.map((pkg) => {
                               const suffix = /^cs_init_(parent|child|family)$/.exec(
@@ -2528,8 +2528,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                   }}
                                   className={`p-2 rounded-lg border text-sm transition-all duration-200 w-full text-left ${
                                     selectedPackage?.id === pkg.id
-                                      ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md'
-                                      : 'border-gray-300 hover:border-[#3f2e73] text-gray-700 hover:shadow-sm'
+                                      ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md'
+                                      : 'border-gray-300 hover:border-[#025545] text-gray-700 hover:shadow-sm'
                                   }`}
                                 >
                                   <div className="flex justify-between items-center gap-2">
@@ -2549,7 +2549,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                           <div className="flex-1 border-t border-gray-300" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-[#3f2e73] mb-2">
+                          <p className="text-sm font-semibold text-[#025545] mb-2">
                             Follow-up package
                           </p>
                           <div className="space-y-1.5">
@@ -2582,8 +2582,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                   }}
                                   className={`rounded-lg border py-1.5 px-2 text-sm transition-colors w-full text-left cursor-pointer ${
                                     selected
-                                      ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-sm'
-                                      : 'border-gray-300 bg-white hover:border-[#3f2e73]/60'
+                                      ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-sm'
+                                      : 'border-gray-300 bg-white hover:border-[#025545]/60'
                                   }`}
                                 >
                                   <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
@@ -2621,7 +2621,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                           }
                                         }}
                                       />
-                                      <span className="font-bold text-sm text-[#3f2e73] px-1.5 py-0.5 rounded-md">
+                                      <span className="font-bold text-sm text-[#025545] px-1.5 py-0.5 rounded-md">
                                         ₹{fuPkg.price}
                                       </span>
                                     </div>
@@ -2656,8 +2656,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                           }}
                           className={`p-2 rounded-lg border text-sm transition-all duration-200 w-full text-left ${
                             selectedPackage?.id === 'individual-15'
-                              ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md' 
-                              : 'border-gray-300 hover:border-[#3f2e73] text-gray-700 hover:shadow-sm'
+                              ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md' 
+                              : 'border-gray-300 hover:border-[#025545] text-gray-700 hover:shadow-sm'
                           }`}
                         >
                           <div className="flex justify-between items-center">
@@ -2687,8 +2687,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                           }}
                           className={`mt-1 p-2 rounded-lg border text-sm transition-all duration-200 w-full text-left ${
                             selectedPackage?.id === 'individual-30'
-                              ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md' 
-                              : 'border-gray-300 hover:border-[#3f2e73] text-gray-700 hover:shadow-sm'
+                              ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md' 
+                              : 'border-gray-300 hover:border-[#025545] text-gray-700 hover:shadow-sm'
                           }`}
                         >
                           <div className="flex justify-between items-center">
@@ -2718,8 +2718,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                         }}
                         className={`p-2 rounded-lg border text-sm transition-all duration-200 w-full text-left ${
                           selectedPackage?.id === 'individual'
-                            ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md'
-                            : 'border-gray-300 hover:border-[#3f2e73] text-gray-700 hover:shadow-sm'
+                            ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md'
+                            : 'border-gray-300 hover:border-[#025545] text-gray-700 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex justify-between items-center">
@@ -2733,7 +2733,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                     {/* Dynamic Packages from Database */}
                     {loadingPackages ? (
                       <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#3f2e73] mx-auto"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#025545] mx-auto"></div>
                         <p className="text-gray-500 text-xs mt-2">Loading packages...</p>
                       </div>
                     ) : !isChildSpecialistDoctor &&
@@ -2764,8 +2764,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                 }}
                                 className={`p-2 rounded-lg border text-sm transition-all duration-200 w-full text-left ${
                                   selectedPackage?.id === pkg.id
-                                    ? 'border-[#3f2e73] bg-[#f5f1ff] text-[#3f2e73] shadow-md'
-                                    : 'border-gray-300 hover:border-[#3f2e73] text-gray-700 hover:shadow-sm'
+                                    ? 'border-[#025545] bg-[#f2fff1] text-[#025545] shadow-md'
+                                    : 'border-gray-300 hover:border-[#025545] text-gray-700 hover:shadow-sm'
                                 }`}
                               >
                                 <div className="flex justify-between items-center">
@@ -2779,7 +2779,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                                         : ''}
                                     </span>
                                     {pkg.discount_percentage > 0 && (
-                                      <span className="ml-2 text-xs bg-[#eae4ff] text-[#3f2e73] px-1 py-0.5 rounded-full">
+                                      <span className="ml-2 text-xs bg-[#d7fec5] text-[#025545] px-1 py-0.5 rounded-full">
                                         Save {pkg.discount_percentage}%
                                       </span>
                                     )}
@@ -2813,7 +2813,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                 className={`w-full mt-4 py-2 px-4 rounded-lg font-semibold transition-colors duration-200 text-sm ${
                   isBooking
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-[#3f2e73] text-white hover:bg-[#1d1733]'
+                    : 'bg-[#025545] text-white hover:bg-[#012f23]'
                 }`}
               >
                 {isBooking ? 'Booking...' : isBookingRemaining ? 'Book Remaining Session' : `Book ${bookButtonPackageLabel(selectedPackage)}`}
@@ -2861,7 +2861,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
       </div>
       
       {/* Support Contact Section */}
-      <div className="w-screen max-w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-auto md:h-[100px] bg-[#3f2e73] flex items-center justify-center py-4 md:py-0 mt-8 md:mt-12" style={{ marginBottom: 0 }}>
+      <div className="w-screen max-w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] h-auto md:h-[100px] bg-[#025545] flex items-center justify-center py-4 md:py-0 mt-8 md:mt-12" style={{ marginBottom: 0 }}>
         <p className="text-white text-xs md:text-sm text-center px-4 support-contact-text">
           If you didn&apos;t find what you were looking for, please reach out to us at hey@koott.com or +91-9539007766. We&apos;re here for you - for anything you might need.
         </p>
@@ -3203,7 +3203,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
               {/* Package Status */}
               <div
                 style={{
-                  backgroundColor: '#f5f1ff',
+                  backgroundColor: '#f2fff1',
                   borderRadius: '12px',
                   padding: '20px',
                   marginBottom: '24px',
@@ -3223,7 +3223,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                   style={{
                     fontSize: '32px',
                     fontWeight: 'bold',
-                    color: '#3f2e73',
+                    color: '#025545',
                     marginBottom: '8px'
                   }}
                 >
@@ -3261,7 +3261,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                 style={{
                   width: '100%',
                   padding: '12px 24px',
-                  backgroundColor: '#3f2e73',
+                  backgroundColor: '#025545',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -3270,8 +3270,8 @@ const TherapistProfileContent = ({ slug, packageId }) => {
                   cursor: 'pointer',
                   transition: 'background-color 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
               >
                 View My Sessions
               </button>

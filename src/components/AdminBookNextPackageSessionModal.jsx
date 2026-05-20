@@ -187,7 +187,7 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
       <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-slate-200">
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white rounded-t-2xl">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-[#3f2e73]/10 text-[#3f2e73]">
+            <div className="p-2 rounded-lg bg-[#025545]/10 text-[#025545]">
               <CalendarDays className="h-5 w-5" />
             </div>
             <div>
@@ -256,7 +256,7 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
               </div>
               {loadingAvailability && (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#3f2e73]" />
+                  <Loader2 className="h-6 w-6 animate-spin text-[#025545]" />
                 </div>
               )}
               {!loadingAvailability && (
@@ -291,7 +291,7 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
                         onClick={() => clickable && handleDateSelect(day)}
                         className={`text-center py-1 rounded-lg text-xs cursor-pointer ${
                           isSelected
-                            ? 'bg-[#3f2e73] text-white font-bold'
+                            ? 'bg-[#025545] text-white font-bold'
                             : clickable
                               ? 'bg-green-500/80 text-white hover:bg-green-500'
                               : isPast
@@ -322,8 +322,8 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
                         onClick={() => setSelectedTime(time)}
                         className={`px-3 py-2 rounded-lg border text-xs transition-colors ${
                           selectedTime === time
-                            ? 'bg-[#3f2e73] text-white border-[#3f2e73]'
-                            : 'bg-white text-slate-700 border-slate-300 hover:border-[#3f2e73]'
+                            ? 'bg-[#025545] text-white border-[#025545]'
+                            : 'bg-white text-slate-700 border-slate-300 hover:border-[#025545]'
                         }`}
                       >
                         {formatTimeDisplay(time)}
@@ -357,7 +357,7 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
             <button
               type="submit"
               disabled={submitting || !selectedDateObj || !selectedTime}
-              className="px-4 py-2 bg-[#3f2e73] text-white rounded-lg hover:bg-[#1d1733] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center gap-2"
+              className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium flex items-center gap-2"
             >
               {submitting ? (
                 <>

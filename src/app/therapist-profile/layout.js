@@ -15,7 +15,7 @@ export const metadata = {
     url: "https://www.koott.in/therapist-profile",
     images: [
       {
-        url: "https://www.koott.in/favicon.png",
+        url: "https://www.koott.in/logo.png",
         width: 1200,
         height: 630,
         alt: "Koott logo",
@@ -27,7 +27,7 @@ export const metadata = {
     title: "Child Psychologist Profile | Koott",
     description:
       "View details of a Koott child psychologist, including experience, specialization, and available online counseling slots.",
-    images: ["https://www.koott.in/favicon.png"],
+    images: ["https://www.koott.in/logo.png"],
   },
   alternates: {
     canonical: "https://www.koott.in/therapist-profile",

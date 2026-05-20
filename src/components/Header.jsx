@@ -569,7 +569,7 @@ export default function Header() {
                 aria-label="Koott - Go to homepage"
               >
                 <img 
-                  src="/mainlogo.webp"
+                  src="/logo.png"
                   alt="Koott"
                   width={120}
                   height={40}
@@ -1186,7 +1186,7 @@ export default function Header() {
                 >
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center flex-shrink-0">
                     <img 
-                      src="/favicon.png"
+                      src="/logo.png"
                       alt={getUserDisplayName()}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -1250,9 +1250,9 @@ export default function Header() {
             <button 
               onClick={() => router.push('/online-child-psychologist')} 
               className="inline-flex items-center rounded-full px-3 md:px-4 xl:px-6 py-2 text-sm md:text-base font-semibold text-white shadow-sm transition-colors duration-200"
-              style={{ backgroundColor: '#3f2e73' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+              style={{ backgroundColor: '#025545' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
             >
               Book Now
             </button>
@@ -1321,7 +1321,7 @@ export default function Header() {
                   aria-label="Koott - Go to homepage"
                 >
                   <img 
-                    src="/mainlogo.webp"
+                    src="/logo.png"
                     alt="Koott"
                     width={120}
                     height={40}
@@ -1347,7 +1347,7 @@ export default function Header() {
                   <div className="flex flex-col items-center text-center py-2">
                     <div className="w-14 h-14 rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center mb-3 flex-shrink-0">
                       <img 
-                        src="/favicon.png"
+                        src="/logo.png"
                         alt={getUserDisplayName()}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -1409,9 +1409,9 @@ export default function Header() {
                       router.push('/online-child-psychologist');
                     }}
                     className="w-full py-3 px-4 text-base font-semibold text-white rounded-lg transition-colors duration-200"
-                    style={{ backgroundColor: '#3f2e73' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+                    style={{ backgroundColor: '#025545' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
                   >
                     Book Now
                   </button>

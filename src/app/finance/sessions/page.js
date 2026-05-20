@@ -238,7 +238,7 @@ export default function FinanceSessionsPage() {
       case 'noshow': return 'bg-orange-100 text-orange-800';
       case 'rescheduled': return 'bg-yellow-100 text-yellow-800';
       case 'booked':
-        return isTimePassed() ? 'bg-slate-100 text-slate-700' : 'bg-[#3f2e73]/10 text-[#3f2e73]';
+        return isTimePassed() ? 'bg-slate-100 text-slate-700' : 'bg-[#025545]/10 text-[#025545]';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -432,7 +432,7 @@ export default function FinanceSessionsPage() {
   if (isLoading && sessions.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -496,7 +496,7 @@ export default function FinanceSessionsPage() {
                   placeholder="Search by client name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
                 />
               </div>
             </div>
@@ -517,8 +517,8 @@ export default function FinanceSessionsPage() {
                     relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
                     transition-all duration-200 ease-out
                     ${isActive
-                      ? 'bg-[#3f2e73] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#3f2e73] hover:bg-[#3f2e73]/8 active:bg-[#3f2e73]/12'
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
                     }
                   `}
                 >
@@ -549,7 +549,7 @@ export default function FinanceSessionsPage() {
                   <tr>
                     <td colSpan={7} className="px-6 py-10 text-center">
                       <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
                         <span className="text-sm font-medium">Processing...</span>
                       </div>
                     </td>
@@ -597,7 +597,7 @@ export default function FinanceSessionsPage() {
                                 const hasTotal = totalSessions > 0;
                                 const hasSessionNum = sessionNumber !== undefined && sessionNumber !== null;
                                 return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#025545]/10 text-[#025545]">
                                     {packageType.charAt(0).toUpperCase() + packageType.slice(1).toLowerCase()}
                                     {hasSessionNum && hasTotal && <span className="ml-1">({sessionNumber}/{totalSessions})</span>}
                                   </span>
@@ -700,8 +700,8 @@ export default function FinanceSessionsPage() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -725,7 +725,7 @@ export default function FinanceSessionsPage() {
               <div className="flex-1 overflow-y-auto p-6">
                 {sessionDetailsLoading ? (
                   <div className="flex items-center justify-center py-16">
-                    <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" />
+                    <Loader2 className="h-10 w-10 animate-spin text-[#025545]" />
                   </div>
                 ) : selectedSession ? (
                   <div className="space-y-5">
@@ -914,7 +914,7 @@ export default function FinanceSessionsPage() {
               <div className="flex items-center justify-end px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
                 <button
                   onClick={() => setIsSessionDetailsOpen(false)}
-                  className="px-4 py-2 text-[#3f2e73] bg-white border border-[#3f2e73]/40 rounded-lg hover:bg-[#3f2e73]/10 transition-colors text-sm font-medium"
+                  className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
                 >
                   Close
                 </button>

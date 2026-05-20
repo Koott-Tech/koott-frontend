@@ -2,9 +2,9 @@
 
 /* Design tokens */
 .root {
-  --bec-primary: #3f2e73;
+  --bec-primary: #025545;
   --bec-primary-light: #5a4a8a;
-  --bec-primary-bg: #f5f3ff;
+  --bec-primary-bg: #f2fff1;
   --bec-text: #1a1a2e;
   --bec-text-secondary: #64748b;
   --bec-border: #e2e8f0;

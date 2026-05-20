@@ -178,16 +178,16 @@ export default function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) 
                   disabled={isLoading}
                   className="flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
-                    backgroundColor: isLoading ? "#9ca3af" : "#3f2e73"
+                    backgroundColor: isLoading ? "#9ca3af" : "#025545"
                   }}
                   onMouseEnter={(e) => {
                     if (!isLoading) {
-                      e.currentTarget.style.backgroundColor = "#1d1733";
+                      e.currentTarget.style.backgroundColor = "#012f23";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isLoading) {
-                      e.currentTarget.style.backgroundColor = "#3f2e73";
+                      e.currentTarget.style.backgroundColor = "#025545";
                     }
                   }}
                 >
@@ -333,13 +333,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }) 
                 onClick={onBackToLogin}
                 className="w-full px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style={{
-                  backgroundColor: "#3f2e73"
+                  backgroundColor: "#025545"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#1d1733";
+                  e.currentTarget.style.backgroundColor = "#012f23";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#3f2e73";
+                  e.currentTarget.style.backgroundColor = "#025545";
                 }}
               >
                 Back to Login

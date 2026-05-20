@@ -211,11 +211,11 @@ export default function AdminEventsPage() {
           <div>
             <div className="flex items-center gap-3">
               <h6 className="text-gray-900 flex items-center gap-2">
-                <Ticket className="h-5 w-5 text-[#3f2e73]" aria-hidden />
+                <Ticket className="h-5 w-5 text-[#025545]" aria-hidden />
                 Events Registrations
               </h6>
               {allRows.length > 0 && (
-                <span className="px-3 py-1 bg-[#3f2e73]/10 text-[#3f2e73] rounded-full text-sm font-medium">
+                <span className="px-3 py-1 bg-[#025545]/10 text-[#025545] rounded-full text-sm font-medium">
                   {allRows.length} {allRows.length === 1 ? 'Registration' : 'Registrations'}
                 </span>
               )}
@@ -228,7 +228,7 @@ export default function AdminEventsPage() {
             type="button"
             onClick={() => openAddClient()}
             disabled={allRows.length === 0}
-            className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-[#3f2e73] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d1733] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-[#025545] px-4 py-2 text-sm font-medium text-white hover:bg-[#012f23] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <UserPlus className="h-4 w-4" />
             Add Client
@@ -243,7 +243,7 @@ export default function AdminEventsPage() {
               placeholder="Search by name, email, event title, or slug..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3f2e73] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
             />
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function AdminEventsPage() {
 
       {loading && events.length === 0 ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-[#3f2e73]" aria-label="Loading" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#025545]" aria-label="Loading" />
         </div>
       ) : allRows.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -359,8 +359,8 @@ export default function AdminEventsPage() {
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-[#3f2e73]" />
+                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                  <User className="w-5 h-5 text-[#025545]" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-800 tracking-tight" role="heading" aria-level={1}>
@@ -432,7 +432,7 @@ export default function AdminEventsPage() {
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Join link</label>
                     <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800">
                       {viewRow.session_join_url ? (
-                        <a className="text-[#3f2e73] underline break-all" href={viewRow.session_join_url} target="_blank" rel="noreferrer">
+                        <a className="text-[#025545] underline break-all" href={viewRow.session_join_url} target="_blank" rel="noreferrer">
                           Open session link
                         </a>
                       ) : (
@@ -471,7 +471,7 @@ export default function AdminEventsPage() {
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button className="rounded-md border px-3 py-2 text-sm" onClick={() => setEditRow(null)}>Cancel</button>
-              <button disabled={saving} className="rounded-md bg-[#3f2e73] text-white px-3 py-2 text-sm disabled:opacity-50" onClick={saveEdit}>{saving ? 'Saving...' : 'Save'}</button>
+              <button disabled={saving} className="rounded-md bg-[#025545] text-white px-3 py-2 text-sm disabled:opacity-50" onClick={saveEdit}>{saving ? 'Saving...' : 'Save'}</button>
             </div>
           </div>
         </div>

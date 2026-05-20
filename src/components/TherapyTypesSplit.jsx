@@ -223,7 +223,7 @@ export default function TherapyTypesSplit({ therapyType = "individual", cmsData 
             <button 
                 className="therapy-types-button mt-6 lg:mt-8 inline-flex items-center justify-center rounded-full px-8 lg:px-10 py-3 lg:py-4 shadow-lg transition-colors duration-200 text-sm lg:text-lg text-white"
               style={{ 
-                backgroundColor: '#3f2e73',
+                backgroundColor: '#025545',
                 fontWeight: 500,
                 textTransform: 'none',
                 letterSpacing: 'normal',
@@ -231,8 +231,8 @@ export default function TherapyTypesSplit({ therapyType = "individual", cmsData 
                     width: 'auto',
                     maxWidth: '80%'
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1d1733')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3f2e73')}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#012f23')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#025545')}
                   onClick={() => router.push('/online-child-psychologist')}
             >
               {currentContent.buttonText || "Get started"}

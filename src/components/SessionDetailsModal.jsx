@@ -45,8 +45,8 @@ export default function SessionDetailsModal({
         {/* Header — minimal */}
         <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-[#3f2e73]" />
+            <div className="w-9 h-9 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-[#025545]" />
             </div>
             <div>
               <div className="text-sm font-semibold text-slate-800 tracking-tight" role="heading" aria-level={1}>
@@ -69,7 +69,7 @@ export default function SessionDetailsModal({
           {isPsychologist && (
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2" role="heading" aria-level={2}>
-                <User className="w-4 h-4 text-[#3f2e73]" />
+                <User className="w-4 h-4 text-[#025545]" />
                 Client Information
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -100,7 +100,7 @@ export default function SessionDetailsModal({
           {/* Session Information */}
           <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
             <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3 flex items-center gap-2" role="heading" aria-level={2}>
-              <Calendar className="w-4 h-4 text-[#3f2e73]" />
+              <Calendar className="w-4 h-4 text-[#025545]" />
               Session Information
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -131,7 +131,7 @@ export default function SessionDetailsModal({
                 <div className={valueBoxClass}>
                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                     session.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    session.status === 'booked' ? 'bg-[#3f2e73]/10 text-[#3f2e73]' :
+                    session.status === 'booked' ? 'bg-[#025545]/10 text-[#025545]' :
                     session.status === 'cancelled' ? 'bg-red-100 text-red-800' :
                     session.status === 'no_show' ? 'bg-orange-100 text-orange-800' :
                     session.status === 'rescheduled' ? 'bg-amber-100 text-amber-800' :
@@ -160,7 +160,7 @@ export default function SessionDetailsModal({
           {summary && (
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-[#3f2e73]" />
+                <MessageSquare className="w-4 h-4 text-[#025545]" />
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Session Summary</div>
               </div>
               <div className={`${valueBoxClass} whitespace-pre-wrap`}>{summary}</div>
@@ -172,7 +172,7 @@ export default function SessionDetailsModal({
           {report && (
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <FileText className="w-4 h-4 text-[#3f2e73]" />
+                <FileText className="w-4 h-4 text-[#025545]" />
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Session Report</div>
               </div>
               <div className={`${valueBoxClass} whitespace-pre-wrap`}>{report}</div>
@@ -185,13 +185,13 @@ export default function SessionDetailsModal({
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#3f2e73]" />
+                  <FileText className="w-4 h-4 text-[#025545]" />
                   <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Private Notes</div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowNotes(!showNotes)}
-                  className="text-xs font-medium text-[#3f2e73] hover:text-[#1d1733]"
+                  className="text-xs font-medium text-[#025545] hover:text-[#012f23]"
                 >
                   {showNotes ? <><EyeOff className="w-3.5 h-3.5 inline mr-1" /> Hide</> : <><Eye className="w-3.5 h-3.5 inline mr-1" /> Show</>}
                 </button>
@@ -205,7 +205,7 @@ export default function SessionDetailsModal({
           {(session.feedback || session.client_feedback) && (
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-[#3f2e73]" />
+                <MessageSquare className="w-4 h-4 text-[#025545]" />
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Client Feedback</div>
               </div>
               <div className={valueBoxClass}>

@@ -54,7 +54,7 @@ export default function FinanceRevenue() {
   if (isLoading && !revenueData) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#3f2e73]"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#025545]"></div>
       </div>
     );
   }
@@ -117,8 +117,8 @@ export default function FinanceRevenue() {
 
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center flex-shrink-0">
-                <Calendar className="h-5 w-5 text-[#3f2e73]" />
+              <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-5 w-5 text-[#025545]" />
               </div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Sessions</p>
             </div>
@@ -139,7 +139,7 @@ export default function FinanceRevenue() {
           <div className="p-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-[#3f2e73]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
               </div>
             ) : monthlyBreakdown.length > 0 ? (
               <div className="space-y-4">
@@ -151,7 +151,7 @@ export default function FinanceRevenue() {
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-2.5">
                       <div
-                        className="bg-[#3f2e73] h-2.5 rounded-full transition-all duration-500"
+                        className="bg-[#025545] h-2.5 rounded-full transition-all duration-500"
                         style={{ width: `${((month.revenue || 0) / maxMonthlyRevenue) * 100}%` }}
                       />
                     </div>

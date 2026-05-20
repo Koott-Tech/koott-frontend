@@ -351,7 +351,7 @@ export default function HowItWorks({ heading, ctaText } = {}) {
             {heading || "Start Your Child's Therapy Journey Towards a Happier, Calmer Home"}
           </h2>
           {ctaText && (
-            <p className="text-center mt-2 text-sm md:text-base" style={{ color: '#3f2e73', fontWeight: 500 }}>
+            <p className="text-center mt-2 text-sm md:text-base" style={{ color: '#025545', fontWeight: 500 }}>
               {ctaText}
             </p>
           )}

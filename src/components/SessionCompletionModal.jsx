@@ -121,7 +121,7 @@ export default function SessionCompletionModal({
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={isSubmitting ? undefined : handleClose} aria-hidden="true" />
       <div className={`relative w-full max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden transform transition-all duration-300 scale-100 ${wide ? 'max-w-4xl' : 'max-w-2xl'}`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] flex-shrink-0">
+        <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md text-white shadow-inner">
               <FileText className="h-6 w-6" />
@@ -151,14 +151,14 @@ export default function SessionCompletionModal({
           <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/30">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#3f2e73]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#025545]"></span>
                 Session Context
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Client</p>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 flex items-center gap-2.5 shadow-sm">
-                    <User className="h-4 w-4 text-[#3f2e73]" />
+                    <User className="h-4 w-4 text-[#025545]" />
                     {session.client?.first_name} {session.client?.last_name}
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function SessionCompletionModal({
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Appointment</p>
                   <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 flex items-center gap-2.5 shadow-sm">
-                    <Calendar className="h-4 w-4 text-[#3f2e73]" />
+                    <Calendar className="h-4 w-4 text-[#025545]" />
                     {session.scheduled_date ? new Date(session.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : "—"} · {formatSessionTime() || "—"}
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function SessionCompletionModal({
                 className={`w-full h-32 px-4 py-3.5 border rounded-2xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                   errors.summary 
                     ? "border-rose-500 ring-4 ring-rose-500/10" 
-                    : "border-slate-200 focus:border-[#3f2e73] focus:ring-4 focus:ring-[#3f2e73]/10"
+                    : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
                 }`}
                 disabled={isSubmitting}
               />
@@ -220,7 +220,7 @@ export default function SessionCompletionModal({
                 className={`w-full h-32 px-4 py-3.5 border rounded-2xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                   errors.report 
                     ? "border-rose-500 ring-4 ring-rose-500/10" 
-                    : "border-slate-200 focus:border-[#3f2e73] focus:ring-4 focus:ring-[#3f2e73]/10"
+                    : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
                 }`}
                 disabled={isSubmitting}
               />
@@ -242,7 +242,7 @@ export default function SessionCompletionModal({
                 className={`w-full h-32 px-4 py-3.5 border rounded-2xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                   errors.summary_notes 
                     ? "border-rose-500 ring-4 ring-rose-500/10" 
-                    : "border-slate-200 focus:border-[#3f2e73] focus:ring-4 focus:ring-[#3f2e73]/10"
+                    : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
                 }`}
                 disabled={isSubmitting}
               />
@@ -264,7 +264,7 @@ export default function SessionCompletionModal({
                     className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                       errors.completion_date 
                         ? "border-rose-500 ring-4 ring-rose-500/10" 
-                        : "border-slate-200 focus:border-[#3f2e73] focus:ring-4 focus:ring-[#3f2e73]/10"
+                        : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
                     }`}
                     disabled={isSubmitting}
                     required
@@ -290,7 +290,7 @@ export default function SessionCompletionModal({
             type="submit"
             form="session-completion-form"
             disabled={isSubmitting}
-            className="px-8 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#3f2e73] to-[#5d44a8] hover:shadow-lg hover:shadow-[#3f2e73]/20 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:scale-[0.98] flex items-center gap-3 active:scale-95"
+            className="px-8 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#025545] to-[#189e4f] hover:shadow-lg hover:shadow-[#025545]/20 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:scale-[0.98] flex items-center gap-3 active:scale-95"
           >
             {isSubmitting ? (
               <>

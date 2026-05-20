@@ -131,7 +131,7 @@ export default function ProfileLayout({ children }) {
   if (authLoading) {
     return (
       <div className="fixed inset-0 w-screen h-screen flex items-center justify-center z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#3f2e73' }}></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderBottomColor: '#025545' }}></div>
       </div>
     );
   }
@@ -164,7 +164,7 @@ export default function ProfileLayout({ children }) {
         
         {/* Sidebar Panel */}
         <div 
-          className={`fixed inset-y-0 right-0 w-64 flex flex-col bg-white border-l border-[#3f2e73]/20 shadow-xl will-change-transform ${
+          className={`fixed inset-y-0 right-0 w-64 flex flex-col bg-white border-l border-[#025545]/20 shadow-xl will-change-transform ${
             sidebarOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           style={{ 
@@ -199,7 +199,7 @@ export default function ProfileLayout({ children }) {
                       ? 'text-gray-900 border-l-4' 
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  style={active ? { borderLeftColor: '#3f2e73' } : {}}
+                  style={active ? { borderLeftColor: '#025545' } : {}}
                 >
                   <Icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                   {item.name}
@@ -255,7 +255,7 @@ export default function ProfileLayout({ children }) {
                       ? 'text-gray-900 border-l-4' 
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  style={active ? { borderLeftColor: '#3f2e73' } : {}}
+                  style={active ? { borderLeftColor: '#025545' } : {}}
                 >
                   <Icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                   {item.name}
@@ -304,9 +304,9 @@ export default function ProfileLayout({ children }) {
             <button
               onClick={handleLogout}
               className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-              style={{ backgroundColor: '#3f2e73' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d1733'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3f2e73'}
+              style={{ backgroundColor: '#025545' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#012f23'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#025545'}
             >
               Get started
             </button>
@@ -323,7 +323,7 @@ export default function ProfileLayout({ children }) {
         >
           <div className="flex items-center shrink-0" style={{ maxHeight: '24px' }}>
             <img 
-              src="/mainlogo.webp" 
+              src="/logo.png" 
               alt="Koott Logo" 
               className="w-auto hover:opacity-80 transition-opacity object-contain"
               style={{ height: '24px', maxHeight: '24px' }}

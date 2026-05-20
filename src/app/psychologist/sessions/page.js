@@ -351,7 +351,7 @@ export default function PsychologistSessions() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f2e73] mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading sessions...</p>
         </div>
       </div>
@@ -533,7 +533,7 @@ export default function PsychologistSessions() {
       cancelled: 'bg-red-100 text-red-800',
       no_show: 'bg-orange-100 text-orange-800',
       rescheduled: 'bg-amber-100 text-amber-800',
-      booked: 'bg-[#3f2e73]/10 text-[#3f2e73]',
+      booked: 'bg-[#025545]/10 text-[#025545]',
       pending: 'bg-slate-100 text-slate-700',
       ongoing: 'bg-blue-100 text-blue-800'
     };
@@ -566,7 +566,7 @@ export default function PsychologistSessions() {
               placeholder="Search by client name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#3f2e73]/20 focus:border-[#3f2e73]"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
             />
           </div>
         </div>
@@ -584,7 +584,7 @@ export default function PsychologistSessions() {
         >
           Upcoming
           {sortedUpcomingSessions.length > 0 && (
-            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'upcoming' ? 'bg-[#3f2e73]/10 text-[#3f2e73]' : 'bg-slate-200 text-slate-600'}`}>
+            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'upcoming' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
               ({sortedUpcomingSessions.length})
             </span>
           )}
@@ -599,7 +599,7 @@ export default function PsychologistSessions() {
         >
           Completed
           {sortedPastSessions.length > 0 && (
-            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'completed' ? 'bg-[#3f2e73]/10 text-[#3f2e73]' : 'bg-slate-200 text-slate-600'}`}>
+            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'completed' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
               ({sortedPastSessions.length})
             </span>
           )}
@@ -646,8 +646,8 @@ export default function PsychologistSessions() {
                     <tr key={session.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 sm:px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-[#3f2e73]/10 flex items-center justify-center shrink-0">
-                            <User className="h-4 w-4 text-[#3f2e73]" />
+                          <div className="h-9 w-9 rounded-lg bg-[#025545]/10 flex items-center justify-center shrink-0">
+                            <User className="h-4 w-4 text-[#025545]" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-slate-900">
@@ -682,7 +682,7 @@ export default function PsychologistSessions() {
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         {(session.session_type === 'assessment' || session.type === 'assessment') && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">Assessment</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">Assessment</span>
                         )}
                         {session.package_id || session.package ? (
                           (() => {
@@ -693,20 +693,20 @@ export default function PsychologistSessions() {
                             const label = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
                             if (total > 0 && idx != null) {
                               return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
                                   {label} {idx}/{total}
                                 </span>
                               );
                             }
                             if (total > 0) {
                               return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
                                   {label} ({total})
                                 </span>
                               );
                             }
                             return (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#3f2e73]/10 text-[#3f2e73]">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
                                 {label}
                               </span>
                             );
@@ -741,7 +741,7 @@ export default function PsychologistSessions() {
                               <button
                                 onClick={() => openCompleteSessionModal(session)}
                                 disabled={completingSessions.has(session.id)}
-                                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#3f2e73] text-white hover:bg-[#1d1733] transition-colors shadow-sm disabled:opacity-50"
+                                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#025545] text-white hover:bg-[#012f23] transition-colors shadow-sm disabled:opacity-50"
                                 title="Mark session as complete"
                               >
                                 {completingSessions.has(session.id) ? (
@@ -757,7 +757,7 @@ export default function PsychologistSessions() {
                           {session.status === 'completed' && (session.feedback || session.rating || session.client_feedback) && (
                             <button
                               onClick={() => setFeedbackToView(session)}
-                              className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-[#3f2e73] transition-colors"
+                              className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-[#025545] transition-colors"
                               title="View feedback"
                             >
                               <MessageSquare className="h-4 w-4" />
@@ -884,8 +884,8 @@ export default function PsychologistSessions() {
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-[#3f2e73]/10 flex items-center justify-center">
-                  <History className="w-4 h-4 text-[#3f2e73]" />
+                <div className="w-9 h-9 rounded-xl bg-[#025545]/10 flex items-center justify-center">
+                  <History className="w-4 h-4 text-[#025545]" />
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-800 tracking-tight">
@@ -930,7 +930,7 @@ export default function PsychologistSessions() {
                 />
               ) : historyLoading ? (
                 <div className="py-12 text-center">
-                  <div className="inline-block h-8 w-8 border-2 border-[#3f2e73] border-t-transparent rounded-full animate-spin" />
+                  <div className="inline-block h-8 w-8 border-2 border-[#025545] border-t-transparent rounded-full animate-spin" />
                   <p className="mt-3 text-sm text-slate-500">Loading session history...</p>
                 </div>
               ) : historySessions.length === 0 ? (
@@ -947,8 +947,8 @@ export default function PsychologistSessions() {
                       className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 hover:bg-slate-50"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-lg bg-[#3f2e73]/10 flex items-center justify-center shrink-0">
-                          <Calendar className="h-5 w-5 text-[#3f2e73]" />
+                        <div className="h-10 w-10 rounded-lg bg-[#025545]/10 flex items-center justify-center shrink-0">
+                          <Calendar className="h-5 w-5 text-[#025545]" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-900 truncate">
@@ -960,7 +960,7 @@ export default function PsychologistSessions() {
                       <button
                         type="button"
                         onClick={() => setSelectedHistorySession(s)}
-                        className="shrink-0 px-3 py-1.5 text-xs font-medium text-[#3f2e73] bg-[#3f2e73]/10 rounded-lg hover:bg-[#3f2e73]/20"
+                        className="shrink-0 px-3 py-1.5 text-xs font-medium text-[#025545] bg-[#025545]/10 rounded-lg hover:bg-[#025545]/20"
                       >
                         View
                       </button>

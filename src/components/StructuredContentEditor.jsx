@@ -335,7 +335,7 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
       const normalizedUrl = normalizeUrl(url);
       const escapedText = escapeHtml(linkText);
-      return `<a href="${normalizedUrl}" data-link-url="${normalizedUrl}" data-link-text="${escapedText}" class="underline cursor-pointer" contenteditable="false" onclick="return false;" style="text-decoration: underline; color: #3f2e73;">${escapedText}</a>`;
+      return `<a href="${normalizedUrl}" data-link-url="${normalizedUrl}" data-link-text="${escapedText}" class="underline cursor-pointer" contenteditable="false" onclick="return false;" style="text-decoration: underline; color: #025545;">${escapedText}</a>`;
     });
     
     // Convert newlines to <br>
@@ -512,7 +512,7 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
           link.setAttribute('data-link-text', linkText);
           link.className = 'underline cursor-pointer';
           link.style.textDecoration = 'underline';
-          link.style.color = '#3f2e73';
+          link.style.color = '#025545';
           link.contentEditable = 'false';
           link.textContent = linkText;
           link.onclick = (e) => {
@@ -826,9 +826,9 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
                 updateBlock(index, { ...block, items: [...block.items, ''] });
               }}
               className="text-sm"
-              style={{ color: '#3f2e73' }}
-              onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-              onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+              style={{ color: '#025545' }}
+              onMouseEnter={(e) => e.target.style.color = '#012f23'}
+              onMouseLeave={(e) => e.target.style.color = '#025545'}
             >
               + Add item
             </button>
@@ -869,9 +869,9 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
                 updateBlock(index, { ...block, items: [...block.items, ''] });
               }}
               className="text-sm"
-              style={{ color: '#3f2e73' }}
-              onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-              onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+              style={{ color: '#025545' }}
+              onMouseEnter={(e) => e.target.style.color = '#012f23'}
+              onMouseLeave={(e) => e.target.style.color = '#025545'}
             >
               + Add item
             </button>
@@ -925,9 +925,9 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="underline font-medium"
-                          style={{ color: '#3f2e73' }}
-                          onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-                          onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+                          style={{ color: '#025545' }}
+                          onMouseEnter={(e) => e.target.style.color = '#012f23'}
+                          onMouseLeave={(e) => e.target.style.color = '#025545'}
                         >
                           {part.text}
                         </a>
@@ -953,9 +953,9 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="underline font-medium"
-                          style={{ color: '#3f2e73' }}
-                          onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-                          onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+                          style={{ color: '#025545' }}
+                          onMouseEnter={(e) => e.target.style.color = '#012f23'}
+                          onMouseLeave={(e) => e.target.style.color = '#025545'}
                         >
                           {part.text}
                         </a>
@@ -1028,9 +1028,9 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="underline font-medium"
-                            style={{ color: '#3f2e73' }}
-                            onMouseEnter={(e) => e.target.style.color = '#2d1f52'}
-                            onMouseLeave={(e) => e.target.style.color = '#3f2e73'}
+                            style={{ color: '#025545' }}
+                            onMouseEnter={(e) => e.target.style.color = '#012f23'}
+                            onMouseLeave={(e) => e.target.style.color = '#025545'}
                           >
                             {part.text}
                           </a>
@@ -1063,11 +1063,11 @@ const StructuredContentEditor = ({ content, onChange, onImageUpload }) => {
           }
           [contenteditable] a[data-link-url] {
             text-decoration: underline !important;
-            color: #3f2e73 !important;
+            color: #025545 !important;
             cursor: pointer;
           }
           [contenteditable] a[data-link-url]:hover {
-            color: #2d1f52 !important;
+            color: #012f23 !important;
           }
         `
       }} />
