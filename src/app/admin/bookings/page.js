@@ -192,7 +192,8 @@ export default function BookingsPage() {
           const hidden = rows.filter((s) => {
             const src = String(s.source || '').toLowerCase();
             const wp = s.wix_payload;
-            return src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || !wp.sessionId);
+            // wp.id is the Wix booking ID — treat as equivalent to sessionId
+            return src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || (!wp.sessionId && !wp.id));
           }).length;
           setTotalInRange(Math.max(0, (r?.data?.pagination?.total || 0) - hidden));
         })
@@ -202,7 +203,8 @@ export default function BookingsPage() {
         const bookingsData = (response.data?.sessions || []).filter((s) => {
           const src = String(s.source || '').toLowerCase();
           const wp = s.wix_payload;
-          return !(src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || !wp.sessionId));
+          // wp.id is the Wix booking ID — treat as equivalent to sessionId
+          return !(src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || (!wp.sessionId && !wp.id)));
         });
         const paginationData = response.data?.pagination || {};
         const hiddenCount = (response.data?.sessions || []).length - bookingsData.length;
