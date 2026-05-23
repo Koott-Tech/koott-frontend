@@ -25,17 +25,41 @@ function deriveSessionType(row) {
   const type = row.session_type || null;
   const count = row.session_count;
   const idx = row.session_index;
-  // Follow-up session of a package — show "Session 2 of 3"
+  const p = row.payload || {};
+
+  // Wix pricing plan package — planSessionNumber is the most reliable source
+  if (p.planSessionNumber && p.creditsAvailable) {
+    return `Session ${p.planSessionNumber} of ${p.creditsAvailable} (Package)`;
+  }
+
+  // Follow-up session of a package linked by the package linker service
   if (row.package_parent_booking_id && idx) {
-    return count ? `Session ${idx} of ${count} (package)` : `Session ${idx} (package)`;
+    return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
   }
   if (type === 'package') {
-    if (count && count > 1) return `Session 1 of ${count} (package)`;
+    if (count && count > 1) return `Session 1 of ${count} (Package)`;
     return 'Package';
   }
+  if (type === 'couple') return 'Couple';
+  if (type === 'assessment') return 'Assessment';
+  if (type === 'discovery') return 'Discovery';
   if (type === 'individual') return 'Individual';
   if (type === 'class') return 'Class';
   if (type) return type;
+  return null;
+}
+
+function derivePaymentMethod(row) {
+  const vendors = row.payload?.paymentDetails?.wixPayMultipleDetails;
+  if (Array.isArray(vendors) && vendors.length > 0) {
+    const v = vendors[0].paymentVendorName;
+    if (v === 'inPerson') return 'Manual';
+    if (v === 'Razorpay') return 'Razorpay';
+    if (v) return v;
+  }
+  const state = row.payload?.paymentState;
+  if (state === 'FREE') return 'Free';
+  if (parseFloat(row.price || '0') === 0) return 'Free';
   return null;
 }
 
@@ -285,11 +309,20 @@ export default function AdminWixDiscoverPage() {
                     </div>
                     <p className="text-gray-500 text-xs mt-0.5">{fmtDateTime(row.start_time)}</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {(() => { 
-                        const st = deriveSessionType(row); 
+                      {(() => {
+                        const st = deriveSessionType(row);
+                        const isPackage = st && st.toLowerCase().includes('package');
                         return st ? (
-                          <span className="inline-flex rounded-full bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700 capitalize">{st}</span>
-                        ) : null; 
+                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${isPackage ? 'bg-violet-50 text-violet-700' : 'bg-indigo-50 text-indigo-700'}`}>{st}</span>
+                        ) : null;
+                      })()}
+                      {(() => {
+                        const pm = derivePaymentMethod(row);
+                        if (!pm) return null;
+                        const isManual = pm === 'Manual';
+                        return (
+                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>
+                        );
                       })()}
                       {row.locally_modified && (
                         <span className="inline-flex rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Edited locally</span>
@@ -383,6 +416,8 @@ export default function AdminWixDiscoverPage() {
                 ['Date/Time', fmtDateTime(viewingRow.start_time)],
                 ['Price', viewingRow.price ? `${viewingRow.price} ${viewingRow.currency || ''}` : '—'],
                 ['Session Type', deriveSessionType(viewingRow)],
+                ['Payment Method', derivePaymentMethod(viewingRow) || '—'],
+                ['Payment State', viewingRow.payload?.paymentState || '—'],
                 ['Wix Booking ID', viewingRow.wix_booking_id],
                 ['Created at', fmtDateTime(wixBookingBookedAtIso(viewingRow))],
                 ['Locally Modified', viewingRow.locally_modified ? 'Yes' : 'No'],

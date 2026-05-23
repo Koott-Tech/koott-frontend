@@ -1222,21 +1222,44 @@ export default function BookingsPage() {
                         <div className="text-xs text-gray-500 mt-1">
                           {formatIstFromIso(row.start_time)}
                         </div>
-                        {(row.session_type || row.package_parent_booking_id) && (() => {
-                          const isPackage = row.session_type === 'package';
+                        {(() => {
+                          const wp = row.payload || {};
                           const isChild = !!row.package_parent_booking_id;
                           const count = row.session_count;
                           const idx = row.session_index;
-                          let label;
-                          if (isChild) label = count ? `Session ${idx} of ${count} (package)` : `Session ${idx} (package)`;
-                          else if (isPackage) label = count && count > 1 ? `Session 1 of ${count} (package)` : 'Package';
-                          else if (row.session_type === 'individual') label = 'Individual';
-                          else label = row.session_type;
-                          const colour = (isPackage || isChild) ? 'bg-purple-50 text-purple-700' : 'bg-indigo-50 text-indigo-700';
+                          let label, colour;
+
+                          // Wix pricing plan package (most reliable)
+                          if (wp.planSessionNumber && wp.creditsAvailable) {
+                            label = `Package (${wp.planSessionNumber}/${wp.creditsAvailable})`;
+                            colour = 'bg-violet-50 text-violet-700';
+                          } else if (isChild) {
+                            label = count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
+                            colour = 'bg-violet-50 text-violet-700';
+                          } else if (row.session_type === 'package') {
+                            label = count && count > 1 ? `Session 1 of ${count} (Package)` : 'Package';
+                            colour = 'bg-violet-50 text-violet-700';
+                          } else if (wp.bookingType === 'couple' || row.session_type === 'couple') {
+                            label = 'Couple'; colour = 'bg-pink-50 text-pink-700';
+                          } else if (wp.bookingType === 'assessment' || row.session_type === 'assessment') {
+                            label = 'Assessment'; colour = 'bg-purple-50 text-purple-700';
+                          } else if (wp.bookingType === 'discovery' || row.session_type === 'discovery') {
+                            label = 'Discovery'; colour = 'bg-sky-50 text-sky-700';
+                          } else {
+                            label = 'Individual'; colour = 'bg-indigo-50 text-indigo-700';
+                          }
+
+                          const pm = (() => {
+                            const vendors = wp.paymentDetails?.wixPayMultipleDetails;
+                            if (Array.isArray(vendors) && vendors[0]?.paymentVendorName === 'inPerson') return 'Manual';
+                            return null;
+                          })();
+
                           return (
-                            <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium mt-1 ${colour}`}>
-                              {label}
-                            </span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${colour}`}>{label}</span>
+                              {pm && <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-orange-50 text-orange-700">{pm}</span>}
+                            </div>
                           );
                         })()}
                       </td>

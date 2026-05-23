@@ -581,29 +581,51 @@ export default function FinanceSessionsPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 mt-1.5">
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                             {(() => {
+                              const wp = booking.wix_payload || {};
+                              const wixType = wp.bookingType || booking.session_type;
+
                               if (booking.session_type === 'free_assessment') {
                                 return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">Free Assessment</span>;
                               }
-                              if (booking.session_type === 'assessment' || booking.type === 'assessment') {
+                              if (booking.session_type === 'assessment' || wixType === 'assessment') {
                                 return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">Assessment</span>;
+                              }
+                              if (wixType === 'couple') {
+                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-pink-100 text-pink-800">Couple</span>;
+                              }
+                              if (wixType === 'discovery') {
+                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-100 text-sky-800">Discovery</span>;
+                              }
+                              // Wix pricing plan package — planSessionNumber is exact
+                              if (wp.planSessionNumber && wp.creditsAvailable) {
+                                return (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
+                                    Package ({wp.planSessionNumber}/{wp.creditsAvailable})
+                                  </span>
+                                );
                               }
                               if (booking.package_id || booking.package || booking.session_type === 'package') {
                                 const pkg = booking.package || {};
                                 const totalSessions = booking.session_count ?? pkg.total_sessions ?? pkg.session_count ?? 0;
                                 const sessionNumber = booking.package_session_number ?? pkg.session_number;
-                                const packageType = (pkg.package_type || 'Package').replace(/_\d+$/, '') || 'Package';
                                 const hasTotal = totalSessions > 0;
                                 const hasSessionNum = sessionNumber !== undefined && sessionNumber !== null;
                                 return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#025545]/10 text-[#025545]">
-                                    {packageType.charAt(0).toUpperCase() + packageType.slice(1).toLowerCase()}
-                                    {hasSessionNum && hasTotal && <span className="ml-1">({sessionNumber}/{totalSessions})</span>}
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
+                                    Package{hasSessionNum && hasTotal ? ` (${sessionNumber}/${totalSessions})` : ''}
                                   </span>
                                 );
                               }
                               return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">Individual</span>;
+                            })()}
+                            {(() => {
+                              const vendors = booking.wix_payload?.paymentDetails?.wixPayMultipleDetails;
+                              if (!Array.isArray(vendors) || !vendors.length) return null;
+                              const v = vendors[0].paymentVendorName;
+                              if (v === 'inPerson') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">Manual</span>;
+                              return null;
                             })()}
                           </div>
                           
