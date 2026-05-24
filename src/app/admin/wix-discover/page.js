@@ -26,21 +26,24 @@ function deriveSessionType(row) {
   const count = row.session_count;
   const idx = row.session_index;
   const p = row.payload || {};
+  const isCouple = type === 'couple';
+  const hasPlan = p.planSessionNumber && p.creditsAvailable;
+  const isChild = !!row.package_parent_booking_id && !!idx;
+  const isPkg = type === 'package' || isChild;
 
-  // Wix pricing plan package — planSessionNumber is the most reliable source
-  if (p.planSessionNumber && p.creditsAvailable) {
-    return `Session ${p.planSessionNumber} of ${p.creditsAvailable} (Package)`;
+  if (isCouple && (hasPlan || isPkg)) {
+    const suffix = hasPlan
+      ? ` (${p.planSessionNumber}/${p.creditsAvailable})`
+      : isChild ? (count ? ` (${idx}/${count})` : ` (${idx})`) : (count && count > 1 ? ` (1/${count})` : '');
+    return `Couple Package${suffix}`;
   }
-
-  // Follow-up session of a package linked by the package linker service
-  if (row.package_parent_booking_id && idx) {
-    return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
-  }
-  if (type === 'package') {
-    if (count && count > 1) return `Session 1 of ${count} (Package)`;
+  if (isCouple) return 'Couple';
+  if (hasPlan) return `Package (${p.planSessionNumber}/${p.creditsAvailable})`;
+  if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
+  if (isPkg) {
+    if (count && count > 1) return `Package (1/${count})`;
     return 'Package';
   }
-  if (type === 'couple') return 'Couple';
   if (type === 'assessment') return 'Assessment';
   if (type === 'discovery') return 'Discovery';
   if (type === 'individual') return 'Individual';
@@ -311,10 +314,18 @@ export default function AdminWixDiscoverPage() {
                     <div className="flex flex-wrap gap-1 mt-1">
                       {(() => {
                         const st = deriveSessionType(row);
-                        const isPackage = st && st.toLowerCase().includes('package');
-                        return st ? (
-                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${isPackage ? 'bg-violet-50 text-violet-700' : 'bg-indigo-50 text-indigo-700'}`}>{st}</span>
-                        ) : null;
+                        if (!st) return null;
+                        const sl = st.toLowerCase();
+                        const colour = sl.startsWith('couple')
+                          ? 'bg-pink-50 text-pink-700'
+                          : sl.includes('package')
+                            ? 'bg-violet-50 text-violet-700'
+                            : sl === 'assessment'
+                              ? 'bg-purple-50 text-purple-700'
+                              : sl === 'discovery'
+                                ? 'bg-sky-50 text-sky-700'
+                                : 'bg-indigo-50 text-indigo-700';
+                        return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{st}</span>;
                       })()}
                       {(() => {
                         const pm = derivePaymentMethod(row);

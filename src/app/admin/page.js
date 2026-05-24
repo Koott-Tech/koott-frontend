@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     bookingStatuses: {
       upcoming: 0,
       rescheduled: 0,
-      rescheduleRequested: 0,
+      pending: 0,
       completed: 0,
       noShow: 0,
       cancelled: 0
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           bookingStatuses: platformStats.data?.bookingStatuses || {
             upcoming: 0,
             rescheduled: 0,
-            rescheduleRequested: 0,
+            pending: 0,
             completed: 0,
             noShow: 0,
             cancelled: 0
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
             upcoming: 0,
             booked: 0,
             rescheduled: 0,
-            rescheduleRequested: 0,
+            pending: 0,
             completed: 0,
             noShow: 0,
             cancelled: 0
@@ -271,12 +271,14 @@ export default function AdminDashboard() {
         : ''
     },
     {
-      title: 'Reschedule Requested',
-      value: stats.bookingStatuses?.rescheduleRequested || 0,
+      title: 'Pending',
+      value: stats.bookingStatuses?.pending || 0,
       icon: RefreshCw,
       color: 'bg-amber-500',
-      description: 'Pending reschedule requests',
-      subValue: 'Requires attention'
+      description: 'Past sessions still awaiting action',
+      subValue: stats.totalBookings > 0
+        ? `${((stats.bookingStatuses?.pending || 0) / stats.totalBookings * 100).toFixed(1)}% of total`
+        : ''
     },
     {
       title: 'Completed',
@@ -501,4 +503,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

@@ -35,7 +35,7 @@ import { useNotification } from '@/contexts/NotificationContext';
 import WheelPagination from '@/components/ui/wheel-pagination';
 import DateRangePicker from '@/components/ui/date-range-picker';
 import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
-import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
+import { formatIstCalendarYmd } from '@/lib/wixFinanceDates';
 import { sessionBookedAtIso } from '@/lib/sessionBookedAt';
 
 export default function FinanceSessionsPage() {
@@ -47,12 +47,13 @@ export default function FinanceSessionsPage() {
   const [sessionDetailsLoading, setSessionDetailsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [wixFilterType, setWixFilterType] = useState('all');
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalSessions, setTotalSessions] = useState(0);
-  const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
+  const [dateRange, setDateRange] = useState({ from: null, to: null });
 
   // Today's stats — fetched once on mount, independent of page filters
   const [todayStats, setTodayStats] = useState(null);
@@ -62,7 +63,7 @@ export default function FinanceSessionsPage() {
     (async () => {
       try {
         const today = formatIstCalendarYmd(new Date());
-        const res = await financeApi.getAllSessions({
+        const res = await financeApi.getSessions({
           dateFrom: today,
           dateTo: today,
           dateBasis: 'booked',
@@ -130,25 +131,22 @@ export default function FinanceSessionsPage() {
 
   useEffect(() => {
     loadSessions();
-  }, [currentPage, filterStatus, dateRange]);
+  }, [currentPage, filterStatus, wixFilterType, dateRange]);
 
   useEffect(() => {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [filterStatus, searchTerm, dateRange]);
+  }, [filterStatus, wixFilterType, searchTerm, dateRange]);
 
   const loadSessions = async () => {
     try {
       setIsLoading(true);
       
       const params = {
-        page: currentPage,
-        limit: itemsPerPage,
+        limit: 500,
         dateBasis: 'booked',
         includeUnpaid: 'true',
-        sort: 'scheduled_date',
-        order: 'asc'
       };
 
       if (filterStatus && filterStatus !== 'all') {
@@ -160,7 +158,7 @@ export default function FinanceSessionsPage() {
         params.dateTo = formatIstCalendarYmd(dateRange.to);
       }
 
-      const response = await financeApi.getAllSessions(params);
+      const response = await financeApi.getSessions(params);
       
       if (response && response.success) {
         const sessionsData = (response.data?.sessions || []).filter((s) => {
@@ -170,22 +168,14 @@ export default function FinanceSessionsPage() {
           const isPackageChild = src === 'wix' && Number(s.package_session_number || 1) > 1;
           return !(isUndefinedWix || isPackageChild);
         });
-        const paginationData = response.data?.pagination || {};
-        const hiddenCount = (response.data?.sessions || []).length - sessionsData.length;
         setSessions(sessionsData);
-        setTotalSessions(Math.max(0, (paginationData.total || 0) - hiddenCount));
-        setTotalPages(Math.max(1, Math.ceil(Math.max(0, (paginationData.total || 0) - hiddenCount) / itemsPerPage)));
       } else {
         setSessions([]);
-        setTotalSessions(0);
-        setTotalPages(1);
       }
     } catch (error) {
       console.error('Failed to load finance sessions:', error);
       showError('Failed to load sessions', 'Load Error');
       setSessions([]);
-      setTotalSessions(0);
-      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -383,6 +373,51 @@ export default function FinanceSessionsPage() {
     return 0;
   };
 
+  const deriveSessionType = (booking) => {
+    const p = wixPayload(booking) || {};
+    const type = booking?.session_type || p.bookingType || null;
+    const count = booking?.session_count;
+    const idx = booking?.package_session_number ?? booking?.session_index;
+    const isChild = !!booking?.package_parent_booking_id && !!idx;
+    const hasPlan = p.planSessionNumber && p.creditsAvailable;
+    const isPkg = type === 'package' || !!booking?.package_id || !!booking?.package || isChild;
+    const isCouple = type === 'couple';
+
+    if (isCouple && (hasPlan || isPkg)) {
+      const suffix = hasPlan
+        ? ` (${p.planSessionNumber}/${p.creditsAvailable})`
+        : isChild ? (count ? ` (${idx}/${count})` : ` (${idx})`) : (count && count > 1 ? ` (1/${count})` : '');
+      return `Couple Package${suffix}`;
+    }
+    if (isCouple) return 'Couple';
+    if (type === 'assessment') return 'Assessment';
+    if (type === 'discovery') return 'Discovery';
+    if (hasPlan) return `Package (${p.planSessionNumber}/${p.creditsAvailable})`;
+    if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
+    if (isPkg) return count && count > 1 ? `Package (1/${count})` : 'Package';
+    return 'Individual';
+  };
+
+  const deriveSessionTypeKey = (booking) => {
+    const label = deriveSessionType(booking).toLowerCase();
+    if (label.includes('couple')) return 'couple';
+    if (label.includes('package')) return 'package';
+    return 'individual';
+  };
+
+  const derivePaymentMethod = (booking) => {
+    const p = wixPayload(booking) || {};
+    const vendors = p.paymentDetails?.wixPayMultipleDetails;
+    if (Array.isArray(vendors) && vendors.length > 0) {
+      const v = vendors[0]?.paymentVendorName;
+      if (v === 'inPerson') return 'Manual';
+      if (v === 'Razorpay') return 'Razorpay';
+      if (v) return v;
+    }
+    if (p.paymentState === 'FREE' || getPriceDisplayAmount(booking) === 0) return 'Free';
+    return null;
+  };
+
   const formatBookedAt = (isoString) => {
     if (!isoString) return '—';
     return new Date(isoString).toLocaleString('en-IN', {
@@ -399,6 +434,8 @@ export default function FinanceSessionsPage() {
   const filteredSessions = sessions.filter(s => {
     const statusMatch = filterStatus === 'all' || normalizeStatus(s.status) === filterStatus;
     if (!statusMatch) return false;
+    const typeMatch = wixFilterType === 'all' || deriveSessionTypeKey(s) === wixFilterType;
+    if (!typeMatch) return false;
     if (!searchTerm) return true;
     const clientName = getClientDisplayName(s).toLowerCase();
     const clientEmail = (s.client?.user?.email || s.client?.email || s.wix_payload?.client?.email || '').toLowerCase();
@@ -406,14 +443,31 @@ export default function FinanceSessionsPage() {
   });
 
   const displaySessions = [...filteredSessions].sort((a, b) => {
+    const aBookedAt = sessionBookedAtIso(a);
+    const bBookedAt = sessionBookedAtIso(b);
+    const aMs = aBookedAt ? new Date(aBookedAt).getTime() : 0;
+    const bMs = bBookedAt ? new Date(bBookedAt).getTime() : 0;
+    if (aMs !== bMs) return bMs - aMs;
+
     const aDate = getScheduledDateValue(a) || '';
     const aTime = getScheduledTimeValue(a) || '';
     const bDate = getScheduledDateValue(b) || '';
     const bTime = getScheduledTimeValue(b) || '';
-    const aDt = new Date(`${aDate}T${aTime}`);
-    const bDt = new Date(`${bDate}T${bTime}`);
-    return aDt - bDt;
+    const aDt = new Date(`${aDate}T${aTime}`).getTime();
+    const bDt = new Date(`${bDate}T${bTime}`).getTime();
+    return bDt - aDt;
   });
+
+  useEffect(() => {
+    const total = displaySessions.length;
+    setTotalSessions(total);
+    setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
+  }, [displaySessions, itemsPerPage]);
+
+  const paginatedSessions = displaySessions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const statusTabs = [
     { value: 'all', label: 'All' },
@@ -422,6 +476,13 @@ export default function FinanceSessionsPage() {
     { value: 'cancelled', label: 'Cancelled' },
     { value: 'rescheduled', label: 'Rescheduled' },
     { value: 'no_show', label: 'No Show' }
+  ];
+
+  const wixTypeTabs = [
+    { value: 'all', label: 'All Types' },
+    { value: 'individual', label: 'Individual' },
+    { value: 'couple', label: 'Couple' },
+    { value: 'package', label: 'Package' }
   ];
 
   const handlePageChange = (page) => {
@@ -529,6 +590,31 @@ export default function FinanceSessionsPage() {
           </nav>
         </div>
 
+        <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-1.5">
+          <nav className="flex gap-1 overflow-x-auto" aria-label="Filter by session type">
+            {wixTypeTabs.map((tab) => {
+              const isActive = wixFilterType === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setWixFilterType(tab.value)}
+                  className={`
+                    relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
+                    transition-all duration-200 ease-out
+                    ${isActive
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
         {/* Sessions Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -554,7 +640,7 @@ export default function FinanceSessionsPage() {
                       </div>
                     </td>
                   </tr>
-                ) : displaySessions.length === 0 ? (
+                ) : paginatedSessions.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <Calendar className="mx-auto h-12 w-12 text-gray-400" />
@@ -567,7 +653,7 @@ export default function FinanceSessionsPage() {
                     </td>
                   </tr>
                 ) : (
-                  displaySessions.map((booking) => (
+                  paginatedSessions.map((booking) => (
                     <tr key={booking.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
@@ -583,49 +669,42 @@ export default function FinanceSessionsPage() {
 
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                             {(() => {
-                              const wp = booking.wix_payload || {};
-                              const wixType = wp.bookingType || booking.session_type;
+                              const typeLabel = deriveSessionType(booking);
+                              const typeKey = deriveSessionTypeKey(booking);
+                              const typeClasses =
+                                typeLabel.startsWith('Couple')
+                                  ? 'bg-pink-100 text-pink-800'
+                                  : typeLabel.startsWith('Package') || typeLabel.includes('(Package)')
+                                    ? 'bg-violet-100 text-violet-800'
+                                    : typeLabel === 'Assessment'
+                                      ? 'bg-purple-100 text-purple-800'
+                                      : typeLabel === 'Discovery'
+                                        ? 'bg-sky-100 text-sky-800'
+                                        : typeKey === 'individual'
+                                          ? 'bg-indigo-100 text-indigo-800'
+                                          : 'bg-gray-100 text-gray-800';
+                              const paymentLabel = derivePaymentMethod(booking);
+                              const paymentClasses =
+                                paymentLabel === 'Manual'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : paymentLabel === 'Razorpay'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : paymentLabel === 'Free'
+                                      ? 'bg-sky-100 text-sky-800'
+                                      : 'bg-slate-100 text-slate-700';
 
-                              if (booking.session_type === 'free_assessment') {
-                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">Free Assessment</span>;
-                              }
-                              if (booking.session_type === 'assessment' || wixType === 'assessment') {
-                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-800">Assessment</span>;
-                              }
-                              if (wixType === 'couple') {
-                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-pink-100 text-pink-800">Couple</span>;
-                              }
-                              if (wixType === 'discovery') {
-                                return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-100 text-sky-800">Discovery</span>;
-                              }
-                              // Wix pricing plan package — planSessionNumber is exact
-                              if (wp.planSessionNumber && wp.creditsAvailable) {
-                                return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
-                                    Package ({wp.planSessionNumber}/{wp.creditsAvailable})
+                              return (
+                                <>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${typeClasses}`}>
+                                    {typeLabel}
                                   </span>
-                                );
-                              }
-                              if (booking.package_id || booking.package || booking.session_type === 'package') {
-                                const pkg = booking.package || {};
-                                const totalSessions = booking.session_count ?? pkg.total_sessions ?? pkg.session_count ?? 0;
-                                const sessionNumber = booking.package_session_number ?? pkg.session_number;
-                                const hasTotal = totalSessions > 0;
-                                const hasSessionNum = sessionNumber !== undefined && sessionNumber !== null;
-                                return (
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-800">
-                                    Package{hasSessionNum && hasTotal ? ` (${sessionNumber}/${totalSessions})` : ''}
-                                  </span>
-                                );
-                              }
-                              return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-800">Individual</span>;
-                            })()}
-                            {(() => {
-                              const vendors = booking.wix_payload?.paymentDetails?.wixPayMultipleDetails;
-                              if (!Array.isArray(vendors) || !vendors.length) return null;
-                              const v = vendors[0].paymentVendorName;
-                              if (v === 'inPerson') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">Manual</span>;
-                              return null;
+                                  {paymentLabel && (
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${paymentClasses}`}>
+                                      {paymentLabel}
+                                    </span>
+                                  )}
+                                </>
+                              );
                             })()}
                           </div>
                           
@@ -701,12 +780,20 @@ export default function FinanceSessionsPage() {
         {/* Total count */}
         {(displaySessions.length > 0 || totalSessions > 0) && (
           <div className="text-center mt-4 text-sm text-gray-600">
-            Showing {displaySessions.length} of {totalSessions} session{totalSessions !== 1 ? 's' : ''}
+            Showing {paginatedSessions.length} of {totalSessions} session{totalSessions !== 1 ? 's' : ''}
             {filterStatus !== 'all' && (
               <>
                 {' '}with status{' '}
                 <span className="font-medium text-gray-900">
                   {filterStatus === 'no_show' ? 'No Show' : filterStatus.replace('_', ' ')}
+                </span>
+              </>
+            )}
+            {wixFilterType !== 'all' && (
+              <>
+                {' '}in{' '}
+                <span className="font-medium text-gray-900">
+                  {wixTypeTabs.find((tab) => tab.value === wixFilterType)?.label || wixFilterType}
                 </span>
               </>
             )}

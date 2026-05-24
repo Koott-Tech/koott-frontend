@@ -615,6 +615,9 @@ export default function BookingsPage() {
       case 'no_show':
         return <AlertCircle className="h-4 w-4 text-orange-500" />;
       case 'rescheduled':
+        if (isBookingPastDue(booking)) {
+          return <Clock className="h-4 w-4 text-slate-500" />;
+        }
         return <RefreshCw className="h-4 w-4 text-yellow-500" />;
       case 'scheduled':
         if (isBookingPastDue(booking)) {
@@ -622,8 +625,14 @@ export default function BookingsPage() {
         }
         return <Calendar className="h-4 w-4 text-sky-600" />;
       case 'confirmed':
+        if (isBookingPastDue(booking)) {
+          return <Clock className="h-4 w-4 text-slate-500" />;
+        }
         return <UserCheck className="h-4 w-4 text-emerald-600" />;
       case 'reschedule_requested':
+        if (isBookingPastDue(booking)) {
+          return <Clock className="h-4 w-4 text-slate-500" />;
+        }
         return <RefreshCw className="h-4 w-4 text-amber-600" />;
       case 'booked':
         if (isBookingPastDue(booking)) {
@@ -644,6 +653,9 @@ export default function BookingsPage() {
       case 'no_show':
         return 'bg-orange-100 text-orange-800';
       case 'rescheduled':
+        if (isBookingPastDue(booking)) {
+          return 'bg-slate-100 text-slate-700';
+        }
         return 'bg-yellow-100 text-yellow-800';
       case 'scheduled':
         if (isBookingPastDue(booking)) {
@@ -651,8 +663,14 @@ export default function BookingsPage() {
         }
         return 'bg-sky-100 text-sky-800';
       case 'confirmed':
+        if (isBookingPastDue(booking)) {
+          return 'bg-slate-100 text-slate-700';
+        }
         return 'bg-emerald-100 text-emerald-800';
       case 'reschedule_requested':
+        if (isBookingPastDue(booking)) {
+          return 'bg-slate-100 text-slate-700';
+        }
         return 'bg-amber-100 text-amber-900';
       case 'booked':
         if (isBookingPastDue(booking)) {
@@ -673,6 +691,9 @@ export default function BookingsPage() {
       case 'no_show':
         return 'No Show';
       case 'rescheduled':
+        if (isBookingPastDue(booking)) {
+          return 'Pending';
+        }
         return 'Rescheduled';
       case 'scheduled':
         if (isBookingPastDue(booking)) {
@@ -680,6 +701,9 @@ export default function BookingsPage() {
         }
         return 'Scheduled';
       case 'confirmed':
+        if (isBookingPastDue(booking)) {
+          return 'Pending';
+        }
         return 'Confirmed';
       case 'reschedule_requested':
         if (isBookingPastDue(booking)) {
@@ -734,7 +758,13 @@ export default function BookingsPage() {
   // Robust overdue check for booked sessions (supports varied backend time formats)
   const isBookingPastDue = (booking) => {
     const status = normalizeStatus(booking?.status);
-    if (status !== 'booked' && status !== 'scheduled' && status !== 'reschedule_requested') return false;
+    if (
+      status !== 'booked' &&
+      status !== 'scheduled' &&
+      status !== 'reschedule_requested' &&
+      status !== 'rescheduled' &&
+      status !== 'confirmed'
+    ) return false;
     const dateStr = booking?.scheduled_date;
     const timeStr = booking?.scheduled_time;
     if (!dateStr || !timeStr) return false;
@@ -774,6 +804,7 @@ export default function BookingsPage() {
     const st = normalizeStatus(booking.status);
     const statusMatch =
       (filterStatus === 'booked' && (st === 'booked' || st === 'rescheduled')) ||
+      (filterStatus === 'pending' && isBookingPastDue(booking)) ||
       st === filterStatus;
     if (!statusMatch) return false;
 
@@ -806,6 +837,9 @@ export default function BookingsPage() {
     if (filterStatus === 'completed') {
       return mb - ma;
     }
+    if (filterStatus === 'pending') {
+      return mb - ma;
+    }
     // Upcoming + Rescheduled tabs: future sessions first (nearest slot at top), overdue after.
     const nearestFirst =
       filterStatus === 'booked' || filterStatus === 'rescheduled';
@@ -836,7 +870,7 @@ export default function BookingsPage() {
     { label: 'Completed', value: 'completed' },
     { label: 'No Show', value: 'no_show' },
     { label: 'Cancelled', value: 'cancelled' },
-    { label: 'Reschedule Requested', value: 'reschedule_requested' },
+    { label: 'Pending', value: 'pending' },
     { label: 'Refund Requested', value: 'refund_requested' },
     { label: 'Packages', value: 'packages' }
   ];
@@ -1229,22 +1263,29 @@ export default function BookingsPage() {
                           const idx = row.session_index;
                           let label, colour;
 
-                          // Wix pricing plan package (most reliable)
-                          if (wp.planSessionNumber && wp.creditsAvailable) {
-                            label = `Package (${wp.planSessionNumber}/${wp.creditsAvailable})`;
-                            colour = 'bg-violet-50 text-violet-700';
-                          } else if (isChild) {
-                            label = count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
-                            colour = 'bg-violet-50 text-violet-700';
-                          } else if (row.session_type === 'package') {
-                            label = count && count > 1 ? `Session 1 of ${count} (Package)` : 'Package';
-                            colour = 'bg-violet-50 text-violet-700';
-                          } else if (wp.bookingType === 'couple' || row.session_type === 'couple') {
+                          const isCouple = wp.bookingType === 'couple' || row.session_type === 'couple';
+                          const isAssessment = wp.bookingType === 'assessment' || row.session_type === 'assessment';
+                          const isDiscovery = wp.bookingType === 'discovery' || row.session_type === 'discovery';
+                          const isPkg = row.session_type === 'package' || isChild;
+                          const hasPlanInfo = wp.planSessionNumber && wp.creditsAvailable;
+                          const pkgSuffix = hasPlanInfo
+                            ? ` (${wp.planSessionNumber}/${wp.creditsAvailable})`
+                            : isChild
+                              ? (count ? ` (${idx}/${count})` : ` (${idx})`)
+                              : (count && count > 1 ? ` (1/${count})` : '');
+
+                          if (isCouple && (hasPlanInfo || isPkg)) {
+                            label = `Couple Package${pkgSuffix}`; colour = 'bg-pink-50 text-pink-700';
+                          } else if (isCouple) {
                             label = 'Couple'; colour = 'bg-pink-50 text-pink-700';
-                          } else if (wp.bookingType === 'assessment' || row.session_type === 'assessment') {
+                          } else if (isAssessment) {
                             label = 'Assessment'; colour = 'bg-purple-50 text-purple-700';
-                          } else if (wp.bookingType === 'discovery' || row.session_type === 'discovery') {
+                          } else if (isDiscovery) {
                             label = 'Discovery'; colour = 'bg-sky-50 text-sky-700';
+                          } else if (hasPlanInfo) {
+                            label = `Package (${wp.planSessionNumber}/${wp.creditsAvailable})`; colour = 'bg-violet-50 text-violet-700';
+                          } else if (isPkg) {
+                            label = count && count > 1 ? `Package (1/${count})` : 'Package'; colour = 'bg-violet-50 text-violet-700';
                           } else {
                             label = 'Individual'; colour = 'bg-indigo-50 text-indigo-700';
                           }
@@ -1690,6 +1731,8 @@ export default function BookingsPage() {
                   ? 'No Show'
                   : filterStatus === 'booked'
                     ? 'Upcoming'
+                    : filterStatus === 'pending'
+                      ? 'Pending'
                     : filterStatus.split('_').join(' ')}
               </span>
             </>
