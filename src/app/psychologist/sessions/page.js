@@ -352,18 +352,23 @@ export default function PsychologistSessions() {
 
   // Exclude free assessment items from psychologist panel
   const excludeFreeAssessment = (s) => s.session_type !== 'free_assessment';
-  // Include all sessions (booked, rescheduled, and pending) in upcoming sessions
-  // Pending assessment sessions will also appear here, not in a separate section
-  // But only include pending sessions that don't have a scheduled date/time yet (truly need scheduling)
+  // Two filter views (consistent with dashboard stats):
+  //   • Upcoming / Completed tabs use scheduled_date — "what's happening in this month"
+  //   • Cancelled tab uses booking_created_at — cancellation is a booking-level event
+  // This matches the rule used across admin/finance/therapist dashboards.
   const dateFilteredSessions = useMemo(() => {
     if (dateRange?.all) return sessions;
     if (!hasDateRangeBounds(dateRange)) return sessions;
     const fromYmd = formatIstCalendarYmd(dateRange.from);
     const toYmd = formatIstCalendarYmd(dateRange.to);
     if (!fromYmd || !toYmd) return sessions;
+    const inRange = (ymd) => !!(ymd && ymd >= fromYmd && ymd <= toYmd);
     return sessions.filter((session) => {
-      const ymd = sessionBookingCreatedIstYmd(session);
-      return ymd && ymd >= fromYmd && ymd <= toYmd;
+      // Cancelled → by booking_created_at; everything else → by scheduled_date
+      const ymd = session.status === 'cancelled'
+        ? (sessionBookingCreatedIstYmd(session) || (session.scheduled_date ? String(session.scheduled_date).slice(0, 10) : null))
+        : (session.scheduled_date ? String(session.scheduled_date).slice(0, 10) : null);
+      return inRange(ymd);
     });
   }, [sessions, dateRange]);
 

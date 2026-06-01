@@ -72,49 +72,58 @@ export default function PsychologistDashboard() {
   };
 
   // Filter by scheduled_date so pending payout and income earned always reflect the
-  // month the session is/was scheduled in — not when it was originally booked.
-  // A rescheduled session naturally moves between months as its scheduled_date changes.
-  const filteredSessions = useMemo(() => {
-    let filtered = [...allSessions];
-    if (dateRange?.all) return filtered;
-    if (!hasDateRangeBounds(dateRange)) return filtered;
-    const fromYmd = formatIstCalendarYmd(dateRange.from);
-    const toYmd = formatIstCalendarYmd(dateRange.to);
-    if (!fromYmd || !toYmd) return filtered;
-    return filtered.filter((s) => {
-      // Cancelled sessions: use booking creation date (cancellation is a booking event,
-      // the scheduled date may be in a future month).
-      // All other sessions: use scheduled_date so income/pending aligns to the month worked.
-      const ymd = s.status === 'cancelled'
-        ? (sessionBookingCreatedIstYmd(s) || s.scheduled_date)
-        : s.scheduled_date;
-      return ymd && ymd >= fromYmd && ymd <= toYmd;
+  // Two filter views — the rule for every dashboard in the system:
+  //   • createdInRange   — booking_created_at in range. Drives "Total Sessions" (how many
+  //                        new bookings happened this month).
+  //   • scheduledInRange — scheduled_date in range. Drives Upcoming/Completed/Rescheduled
+  //                        (which sessions are happening this month, regardless of when
+  //                        they were booked).
+  //   • cancelledInRange — booking_created_at in range, since cancellation is a booking
+  //                        event and the original scheduled date is often in a future month.
+  const fromYmd = useMemo(
+    () => (hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.from) : null),
+    [dateRange]
+  );
+  const toYmd = useMemo(
+    () => (hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.to) : null),
+    [dateRange]
+  );
+
+  const inRange = (ymd) => !!(ymd && fromYmd && toYmd && ymd >= fromYmd && ymd <= toYmd);
+
+  const createdInRange = useMemo(() => {
+    if (dateRange?.all) return allSessions;
+    if (!fromYmd || !toYmd) return allSessions;
+    return allSessions.filter((s) => inRange(sessionBookingCreatedIstYmd(s)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSessions, dateRange, fromYmd, toYmd]);
+
+  const scheduledInRange = useMemo(() => {
+    if (dateRange?.all) return allSessions;
+    if (!fromYmd || !toYmd) return allSessions;
+    return allSessions.filter((s) => {
+      const ymd = s.scheduled_date ? String(s.scheduled_date).slice(0, 10) : null;
+      return inRange(ymd);
     });
-  }, [allSessions, dateRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allSessions, dateRange, fromYmd, toYmd]);
+
+  // Kept for any downstream code that still references this variable
+  const filteredSessions = scheduledInRange;
 
   // Calculate stats from filtered sessions
   useEffect(() => {
     if (allSessions.length === 0) return;
 
-    // Calculate session stats
-    // All booked/rescheduled sessions in the selected date range are "pending" —
-    // past-dated ones that were never marked complete also stay in the month they
-    // were scheduled in, not forwarded to the current month.
-    const upcomingSessions = filteredSessions.filter((session) => {
+    // Upcoming / Completed / Rescheduled — by scheduled_date in range.
+    // Cancelled — by booking_created_at in range (cancellation is a booking-level event).
+    const upcomingSessions = scheduledInRange.filter((session) => {
       return session.status === 'booked' || session.status === 'rescheduled';
     });
 
-    const completedSessions = filteredSessions.filter(session => {
-      return session.status === 'completed';
-    });
-
-    const cancelledSessions = filteredSessions.filter(session => {
-      return session.status === 'cancelled';
-    });
-
-    const rescheduledSessions = filteredSessions.filter(session => {
-      return session.status === 'rescheduled';
-    });
+    const completedSessions = scheduledInRange.filter(session => session.status === 'completed');
+    const rescheduledSessions = scheduledInRange.filter(session => session.status === 'rescheduled');
+    const cancelledSessions = createdInRange.filter(session => session.status === 'cancelled');
 
     // Calculate payout stats
     let incomeEarned = 0; // Commission from completed sessions
@@ -138,7 +147,9 @@ export default function PsychologistDashboard() {
     });
 
     setStats({
-      totalSessions: filteredSessions.length,
+      // Total Sessions = sessions BOOKED in this date range (by booking_created_at)
+      totalSessions: createdInRange.length,
+      // Upcoming = all non-completed sessions relevant to this month (created here OR scheduled here)
       upcomingSessions: upcomingSessions.length,
       completedSessions: completedSessions.length,
       cancelledSessions: cancelledSessions.length,
@@ -149,7 +160,7 @@ export default function PsychologistDashboard() {
       incomeEarned: incomeEarned,
       pendingPayout: pendingPayout
     });
-  }, [filteredSessions, allSessions.length]);
+  }, [createdInRange, scheduledInRange, allSessions.length]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
