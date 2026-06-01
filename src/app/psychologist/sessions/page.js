@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { psychologistApi } from "../../../lib/backendApi";
 import { 
@@ -11,14 +11,14 @@ import {
   X,
   FileText,
   MessageSquare,
-  Trash2,
   MoreVertical,
   Eye,
   Video,
   CheckCircle2,
   XCircle,
   Search,
-  History
+  History,
+  Filter
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -35,7 +35,10 @@ import ScheduleAssessmentSessionModal from "../../../components/ScheduleAssessme
 import WheelPagination from "../../../components/ui/wheel-pagination";
 // Removed RescheduleRequestPopup import - reschedule requests are handled on rescheduling page
 import { useNotification } from "../../../contexts/NotificationContext";
-import { sessionBookedAtIso } from "@/lib/sessionBookedAt";
+import DateRangePicker from "@/components/ui/date-range-picker";
+import { hasDateRangeBounds } from "@/lib/dateRangeBounds";
+import { formatIstCalendarYmd, istCalendarMonthBounds } from "@/lib/wixFinanceDates";
+import { sessionBookedAtIso, sessionBookingCreatedIstYmd } from "@/lib/sessionBookedAt";
 
 const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
 const valueBoxClass = "bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800";
@@ -117,10 +120,11 @@ export default function PsychologistSessions() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedScheduleSession, setSelectedScheduleSession] = useState(null);
   const [feedbackToView, setFeedbackToView] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'completed'
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'completed', or 'cancelled'
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const sessionsPerPage = 10;
+  const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
+  const sessionsPerPage = 8;
   // Client session history (History in 3-dots)
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyClientId, setHistoryClientId] = useState(null);
@@ -139,7 +143,7 @@ export default function PsychologistSessions() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, dateRange, activeTab]);
 
   const loadSessions = async () => {
     try {
@@ -168,19 +172,6 @@ export default function PsychologistSessions() {
       console.error('Error updating session:', err);
       setError(err.message);
       showError(`Failed to update session: ${err.message}`, 'Update Error');
-    }
-  };
-
-  const handleDeleteSession = async (session) => {
-    try {
-      if (!confirm('Are you sure you want to delete this session?')) return;
-      await psychologistApi.deleteSession(session.id);
-      await loadSessions();
-      showSuccess('Session deleted successfully');
-    } catch (err) {
-      console.error('Error deleting session:', err);
-      setError(err.message);
-      showError(`Failed to delete session: ${err.message}`, 'Delete Error');
     }
   };
 
@@ -347,6 +338,35 @@ export default function PsychologistSessions() {
     });
   };
 
+  const isAssignedToCurrentPsychologist = (session) => {
+    // Regular therapy sessions always have psychologist_id; ensure it matches current user
+    if (session.psychologist_id && session.psychologist_id !== user?.id) {
+      return false;
+    }
+    // Assessment sessions that are still unassigned shouldn't appear in the main sessions list
+    if ((session.session_type === 'assessment' || session.type === 'assessment') && !session.psychologist_id) {
+      return false;
+    }
+    return true;
+  };
+
+  // Exclude free assessment items from psychologist panel
+  const excludeFreeAssessment = (s) => s.session_type !== 'free_assessment';
+  // Include all sessions (booked, rescheduled, and pending) in upcoming sessions
+  // Pending assessment sessions will also appear here, not in a separate section
+  // But only include pending sessions that don't have a scheduled date/time yet (truly need scheduling)
+  const dateFilteredSessions = useMemo(() => {
+    if (dateRange?.all) return sessions;
+    if (!hasDateRangeBounds(dateRange)) return sessions;
+    const fromYmd = formatIstCalendarYmd(dateRange.from);
+    const toYmd = formatIstCalendarYmd(dateRange.to);
+    if (!fromYmd || !toYmd) return sessions;
+    return sessions.filter((session) => {
+      const ymd = sessionBookingCreatedIstYmd(session);
+      return ymd && ymd >= fromYmd && ymd <= toYmd;
+    });
+  }, [sessions, dateRange]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -369,24 +389,7 @@ export default function PsychologistSessions() {
     );
   }
 
-  const isAssignedToCurrentPsychologist = (session) => {
-    // Regular therapy sessions always have psychologist_id; ensure it matches current user
-    if (session.psychologist_id && session.psychologist_id !== user?.id) {
-      return false;
-    }
-    // Assessment sessions that are still unassigned shouldn't appear in the main sessions list
-    if ((session.session_type === 'assessment' || session.type === 'assessment') && !session.psychologist_id) {
-      return false;
-    }
-    return true;
-  };
-
-  // Exclude free assessment items from psychologist panel
-  const excludeFreeAssessment = (s) => s.session_type !== 'free_assessment';
-  // Include all sessions (booked, rescheduled, and pending) in upcoming sessions
-  // Pending assessment sessions will also appear here, not in a separate section
-  // But only include pending sessions that don't have a scheduled date/time yet (truly need scheduling)
-  const allUpcomingSessions = sessions.filter(s => {
+  const allUpcomingSessions = dateFilteredSessions.filter(s => {
     if (!isAssignedToCurrentPsychologist(s)) return false;
     if (!excludeFreeAssessment(s)) return false;
     // Include booked and rescheduled sessions
@@ -410,22 +413,24 @@ export default function PsychologistSessions() {
     return dateA - dateB; // Ascending order (nearest first)
   });
 
-  const completedSessions = sessions.filter(s => s.status === 'completed' && excludeFreeAssessment(s));
-  const pastSessions = sessions.filter(s => 
-    (s.status === 'completed' || s.status === 'cancelled' || s.status === 'no_show') && 
-    excludeFreeAssessment(s) && 
-    isAssignedToCurrentPsychologist(s)
-  );
-
-  // Sort past sessions by date/time (most recent first)
-  const sortedPastSessions = [...pastSessions].sort((a, b) => {
+  const sortByDateDesc = (list) => [...list].sort((a, b) => {
     if (!a.scheduled_date || !a.scheduled_time) return 1;
     if (!b.scheduled_date || !b.scheduled_time) return -1;
-    
-    const dateA = new Date(`${a.scheduled_date}T${a.scheduled_time}`);
-    const dateB = new Date(`${b.scheduled_date}T${b.scheduled_time}`);
-    return dateB - dateA; // Descending order (most recent first)
+    return new Date(`${b.scheduled_date}T${b.scheduled_time}`) - new Date(`${a.scheduled_date}T${a.scheduled_time}`);
   });
+
+  const completedSessions = dateFilteredSessions.filter(s => s.status === 'completed' && excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s));
+  const cancelledSessions = dateFilteredSessions.filter(s => s.status === 'cancelled' && excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s));
+
+  // Keep pastSessions for any legacy references (completed + cancelled + no_show)
+  const pastSessions = dateFilteredSessions.filter(s =>
+    (s.status === 'completed' || s.status === 'cancelled' || s.status === 'no_show') &&
+    excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s)
+  );
+
+  const sortedPastSessions = sortByDateDesc(pastSessions);
+  const sortedCompletedSessions = sortByDateDesc(completedSessions);
+  const sortedCancelledSessions = sortByDateDesc(cancelledSessions);
 
   // Filter by search (client name) — after sorted lists are defined
   const filterBySearch = (list) => {
@@ -433,29 +438,45 @@ export default function PsychologistSessions() {
     const q = searchTerm.trim().toLowerCase();
     return list.filter(s => {
       const name = `${s.client?.first_name || ''} ${s.client?.last_name || ''}`.trim().toLowerCase();
-      const child = (s.client?.child_name || '').toLowerCase();
-      return name.includes(q) || child.includes(q);
+      return name.includes(q);
     });
   };
   const filteredUpcoming = filterBySearch(sortedUpcomingSessions);
-  const filteredPast = filterBySearch(sortedPastSessions);
+  const filteredCompleted = filterBySearch(sortedCompletedSessions);
+  const filteredCancelled = filterBySearch(sortedCancelledSessions);
+  const filteredPast = filteredCompleted; // keep for any remaining references
 
-  // Calculate pagination for upcoming sessions
+  // Pagination
   const totalUpcomingPages = Math.max(1, Math.ceil(filteredUpcoming.length / sessionsPerPage));
-  const upcomingStartIndex = (currentPage - 1) * sessionsPerPage;
-  const upcomingEndIndex = upcomingStartIndex + sessionsPerPage;
-  const paginatedUpcomingSessions = filteredUpcoming.slice(upcomingStartIndex, upcomingEndIndex);
+  const totalCompletedPages = Math.max(1, Math.ceil(filteredCompleted.length / sessionsPerPage));
+  const totalCancelledPages = Math.max(1, Math.ceil(filteredCancelled.length / sessionsPerPage));
 
-  // Calculate pagination for completed sessions
-  const totalCompletedPages = Math.max(1, Math.ceil(filteredPast.length / sessionsPerPage));
+  const upcomingStartIndex = (currentPage - 1) * sessionsPerPage;
+  const paginatedUpcomingSessions = filteredUpcoming.slice(upcomingStartIndex, upcomingStartIndex + sessionsPerPage);
+
   const completedStartIndex = (currentPage - 1) * sessionsPerPage;
-  const completedEndIndex = completedStartIndex + sessionsPerPage;
-  const paginatedPastSessions = filteredPast.slice(completedStartIndex, completedEndIndex);
+  const paginatedCompletedSessions = filteredCompleted.slice(completedStartIndex, completedStartIndex + sessionsPerPage);
+
+  const cancelledStartIndex = (currentPage - 1) * sessionsPerPage;
+  const paginatedCancelledSessions = filteredCancelled.slice(cancelledStartIndex, cancelledStartIndex + sessionsPerPage);
+  const paginatedPastSessions = paginatedCompletedSessions; // keep for remaining references
 
   // Get current sessions based on active tab
-  const currentSessions = activeTab === 'upcoming' ? paginatedUpcomingSessions : paginatedPastSessions;
-  const totalPages = activeTab === 'upcoming' ? totalUpcomingPages : totalCompletedPages;
-  const totalSessions = activeTab === 'upcoming' ? filteredUpcoming.length : filteredPast.length;
+  const currentSessions = activeTab === 'upcoming'
+    ? paginatedUpcomingSessions
+    : activeTab === 'cancelled'
+      ? paginatedCancelledSessions
+      : paginatedCompletedSessions;
+  const totalPages = activeTab === 'upcoming'
+    ? totalUpcomingPages
+    : activeTab === 'cancelled'
+      ? totalCancelledPages
+      : totalCompletedPages;
+  const totalSessions = activeTab === 'upcoming'
+    ? filteredUpcoming.length
+    : activeTab === 'cancelled'
+      ? filteredCancelled.length
+      : filteredCompleted.length;
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage + 1); // WheelPagination uses 0-indexed, we use 1-indexed
@@ -557,53 +578,78 @@ export default function PsychologistSessions() {
       )}
 
       {/* Filters and search */}
-      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by client name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
-            />
+      <div className="mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+          <div className="flex items-center gap-2 shrink-0">
+            <Filter className="h-4 w-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-700">Date Range:</span>
           </div>
+          <DateRangePicker
+            selectedRange={dateRange}
+            onSelect={setDateRange}
+          />
         </div>
       </div>
 
-      {/* Tabs - modern segmented */}
-      <div className="mt-6 flex rounded-xl bg-slate-100 p-1 w-fit">
-        <button
-          onClick={() => handleTabChange('upcoming')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'upcoming'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Upcoming
-          {sortedUpcomingSessions.length > 0 && (
-            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'upcoming' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
-              ({sortedUpcomingSessions.length})
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => handleTabChange('completed')}
-          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === 'completed'
-              ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          Completed
-          {sortedPastSessions.length > 0 && (
-            <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'completed' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
-              ({sortedPastSessions.length})
-            </span>
-          )}
-        </button>
+      {/* Tabs + search */}
+      <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex rounded-xl bg-slate-100 p-1 w-fit">
+          <button
+            onClick={() => handleTabChange('upcoming')}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'upcoming'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Upcoming
+            {sortedUpcomingSessions.length > 0 && (
+              <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'upcoming' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
+                ({sortedUpcomingSessions.length})
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => handleTabChange('completed')}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'completed'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Completed
+            {sortedCompletedSessions.length > 0 && (
+              <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'completed' ? 'bg-[#025545]/10 text-[#025545]' : 'bg-slate-200 text-slate-600'}`}>
+                ({sortedCompletedSessions.length})
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => handleTabChange('cancelled')}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'cancelled'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Cancelled
+            {sortedCancelledSessions.length > 0 && (
+              <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'cancelled' ? 'bg-red-100 text-red-600' : 'bg-slate-200 text-slate-600'}`}>
+                ({sortedCancelledSessions.length})
+              </span>
+            )}
+          </button>
+        </div>
+        <div className="relative w-full lg:w-80 xl:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by client name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -630,11 +676,17 @@ export default function PsychologistSessions() {
                         <p className="mt-2 text-sm font-medium text-slate-700">No upcoming sessions</p>
                         <p className="mt-1 text-xs text-slate-500">Scheduled sessions will appear here.</p>
                       </>
+                    ) : activeTab === 'cancelled' ? (
+                      <>
+                        <XCircle className="mx-auto h-10 w-10 text-slate-300" />
+                        <p className="mt-2 text-sm font-medium text-slate-700">No cancelled sessions</p>
+                        <p className="mt-1 text-xs text-slate-500">Cancelled sessions for this period will appear here.</p>
+                      </>
                     ) : (
                       <>
                         <CheckCircle className="mx-auto h-10 w-10 text-slate-300" />
-                        <p className="mt-2 text-sm font-medium text-slate-700">No past sessions</p>
-                        <p className="mt-1 text-xs text-slate-500">Completed and past sessions will appear here.</p>
+                        <p className="mt-2 text-sm font-medium text-slate-700">No completed sessions</p>
+                        <p className="mt-1 text-xs text-slate-500">Completed sessions will appear here.</p>
                       </>
                     )}
                   </td>
@@ -681,14 +733,13 @@ export default function PsychologistSessions() {
                         )}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        {(session.session_type === 'assessment' || session.type === 'assessment') && (
+                        {(session.session_type === 'assessment' || session.type === 'assessment') ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">Assessment</span>
-                        )}
-                        {session.package_id || session.package ? (
+                        ) : (session.package_id || session.package || session.session_type === 'package') ? (
                           (() => {
                             const p = session.package || {};
-                            const idx = p.session_index;
-                            const total = p.total_sessions ?? p.session_count ?? 0;
+                            const idx = p.session_index ?? session.package_session_number ?? null;
+                            const total = p.total_sessions ?? p.session_count ?? session.session_count ?? 0;
                             const raw = (p.package_type || 'Package').replace(/_\d+$/, '') || 'Package';
                             const label = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
                             if (total > 0 && idx != null) {
@@ -711,7 +762,11 @@ export default function PsychologistSessions() {
                               </span>
                             );
                           })()
-                        ) : (session.session_type !== 'assessment' && session.type !== 'assessment') && (
+                        ) : (session.session_type === 'couple') ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">Couple</span>
+                        ) : (session.session_type === 'discovery') ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-700">Discovery</span>
+                        ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Individual</span>
                         )}
                       </td>
@@ -815,10 +870,6 @@ export default function PsychologistSessions() {
                                 </DropdownMenuItem>
                               )}
                               
-                              <DropdownMenuItem onClick={() => handleDeleteSession(session)} className="cursor-pointer text-red-600">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

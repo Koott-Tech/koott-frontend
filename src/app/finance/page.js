@@ -896,19 +896,19 @@ export default function FinanceDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <StatCard
             title="Total Revenue"
-            value={`₹${(stats.total_revenue || 0).toLocaleString('en-IN')}`}
+            value={`₹${Math.round(stats.total_revenue || 0).toLocaleString('en-IN')}`}
             icon={DollarSign}
             color="green"
           />
           <StatCard
             title="Net Profit"
-            value={`₹${(stats.net_profit || 0).toLocaleString('en-IN')}`}
+            value={`₹${Math.round(stats.net_profit || 0).toLocaleString('en-IN')}`}
             icon={TrendingUp}
             color="purple"
           />
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">₹{(stats.total_doctor_wallet || 0).toLocaleString('en-IN')}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900">₹{Math.round(stats.total_doctor_wallet || 0).toLocaleString('en-IN')}</h3>
               <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                 <Wallet className="h-5 w-5" />
               </div>
@@ -921,7 +921,7 @@ export default function FinanceDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-orange-700">₹{(stats.pending_payouts || 0).toLocaleString('en-IN')}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-orange-700">₹{Math.round(stats.pending_payouts || 0).toLocaleString('en-IN')}</h3>
               <div className="p-2 rounded-lg bg-orange-50 text-orange-600">
                 <Clock className="h-5 w-5" />
               </div>
@@ -930,7 +930,7 @@ export default function FinanceDashboard() {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-green-700">₹{(stats.payout || 0).toLocaleString('en-IN')}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-green-700">₹{Math.round(stats.payout || 0).toLocaleString('en-IN')}</h3>
               <div className="p-2 rounded-lg bg-green-50 text-green-600">
                 <CheckCircle className="h-5 w-5" />
               </div>
@@ -939,7 +939,7 @@ export default function FinanceDashboard() {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-rose-700">₹{(stats.refund_total || 0).toLocaleString('en-IN')}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-rose-700">₹{Math.round(stats.refund_total || 0).toLocaleString('en-IN')}</h3>
               <div className="p-2 rounded-lg bg-rose-50 text-rose-600">
                 <RefreshCcw className="h-5 w-5" />
               </div>
@@ -948,7 +948,7 @@ export default function FinanceDashboard() {
           </div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-red-700">₹{(stats.total_expenses || 0).toLocaleString('en-IN')}</h3>
+              <h3 className="text-lg sm:text-xl font-semibold text-red-700">₹{Math.round(stats.total_expenses || 0).toLocaleString('en-IN')}</h3>
               <div className="p-2 rounded-lg bg-red-50 text-red-600">
                 <Receipt className="h-5 w-5" />
               </div>

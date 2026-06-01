@@ -17,7 +17,7 @@ import { TrendingUp } from 'lucide-react';
 // Metadata configuration
 const pageMetadata = {
   title: 'Child Psychology Services & Online Counseling | Koott',
-  description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support. Book a free assessment today.',
+  description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support. Book a session today.',
   keywords: [
     'child psychologist',
     'online child counseling',
@@ -355,7 +355,7 @@ export default function AdsLandingPage() {
   };
 
   const handleGetStartedClick = () => {
-    router.push('/free-assessment');
+    router.push('/');
   };
 
   // Fetch psychologists

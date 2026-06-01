@@ -81,7 +81,6 @@ export default function AdminLayout({ children }) {
     { name: 'Koott Discover', href: '/admin/wix-discover', icon: Globe },
     { name: 'Koott Therapists', href: '/admin/wix-therapists', icon: UserCheck },
     { name: 'Events', href: '/admin/events', icon: Ticket },
-    { name: 'Free Assessments', href: '/admin/free-assessments', icon: Calendar },
     { name: 'Assessment Sessions', href: '/admin/assessment-sessions', icon: Package },
     { name: 'Rescheduling', href: '/admin/rescheduling', icon: RefreshCw },
     { 

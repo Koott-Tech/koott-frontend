@@ -14,7 +14,6 @@ export default async function sitemap() {
     "/online-child-psychologist", 
     "/blog",
     "/faq",
-    "/free-assessment",
     "/career",
     "/events",
     "/events/Koott-summer-workshops-2026",

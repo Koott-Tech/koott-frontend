@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Edit, Save, X, DollarSign, TrendingUp, Calendar, Wallet, Eye, User, MoreVertical, Filter } from 'lucide-react';
+import { Edit, Save, X, TrendingUp, Calendar, Wallet, Eye, User, MoreVertical, Filter } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { normalizeImageUrl } from '@/utils/urlNormalizer';
@@ -57,6 +57,18 @@ const getDoctorImageUrl = (doctor) => {
   // Normalize the image URL (converts Supabase URLs to proxy URLs with signed signatures)
   return imageUrl ? normalizeImageUrl(imageUrl) : null;
 };
+
+const formatAmount = (value) => `₹${(value || 0).toLocaleString('en-IN')}`;
+
+const PACKAGE_COMMISSION_GROUPS = [
+  { key: 'package_3', label: 'Package of 3 Sessions' },
+  { key: 'package_6', label: 'Package of 6 Sessions' },
+  { key: 'package_9', label: 'Package of 9 Sessions' },
+];
+
+const COUPLE_PACKAGE_GROUPS = [
+  { key: 'couple_package_3', label: 'Couple Package of 3 Sessions' },
+];
 
 export default function FinanceDoctors() {
   const { showError } = useNotification();
@@ -116,9 +128,7 @@ export default function FinanceDoctors() {
       doctor_commission_first_session: doctor.doctor_commission_first_session?.toString() || '',
       doctor_commission_followup: doctor.doctor_commission_followup?.toString() || '',
       doctor_commission_couple: (doctor.doctor_commission_couple ?? pkgComm.couple_session ?? '')?.toString() || '',
-      doctor_commission_couple_followup: (pkgComm.couple_followup ?? '')?.toString() || '',
-      package_3_first_session: (pkgComm.package_3_first_session ?? '')?.toString() || '',
-      package_3_followup: (pkgComm.package_3_followup ?? '')?.toString() || '',
+      doctor_commission_couple_followup: (pkgComm.couple_followup ?? pkgComm.couple_session ?? '')?.toString() || '',
       doctor_commission_individual: doctor.doctor_commission_individual?.toString() || '',
       // Legacy package commissions (for backward compatibility)
       doctor_commission_first_session_package: doctor.doctor_commission_first_session_package?.toString() || '',
@@ -131,6 +141,14 @@ export default function FinanceDoctors() {
         editData[pkg.type] = pkg.commission_amount?.toString() || '';
       });
     }
+
+    [...PACKAGE_COMMISSION_GROUPS, ...COUPLE_PACKAGE_GROUPS].forEach(({ key }) => {
+      if (commissions[key] !== undefined) {
+        editData[key] = commissions[key]?.toString() || '';
+      }
+      editData[`${key}_first_session`] = (pkgComm[`${key}_first_session`] ?? '')?.toString() || '';
+      editData[`${key}_followup`] = (pkgComm[`${key}_followup`] ?? '')?.toString() || '';
+    });
     
     // Add package-specific doctor commissions (first_session and followup for each package)
     if (doctor.package_commissions) {
@@ -156,12 +174,24 @@ export default function FinanceDoctors() {
     try {
       // Build commission amounts object (company gets)
       const commissionAmounts = {};
-      const doctorCommissionFields = ['doctor_commission_first_session', 'doctor_commission_followup', 'doctor_commission_individual'];
+      const doctorCommissionFields = [
+        'doctor_commission_first_session',
+        'doctor_commission_followup',
+        'doctor_commission_individual',
+        'doctor_commission_couple',
+        'doctor_commission_couple_followup',
+        'doctor_commission_first_session_package',
+        'doctor_commission_followup_package',
+      ];
       let hasValidAmount = false;
 
       for (const [packageType, value] of Object.entries(editCommissions)) {
         // Skip doctor commission fields - they're handled separately
-        if (doctorCommissionFields.includes(packageType)) {
+        if (
+          doctorCommissionFields.includes(packageType) ||
+          packageType.endsWith('_first_session') ||
+          packageType.endsWith('_followup')
+        ) {
           continue;
         }
         
@@ -279,24 +309,28 @@ export default function FinanceDoctors() {
         doctorCommissionPackages.couple_followup = amount;
         hasValidAmount = true;
       }
-      if (editCommissions.package_3_first_session && editCommissions.package_3_first_session.trim() !== '') {
-        const amount = parseFloat(editCommissions.package_3_first_session);
-        if (isNaN(amount) || amount < 0) {
-          alert('Please enter a valid couple package first session commission (≥ 0)');
-          return;
+      [...PACKAGE_COMMISSION_GROUPS, ...COUPLE_PACKAGE_GROUPS].forEach(({ key, label }) => {
+        const firstKey = `${key}_first_session`;
+        const followKey = `${key}_followup`;
+
+        if (editCommissions[firstKey] && editCommissions[firstKey].trim() !== '') {
+          const amount = parseFloat(editCommissions[firstKey]);
+          if (isNaN(amount) || amount < 0) {
+            throw new Error(`Please enter a valid ${label} first session commission (≥ 0)`);
+          }
+          doctorCommissionPackages[firstKey] = amount;
+          hasValidAmount = true;
         }
-        doctorCommissionPackages.package_3_first_session = amount;
-        hasValidAmount = true;
-      }
-      if (editCommissions.package_3_followup && editCommissions.package_3_followup.trim() !== '') {
-        const amount = parseFloat(editCommissions.package_3_followup);
-        if (isNaN(amount) || amount < 0) {
-          alert('Please enter a valid couple package follow-up commission (≥ 0)');
-          return;
+
+        if (editCommissions[followKey] && editCommissions[followKey].trim() !== '') {
+          const amount = parseFloat(editCommissions[followKey]);
+          if (isNaN(amount) || amount < 0) {
+            throw new Error(`Please enter a valid ${label} follow-up commission (≥ 0)`);
+          }
+          doctorCommissionPackages[followKey] = amount;
+          hasValidAmount = true;
         }
-        doctorCommissionPackages.package_3_followup = amount;
-        hasValidAmount = true;
-      }
+      });
 
       if (Object.keys(doctorCommissionPackages).length > 0) {
         requestData.doctor_commission_packages = doctorCommissionPackages;
@@ -382,13 +416,6 @@ export default function FinanceDoctors() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="text-base font-semibold text-gray-900">Doctors</div>
-          </div>
-        </div>
-
         {/* Date Range Filter */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
           <div className="flex flex-col gap-4 md:flex-row md:flex-wrap items-start md:items-center">
@@ -415,58 +442,35 @@ export default function FinanceDoctors() {
                   key={doctor.psychologist_id}
                   className="bg-white border-2 border-gray-200 shadow-sm hover:shadow-md transition-all p-6 w-full rounded-lg"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    {/* Left: Image and Name */}
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {getDoctorImageUrl(doctor) ? (
-                          <img
-                            src={getDoctorImageUrl(doctor)}
-                            alt={`${doctor.psychologist?.first_name} ${doctor.psychologist?.last_name}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-8 w-8 text-gray-500" />
-                        )}
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex items-center gap-6 flex-1 min-w-0">
+                      <div className="w-40 shrink-0 text-sm font-semibold text-gray-900">
+                        {doctor.psychologist?.first_name} {doctor.psychologist?.last_name}
                       </div>
-
-                      <div className="flex-1">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {doctor.psychologist?.first_name} {doctor.psychologist?.last_name}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Middle: Stats */}
-                    <div className="flex flex-wrap gap-6 md:gap-8">
-                      <div className="text-center">
-                        <div className="text-xs text-gray-500 mb-1">Sessions Booked</div>
-                        <div className="text-lg font-semibold text-gray-900">
-                          {doctor.total_sessions_finance ?? doctor.total_sessions ?? 0}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
-                          <Wallet className="h-3 w-3" />
-                          Doctor Wallet
-                        </div>
-                        <div className="text-lg font-semibold text-green-700">
-                          ₹{(doctor.total_to_doctor_wallet || 0).toLocaleString('en-IN')}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          Company
-                        </div>
-                        <div className="text-lg font-semibold text-blue-700">
-                          ₹{(doctor.total_commission_to_company || 0).toLocaleString('en-IN')}
-                        </div>
+                      <div className="flex flex-wrap items-stretch gap-y-3 text-sm min-w-0">
+                        {[
+                          { label: 'Total Sessions', value: doctor.total_sessions_finance ?? doctor.total_sessions ?? 0, valueClass: 'text-gray-900' },
+                          { label: 'Pending', value: doctor.pending_sessions || 0, valueClass: 'text-amber-700' },
+                          { label: 'Completed', value: doctor.completed_sessions || 0, valueClass: 'text-emerald-700' },
+                          { label: 'Company Commission', value: formatAmount(doctor.total_commission_to_company), valueClass: 'text-sky-700' },
+                          { label: 'Pending Payout', value: formatAmount(doctor.pending_payout), valueClass: 'text-orange-700' },
+                          { label: 'Completed Payout', value: formatAmount(doctor.completed_payout), valueClass: 'text-green-700' },
+                        ].map((item, index, arr) => (
+                          <div key={item.label} className="flex items-stretch">
+                            <div className="min-w-[110px] pr-4">
+                              <div className="text-[11px] uppercase tracking-wide text-gray-500">{item.label}</div>
+                              <div className={`mt-1 text-base font-semibold ${item.valueClass}`}>{item.value}</div>
+                            </div>
+                            {index < arr.length - 1 ? (
+                              <div className="px-1 pr-4 flex items-center text-gray-300 text-lg font-light">|</div>
+                            ) : null}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-start lg:self-center">
                       {editingId === doctor.psychologist_id ? (
                         <>
                           <button
@@ -593,121 +597,71 @@ export default function FinanceDoctors() {
                         </div>
 
                         {/* Column 2 & 3: Package Sessions */}
-                        {doctor.package_commissions && doctor.package_commissions.length > 0 ? (
-                          doctor.package_commissions.map((pkg) => {
-                            const packageType = pkg.type || `package_${pkg.session_count}`;
-                            const firstSessionKey = `${packageType}_first_session`;
-                            const followupKey = `${packageType}_followup`;
-                            const firstSessionValue = editCommissions[firstSessionKey] || '';
-                            const followupValue = editCommissions[followupKey] || '';
-                            
-                            // Calculate full package price (price * session_count if price_per_session, otherwise use price directly)
-                            const fullPackagePrice = pkg.price || (pkg.price_per_session ? pkg.price_per_session * (pkg.session_count || 1) : 0);
-                            
-                            return (
-                              <div key={pkg.type} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                                <div className="text-sm font-semibold text-slate-900 mb-1">
-                                  {pkg.name || `Package of ${pkg.session_count} Sessions`}
-                                </div>
-                                <div className="mb-4 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs text-slate-600">
-                                  Full package list price{' '}
-                                  <span className="font-semibold text-slate-800">
-                                    ₹{fullPackagePrice.toLocaleString('en-IN')}
-                                  </span>
-                                </div>
+                        {[...PACKAGE_COMMISSION_GROUPS, ...COUPLE_PACKAGE_GROUPS].map(({ key, label }) => {
+                          const firstSessionKey = `${key}_first_session`;
+                          const followupKey = `${key}_followup`;
+                          const firstSessionValue = editCommissions[firstSessionKey] || '';
+                          const followupValue = editCommissions[followupKey] || '';
+                          const companyCommissionValue = editCommissions[key] || '';
 
-                                <div className="space-y-4">
-                                  <div>
-                                    <CommissionAmountField
-                                      id={`dc-${doctor.psychologist_id}-${firstSessionKey}`}
-                                      label="First session in package (doctor receives)"
-                                      value={firstSessionValue}
-                                      onChange={(e) =>
-                                        setEditCommissions({ ...editCommissions, [firstSessionKey]: e.target.value })
-                                      }
-                                    />
-                                    {firstSessionValue && fullPackagePrice > 0 && (
-                                      <p className="mt-1.5 text-xs text-slate-600">
-                                        Company: ₹
-                                        {(fullPackagePrice - parseFloat(firstSessionValue || 0)).toLocaleString('en-IN')}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div>
-                                    <CommissionAmountField
-                                      id={`dc-${doctor.psychologist_id}-${followupKey}`}
-                                      label="Follow-up in package (doctor receives)"
-                                      value={followupValue}
-                                      onChange={(e) =>
-                                        setEditCommissions({ ...editCommissions, [followupKey]: e.target.value })
-                                      }
-                                    />
-                                    {followupValue && fullPackagePrice > 0 && (
-                                      <p className="mt-1.5 text-xs text-slate-600">
-                                        Company: ₹
-                                        {(fullPackagePrice - parseFloat(followupValue || 0)).toLocaleString('en-IN')}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
+                          return (
+                            <div key={key} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                              <div className="text-sm font-semibold text-slate-900 mb-4">{label}</div>
+                              <div className="space-y-4">
+                                <CommissionAmountField
+                                  id={`dc-${doctor.psychologist_id}-${key}-company`}
+                                  label="Company commission"
+                                  value={companyCommissionValue}
+                                  onChange={(e) =>
+                                    setEditCommissions({ ...editCommissions, [key]: e.target.value })
+                                  }
+                                />
+                                <CommissionAmountField
+                                  id={`dc-${doctor.psychologist_id}-${firstSessionKey}`}
+                                  label="First session (doctor receives)"
+                                  value={firstSessionValue}
+                                  onChange={(e) =>
+                                    setEditCommissions({ ...editCommissions, [firstSessionKey]: e.target.value })
+                                  }
+                                />
+                                <CommissionAmountField
+                                  id={`dc-${doctor.psychologist_id}-${followupKey}`}
+                                  label="Follow-up (doctor receives)"
+                                  value={followupValue}
+                                  onChange={(e) =>
+                                    setEditCommissions({ ...editCommissions, [followupKey]: e.target.value })
+                                  }
+                                />
                               </div>
-                            );
-                          })
-                        ) : (
-                          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <div className="text-sm font-semibold text-slate-900 mb-4">Package commission (fallback)</div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <CommissionAmountField
-                                id={`dc-${doctor.psychologist_id}-pkg-first-fb`}
-                                label="First session (doctor receives)"
-                                value={editCommissions.doctor_commission_first_session_package || ''}
-                                onChange={(e) =>
-                                  setEditCommissions({
-                                    ...editCommissions,
-                                    doctor_commission_first_session_package: e.target.value,
-                                  })
-                                }
-                              />
-                              <CommissionAmountField
-                                id={`dc-${doctor.psychologist_id}-pkg-follow-fb`}
-                                label="Follow-up (doctor receives)"
-                                value={editCommissions.doctor_commission_followup_package || ''}
-                                onChange={(e) =>
-                                  setEditCommissions({
-                                    ...editCommissions,
-                                    doctor_commission_followup_package: e.target.value,
-                                  })
-                                }
-                              />
                             </div>
-                          </div>
-                        )}
+                          );
+                        })}
 
-                        {/* Couple Package of 3 */}
                         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                          <div className="text-sm font-semibold text-slate-900 mb-4">Couple Package of 3 Sessions</div>
-                          <div className="space-y-4">
-                            <div>
-                              <CommissionAmountField
-                                id={`dc-${doctor.psychologist_id}-pkg3-first`}
-                                label="First session in package (doctor receives)"
-                                value={editCommissions.package_3_first_session || ''}
-                                onChange={(e) =>
-                                  setEditCommissions({ ...editCommissions, package_3_first_session: e.target.value })
-                                }
-                              />
-                            </div>
-                            <div>
-                              <CommissionAmountField
-                                id={`dc-${doctor.psychologist_id}-pkg3-followup`}
-                                label="Follow-up in package (doctor receives)"
-                                value={editCommissions.package_3_followup || ''}
-                                onChange={(e) =>
-                                  setEditCommissions({ ...editCommissions, package_3_followup: e.target.value })
-                                }
-                              />
-                              <p className="mt-1 text-xs text-slate-400">Leave blank to use same as first session</p>
-                            </div>
+                          <div className="text-sm font-semibold text-slate-900 mb-4">Legacy package fallback</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <CommissionAmountField
+                              id={`dc-${doctor.psychologist_id}-pkg-first-fb`}
+                              label="First session (doctor receives)"
+                              value={editCommissions.doctor_commission_first_session_package || ''}
+                              onChange={(e) =>
+                                setEditCommissions({
+                                  ...editCommissions,
+                                  doctor_commission_first_session_package: e.target.value,
+                                })
+                              }
+                            />
+                            <CommissionAmountField
+                              id={`dc-${doctor.psychologist_id}-pkg-follow-fb`}
+                              label="Follow-up (doctor receives)"
+                              value={editCommissions.doctor_commission_followup_package || ''}
+                              onChange={(e) =>
+                                setEditCommissions({
+                                  ...editCommissions,
+                                  doctor_commission_followup_package: e.target.value,
+                                })
+                              }
+                            />
                           </div>
                         </div>
                       </div>
@@ -872,6 +826,27 @@ export default function FinanceDoctors() {
                             ₹{selectedDoctor.doctor_commission_couple || 0}
                           </div>
                         </div>
+                        {[...PACKAGE_COMMISSION_GROUPS, ...COUPLE_PACKAGE_GROUPS].map(({ key, label }) => {
+                          const pkgComm = selectedDoctor.doctor_commission_packages || {};
+                          const companyComm = selectedDoctor.commission_amounts?.[key] || 0;
+                          return (
+                            <div key={key} className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Company</span>
+                                <span className="font-medium text-slate-900">₹{companyComm || 0}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Doctor First</span>
+                                <span className="font-medium text-slate-900">₹{pkgComm[`${key}_first_session`] || 0}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Doctor Follow-up</span>
+                                <span className="font-medium text-slate-900">₹{pkgComm[`${key}_followup`] || 0}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -917,6 +892,14 @@ export default function FinanceDoctors() {
                           <span className="text-xs text-slate-500">Total:</span>
                           <span className="text-sm font-semibold text-slate-900">{selectedDoctor.total_sessions_finance ?? selectedDoctor.total_sessions ?? 0}</span>
                         </div>
+                        <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
+                          <span className="text-xs text-amber-600">Pending:</span>
+                          <span className="text-sm font-semibold text-amber-800">{selectedDoctor.pending_sessions || 0}</span>
+                        </div>
+                        <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
+                          <span className="text-xs text-emerald-600">Completed:</span>
+                          <span className="text-sm font-semibold text-emerald-800">{selectedDoctor.completed_sessions || 0}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -926,15 +909,19 @@ export default function FinanceDoctors() {
                       <div className="space-y-2">
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
                           <span className="text-xs text-slate-500">Total Revenue:</span>
-                          <span className="text-sm font-medium text-slate-900">₹{(selectedDoctor.total_revenue || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-sm font-medium text-slate-900">{formatAmount(selectedDoctor.total_revenue)}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
-                          <span className="text-xs text-green-600">Doctor Wallet:</span>
-                          <span className="text-sm font-medium text-green-700">₹{(selectedDoctor.total_to_doctor_wallet || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-xs text-orange-600">Pending Payout:</span>
+                          <span className="text-sm font-medium text-orange-700">{formatAmount(selectedDoctor.pending_payout)}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
-                          <span className="text-xs text-blue-600">Company:</span>
-                          <span className="text-sm font-medium text-blue-700">₹{(selectedDoctor.total_commission_to_company || 0).toLocaleString('en-IN')}</span>
+                          <span className="text-xs text-green-600">Completed Payout:</span>
+                          <span className="text-sm font-medium text-green-700">{formatAmount(selectedDoctor.completed_payout)}</span>
+                        </div>
+                        <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
+                          <span className="text-xs text-blue-600">Company Commission:</span>
+                          <span className="text-sm font-medium text-blue-700">{formatAmount(selectedDoctor.total_commission_to_company)}</span>
                         </div>
                       </div>
                     </div>
@@ -956,8 +943,8 @@ export default function FinanceDoctors() {
                               </span>
                             </div>
                             <div className="flex justify-between text-xs text-slate-500">
-                              <span>Wallet: ₹{(month.to_doctor_wallet || 0).toLocaleString('en-IN')}</span>
-                              <span>Company: ₹{(month.commission_to_company || 0).toLocaleString('en-IN')}</span>
+                              <span>Doctor Share: {formatAmount(month.to_doctor_wallet)}</span>
+                              <span>Company: {formatAmount(month.commission_to_company)}</span>
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 mt-0.5">
                               <span>Individual: {month.individual_sessions || 0}</span>

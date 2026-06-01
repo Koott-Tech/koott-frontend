@@ -7,7 +7,6 @@ import {
   X, 
   User,
   UserCheck,
-  Package,
   DollarSign,
   Loader2,
   CalendarDays,
@@ -21,9 +20,43 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminApi } from '@/lib/backendApi';
-import { publicApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { validatePassword } from '@/utils/passwordValidation';
+
+const getClientDisplayName = (client) => {
+  if (!client) return 'Unknown client';
+  const first = client.first_name || client.profile?.first_name || '';
+  const last = client.last_name || client.profile?.last_name || '';
+  const email = client.email || client.user?.email || '';
+  const fullName = `${first} ${last}`.trim();
+
+  if (fullName) return fullName;
+  if (email) return email;
+  return 'Unknown client';
+};
+
+const MANUAL_BOOKING_HOURS = Array.from({ length: 24 }, (_, hour) => ({
+  value: String(hour).padStart(2, '0'),
+  label: new Date(`2000-01-01T${String(hour).padStart(2, '0')}:00:00`).toLocaleTimeString('en-IN', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }),
+}));
+
+const MANUAL_BOOKING_MINUTES = ['00', '15', '30', '45'];
+const MANUAL_SESSION_TYPE_OPTIONS = [
+  { value: 'individual', label: 'Individual' },
+  { value: 'couple', label: 'Couple' },
+  { value: 'package_3', label: 'Package of 3' },
+  { value: 'package_6', label: 'Package of 6' },
+  { value: 'package_9', label: 'Package of 9' },
+  { value: 'couple_package_3', label: 'Couple Package of 3' },
+];
+const MANUAL_SESSION_STAGE_OPTIONS = [
+  { value: 'first', label: 'First Session' },
+  { value: 'follow_up', label: 'Follow-up' },
+];
 
 export default function AdminManualBookingModal({ 
   isOpen, 
@@ -53,15 +86,14 @@ export default function AdminManualBookingModal({
     last_name: '',
     phone_number: '',
     country_code: '+91',
-    child_name: '',
-    child_age: '',
     password: '' // Optional: client login password. If empty, a random one is generated.
   });
   const [showNewClientPassword, setShowNewClientPassword] = useState(false);
   
   // Form data - Booking
   const [psychologistId, setPsychologistId] = useState('');
-  const [packageId, setPackageId] = useState('');
+  const [sessionType, setSessionType] = useState('individual');
+  const [sessionStage, setSessionStage] = useState('first');
   const [selectedTime, setSelectedTime] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentReceivedDate, setPaymentReceivedDate] = useState(() => {
@@ -81,11 +113,12 @@ export default function AdminManualBookingModal({
   // Dropdown data
   const [clients, setClients] = useState([]);
   const [psychologists, setPsychologists] = useState([]);
-  const [packages, setPackages] = useState([]);
   const [psychologistAvailability, setPsychologistAvailability] = useState({});
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDateObj, setSelectedDateObj] = useState(null); // Store as Date object
+  const [selectedHour, setSelectedHour] = useState('');
+  const [selectedMinute, setSelectedMinute] = useState('00');
   const [searchClient, setSearchClient] = useState('');
   const [searchPsychologist, setSearchPsychologist] = useState('');
   const [meetLink, setMeetLink] = useState(''); // For recordOnly: optional Meet link if created elsewhere
@@ -100,6 +133,16 @@ export default function AdminManualBookingModal({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || isNewClient) return;
+
+    const timer = setTimeout(() => {
+      fetchClients(searchClient.trim());
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, isNewClient, searchClient]);
+
   // Debug: Log loading states
   useEffect(() => {
     console.log('🔍 Loading states changed:', { isLoading, isLoadingData });
@@ -112,25 +155,18 @@ export default function AdminManualBookingModal({
     }
   }, [psychologistId, currentDate]);
 
-  // Fetch packages when psychologist changes; default to Individual Session
   useEffect(() => {
     if (psychologistId) {
-      setPackageId(''); // Default to Individual Session when psychologist is selected/changed
-      fetchPackages();
-    } else {
-      setPackages([]);
-      setPackageId('');
+      setSessionType('individual');
+    }
+    else {
+      setSessionType('individual');
     }
   }, [psychologistId]);
 
   // Update amount when package changes
   useEffect(() => {
-    if (packageId && packages.length > 0) {
-      const selectedPackage = packages.find(pkg => pkg.id === packageId);
-      if (selectedPackage) {
-        setAmount(selectedPackage.price.toString());
-      }
-    } else if (psychologistId && !packageId) {
+    if (psychologistId) {
       // Individual session by default: set amount to psychologist's individual session price
       const psych = psychologists.find(p => p.id === psychologistId);
       const individualPrice = psych?.individual_session_price ?? psych?.price;
@@ -138,7 +174,7 @@ export default function AdminManualBookingModal({
         setAmount(String(individualPrice));
       }
     }
-  }, [packageId, packages, psychologistId, psychologists]);
+  }, [psychologistId, psychologists]);
 
   // Handle auto-zero pricing for cancellations and refunds in recordOnly mode
   useEffect(() => {
@@ -156,14 +192,15 @@ export default function AdminManualBookingModal({
       last_name: '',
       phone_number: '',
       country_code: '+91',
-      child_name: '',
-      child_age: '',
       password: ''
     });
     setPsychologistId('');
-    setPackageId('');
+    setSessionType('individual');
+    setSessionStage('first');
     setSelectedDateObj(null);
     setSelectedTime('');
+    setSelectedHour('');
+    setSelectedMinute('00');
     setAmount('');
     const now = new Date();
     const y = now.getFullYear();
@@ -254,16 +291,19 @@ export default function AdminManualBookingModal({
     }
   };
 
-  const fetchPackages = async () => {
-    if (!psychologistId) return;
-    
+  const fetchClients = async (search = '') => {
     try {
-      const response = await publicApi.getPsychologistPackages(psychologistId);
-      if (response.success && response.data.packages) {
-        setPackages(response.data.packages);
-      }
-    } catch (error) {
-      console.error('Error fetching packages:', error);
+      const params = { role: 'client', limit: 100 };
+      if (search) params.search = search;
+
+      const clientsRes = await adminApi.getUsers(params);
+      if (!clientsRes?.success) return;
+
+      const clientList = clientsRes.data?.users || clientsRes.data || [];
+      const filteredClients = clientList.filter(user => user.role === 'client' || !user.role);
+      setClients(filteredClients);
+    } catch (fetchError) {
+      console.error('Error fetching clients for manual booking:', fetchError);
     }
   };
 
@@ -368,11 +408,28 @@ export default function AdminManualBookingModal({
   const handleDateSelect = (day) => {
     const newSelectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDateObj(newSelectedDate);
-    setSelectedTime(''); // Reset time when date changes
+    setSelectedTime('');
+    setSelectedHour('');
+    setSelectedMinute('00');
   };
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time);
+  };
+
+  const handleManualHourChange = (hourValue) => {
+    setSelectedHour(hourValue);
+    if (!hourValue) {
+      setSelectedTime('');
+      return;
+    }
+    setSelectedTime(`${hourValue}:${selectedMinute || '00'}`);
+  };
+
+  const handleManualMinuteChange = (minuteValue) => {
+    setSelectedMinute(minuteValue);
+    if (!selectedHour) return;
+    setSelectedTime(`${selectedHour}:${minuteValue}`);
   };
 
   const handlePaymentScreenshotChange = async (e) => {
@@ -396,7 +453,7 @@ export default function AdminManualBookingModal({
     setIsUploadingPaymentScreenshot(true);
 
     try {
-      const response = await adminApi.uploadImage(file);
+      const response = await adminApi.uploadImage(file, { bucket: 'manual-bookings' });
       if (!response?.success || !response?.url) {
         throw new Error(response?.message || response?.error || 'Failed to upload payment screenshot');
       }
@@ -507,7 +564,7 @@ export default function AdminManualBookingModal({
     // If creating a new client (manual booking only), create it first
     if (!recordOnly && isNewClient) {
       // Validate new client data - only email, first_name, and phone_number are required
-      // last_name, child_name, and child_age are optional
+      // last_name is optional
       if (!newClientData.email || !newClientData.first_name || !newClientData.phone_number) {
         setError('Please fill in all required client details: Email, First Name, and Phone Number');
         isSubmittingRef.current = false;
@@ -520,16 +577,6 @@ export default function AdminManualBookingModal({
         setError('Please enter a valid email address');
         isSubmittingRef.current = false;
         return;
-      }
-
-      // Validate child age only if provided
-      if (newClientData.child_age && newClientData.child_age.trim() !== '') {
-      const childAge = parseInt(newClientData.child_age);
-      if (isNaN(childAge) || childAge < 1 || childAge > 18) {
-        setError('Child age must be between 1 and 18');
-        isSubmittingRef.current = false;
-        return;
-        }
       }
 
       // If admin entered a password, validate it (policy must be met for client login)
@@ -557,8 +604,6 @@ export default function AdminManualBookingModal({
           first_name: newClientData.first_name,
           last_name: newClientData.last_name || '', // Optional
           phone_number: fullPhoneNumber,
-          child_name: newClientData.child_name || null, // Optional
-          child_age: newClientData.child_age && newClientData.child_age.trim() !== '' ? parseInt(newClientData.child_age) : null // Optional
         });
 
         console.log('🔍 Client creation response:', JSON.stringify(clientResponse, null, 2));
@@ -657,7 +702,9 @@ export default function AdminManualBookingModal({
       const bookingData = {
         client_id: finalClientId,
         psychologist_id: psychologistId,
-        package_id: packageId || null,
+        package_id: null,
+        session_type: sessionType,
+        session_stage: sessionStage,
         scheduled_date: scheduledDate,
         scheduled_time: convertTo24Hour(selectedTime),
         amount: parseFloat(amount),
@@ -722,8 +769,19 @@ export default function AdminManualBookingModal({
   };
 
   const filteredClients = Array.isArray(clients) ? clients.filter(client => {
-    const name = `${client.first_name || ''} ${client.last_name || ''} ${client.email || ''}`.toLowerCase();
-    return name.includes(searchClient.toLowerCase());
+    const haystack = [
+      client.first_name,
+      client.last_name,
+      client.email,
+      client.profile?.first_name,
+      client.profile?.last_name,
+      client.user?.email,
+      getClientDisplayName(client)
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(searchClient.toLowerCase());
   }) : [];
 
   const filteredPsychologists = Array.isArray(psychologists) ? psychologists.filter(psych => {
@@ -789,8 +847,6 @@ export default function AdminManualBookingModal({
                         last_name: '',
                         phone_number: '',
                         country_code: '+91',
-                        child_name: '',
-                        child_age: ''
                       });
                     }}
                     className="text-sm text-[#025545] hover:text-[#012f23] font-medium"
@@ -917,36 +973,6 @@ export default function AdminManualBookingModal({
                       </div>
                     </div>
 
-                    {/* Child Name */}
-                    <div>
-                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">
-                        Child Name
-                      </label>
-                      <input
-                        type="text"
-                        value={newClientData.child_name}
-                        onChange={(e) => handleNewClientInputChange('child_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                        placeholder="Child's name (optional)"
-                      />
-                    </div>
-
-                    {/* Child Age */}
-                    <div>
-                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">
-                        Child Age
-                      </label>
-                      <input
-                        type="number"
-                        value={newClientData.child_age}
-                        onChange={(e) => handleNewClientInputChange('child_age', e.target.value)}
-                        min="1"
-                        max="18"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                        placeholder="Age 1-18 (optional)"
-                      />
-                    </div>
-
                     {/* Client login password (optional) */}
                     <div className="md:col-span-2">
                       <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">
@@ -998,7 +1024,8 @@ export default function AdminManualBookingModal({
                     <option value="">Select a client</option>
                     {filteredClients.map(client => (
                       <option key={client.id} value={client.id}>
-                        {client.first_name || ''} {client.last_name || ''} {client.child_name ? `(Child: ${client.child_name})` : ''} {client.email ? `(${client.email})` : ''}
+                        {getClientDisplayName(client)}
+                        {(client.email || client.user?.email) ? ` (${client.email || client.user?.email})` : ''}
                       </option>
                     ))}
                   </select>
@@ -1036,25 +1063,43 @@ export default function AdminManualBookingModal({
               </div>
             </div>
 
-            {/* Package Selection (Optional) */}
+            {/* Session Type */}
             {psychologistId && (
               <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                  <Package className="h-4 w-4 inline mr-1" />
-                  Package (Optional)
+                  <UserCheck className="h-4 w-4 inline mr-1" />
+                  Session Type
                 </label>
-                <select
-                  value={packageId}
-                  onChange={(e) => setPackageId(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                >
-                  <option value="">Individual Session</option>
-                  {packages.map(pkg => (
-                    <option key={pkg.id} value={pkg.id}>
-                      {pkg.name || pkg.package_type} - ₹{pkg.price} ({pkg.session_count} sessions)
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <select
+                    value={sessionType}
+                    onChange={(e) => {
+                      const nextType = e.target.value;
+                      setSessionType(nextType);
+                      if (nextType !== 'package' && nextType !== 'couple_package') {
+                        setPackageId('');
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                  >
+                    {MANUAL_SESSION_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={sessionStage}
+                    onChange={(e) => setSessionStage(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                  >
+                    {MANUAL_SESSION_STAGE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
 
@@ -1090,12 +1135,6 @@ export default function AdminManualBookingModal({
                     </button>
                   </div>
 
-                  {loadingAvailability && (
-                    <div className="text-center py-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#025545] mx-auto"></div>
-                    </div>
-                  )}
-
                   {/* Calendar Grid */}
                   <div className="grid grid-cols-7 gap-1 mb-3">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
@@ -1106,7 +1145,7 @@ export default function AdminManualBookingModal({
                     {(() => {
                       const { daysInMonth, startingDay } = getDaysInMonth(currentDate);
                       const today = new Date();
-                      const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+                      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
                       
                       const calendarDays = [];
                       
@@ -1117,52 +1156,34 @@ export default function AdminManualBookingModal({
                       
                       // Add days of the month
                       for (let day = 1; day <= daysInMonth; day++) {
-                        const isToday = isCurrentMonth && day === today.getDate();
-                        const isSelected = selectedDateObj && selectedDateObj.getDate() === day && selectedDateObj.getMonth() === currentDate.getMonth() && selectedDateObj.getFullYear() === currentDate.getFullYear();
-                        const isAvailable = day >= today.getDate() || !isCurrentMonth;
-                        
-                        // Check if this specific date is available for the psychologist
                         const calendarDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                        const year = calendarDate.getFullYear();
-                        const month = String(calendarDate.getMonth() + 1).padStart(2, '0');
-                        const dayStr = String(calendarDate.getDate()).padStart(2, '0');
-                        const dateStr = `${year}-${month}-${dayStr}`;
-                        const dateAvailability = psychologistAvailability[dateStr];
-                        const isPsychologistAvailable = dateAvailability && dateAvailability.is_available && (
-                          (dateAvailability.available_slots && Array.isArray(dateAvailability.available_slots) && dateAvailability.available_slots.length > 0) ||
-                          (dateAvailability.availableSlots && dateAvailability.availableSlots > 0) ||
-                          (dateAvailability.timeSlots && Array.isArray(dateAvailability.timeSlots) && dateAvailability.timeSlots.some(slot => slot.available))
-                        );
-                        
-                        const isActuallyAvailable = isPsychologistAvailable && isAvailable;
+                        const isToday =
+                          calendarDate.getDate() === today.getDate() &&
+                          calendarDate.getMonth() === today.getMonth() &&
+                          calendarDate.getFullYear() === today.getFullYear();
+                        const isSelected = selectedDateObj && selectedDateObj.getDate() === day && selectedDateObj.getMonth() === currentDate.getMonth() && selectedDateObj.getFullYear() === currentDate.getFullYear();
+                        const isSelectable = calendarDate >= todayStart;
                         
                         calendarDays.push(
                           <div
                             key={`day-${day}`}
                             onClick={() => {
-                              if (isAvailable) {
+                              if (isSelectable) {
                                 handleDateSelect(day);
                               }
                             }}
                             className={`text-center py-1 rounded-lg transition-all duration-200 text-xs cursor-pointer ${
                               isSelected
                                 ? 'bg-[#025545] text-white font-bold shadow-lg'
-                                : (isToday && isActuallyAvailable)
-                                  ? 'bg-green-500 text-white font-semibold shadow-md border-2 border-green-600 hover:bg-green-600'
-                                  : isToday
-                                    ? 'bg-[#025545]/10 text-[#025545] font-semibold'
-                                  : isActuallyAvailable
-                                    ? 'bg-green-500 text-white font-semibold shadow-md border-2 border-green-600 hover:bg-green-600'
-                                  : isAvailable
-                                    ? 'hover:bg-gray-100 text-gray-500'
+                                : isToday
+                                  ? 'bg-[#025545]/10 text-[#025545] font-semibold hover:bg-[#025545]/15'
+                                  : isSelectable
+                                    ? 'hover:bg-gray-100 text-gray-700'
                                     : 'text-gray-300 cursor-not-allowed'
                             }`}
-                            title={isPsychologistAvailable ? (isToday ? 'Today - Available for booking' : 'Available for booking') : isAvailable ? 'Click to check availability' : 'Past date'}
+                            title={isSelectable ? 'Select date' : 'Past date'}
                           >
                             {day}
-                            {isActuallyAvailable && (
-                              <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1 shadow-sm"></div>
-                            )}
                           </div>
                         );
                       }
@@ -1173,51 +1194,57 @@ export default function AdminManualBookingModal({
                 </div>
 
                 {/* Time Selection */}
-                {selectedDateObj && (() => {
-                  const availableSlots = getAvailableSlotsForDate(selectedDateObj);
-                  
-                  if (availableSlots.length > 0) {
-                    return (
-                      <div className="mt-4">
-                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          Session Time *
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {availableSlots.map(time => (
-                            <button
-                              key={time}
-                              type="button"
-                              onClick={() => handleTimeSelect(time)}
-                              className={`px-3 py-2 rounded-lg border transition-colors text-xs ${
-                                selectedTime === time
-                                  ? 'bg-[#025545] text-white border-[#025545]'
-                                  : 'bg-white text-gray-700 border-gray-300 hover:border-[#025545]'
-                              }`}
-                            >
-                              {formatTime(time)}
-                            </button>
+                {selectedDateObj && (
+                  <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-gray-900 mb-4">Time</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Hour</label>
+                        <select
+                          value={selectedHour}
+                          onChange={(e) => handleManualHourChange(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          <option value="">HH</option>
+                          {MANUAL_BOOKING_HOURS.map((hour) => (
+                            <option key={hour.value} value={hour.value}>
+                              {hour.value}
+                            </option>
                           ))}
-                        </div>
-                        {selectedTime && (
-                          <p className="mt-2 text-sm text-gray-600">
-                            Selected: {formatTime(selectedTime)}
-                          </p>
-                        )}
+                        </select>
                       </div>
-                    );
-                  } else {
-                    return (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-                        No available time slots for this date. Please select another date.
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Minute</label>
+                        <select
+                          value={selectedMinute}
+                          onChange={(e) => handleManualMinuteChange(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          <option value="">MM</option>
+                          {MANUAL_BOOKING_MINUTES.map((minute) => (
+                            <option key={minute} value={minute}>
+                              {minute}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    );
-                  }
-                })()}
+                    </div>
+                    {selectedTime && (
+                      <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-sm text-emerald-800">
+                        {selectedDateObj.toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          timeZone: 'Asia/Kolkata'
+                        })} at {formatTime(selectedTime)}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {!selectedDateObj && (
                   <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 text-sm text-center">
-                    Select a date to see available time slots
+                    Select a date, then choose the session time manually
                   </div>
                 )}
               </div>

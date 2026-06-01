@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Users, 
   Plus, 
@@ -39,7 +39,9 @@ export default function UsersPage() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [isFullProfileOpen, setIsFullProfileOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,6 +52,15 @@ export default function UsersPage() {
   const [deletingUserId, setDeletingUserId] = useState(null); // Track which user is being deleted
   const [bookingsHistoryOpen, setBookingsHistoryOpen] = useState(false);
   const [bookingsHistoryUser, setBookingsHistoryUser] = useState(null);
+  const hasLoadedOnceRef = useRef(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     // Check authentication and role
@@ -71,14 +82,28 @@ export default function UsersPage() {
     }
   }, [authLoading, isAuthenticated, hasRole, router, currentPage]);
 
+  useEffect(() => {
+    if (authLoading || !user || (!hasRole('admin') && !hasRole('superadmin'))) return;
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    loadUsers();
+  }, [debouncedSearchTerm]);
+
   const loadUsers = async () => {
     try {
-      setIsLoading(true);
+      if (hasLoadedOnceRef.current) {
+        setIsFetching(true);
+      } else {
+        setIsLoading(true);
+      }
       console.log('🔍 Loading users...');
       const response = await adminApi.getUsers({
         page: currentPage,
         limit: 10,
-        role: 'client' // Only fetch client users
+        role: 'client', // Only fetch client users
+        search: debouncedSearchTerm.trim() || undefined
       });
       console.log('📊 Users API response:', response);
       
@@ -92,6 +117,7 @@ export default function UsersPage() {
         setUsers(usersData);
         setTotalUsers(pagination.total || 0);
         setTotalPages(Math.max(1, Math.ceil((pagination.total || 0) / 10)));
+        hasLoadedOnceRef.current = true;
       } else {
         console.warn('Invalid response structure:', response);
         setUsers([]);
@@ -106,6 +132,7 @@ export default function UsersPage() {
       setTotalPages(1);
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -255,8 +282,11 @@ export default function UsersPage() {
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
           />
+          {isFetching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
+          )}
         </div>
       </div>
 

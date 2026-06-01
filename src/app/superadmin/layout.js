@@ -113,10 +113,8 @@ export default function SuperAdminLayout({ children }) {
         { name: 'Users', href: '/superadmin/admin/users', icon: Users },
         { name: 'Bookings', href: '/superadmin/admin/bookings', icon: Calendar },
         { name: 'Events', href: '/superadmin/admin/events', icon: Ticket },
-        { name: 'Free Assessments', href: '/superadmin/admin/free-assessments', icon: Calendar },
         { name: 'Assessment Sessions', href: '/superadmin/admin/assessment-sessions', icon: Package },
         { name: 'Rescheduling', href: '/superadmin/admin/rescheduling', icon: RefreshCw },
-        { name: 'Free Assessment Timeslots', href: '/superadmin/admin/free-assessment-timeslots', icon: Clock },
         { name: 'Event pages (CMS)', href: '/superadmin/admin/events-cms', icon: Ticket },
       ]
     },
@@ -130,7 +128,6 @@ export default function SuperAdminLayout({ children }) {
         { name: 'Sessions', href: '/superadmin/finance/sessions', icon: Calendar },
         { name: 'Payouts', href: '/superadmin/finance/payouts', icon: Wallet },
         { name: 'Doctors', href: '/superadmin/finance/doctors', icon: UserCheck },
-        { name: 'Free Assessments', href: '/superadmin/finance/free-assessments', icon: Calendar },
         { name: 'Expenses', href: '/superadmin/finance/expenses', icon: Receipt },
         { name: 'Income', href: '/superadmin/finance/income', icon: TrendingUp },
         { name: 'Settings', href: '/superadmin/finance/settings', icon: Settings },

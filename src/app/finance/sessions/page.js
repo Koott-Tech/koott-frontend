@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Calendar, 
+import {
+  Calendar,
   Search,
   Filter,
   Eye,
+  Edit,
   Clock,
   Loader2,
   User,
@@ -22,7 +23,10 @@ import {
   MoreVertical,
   TrendingUp,
   ShoppingBag,
-  IndianRupee
+  IndianRupee,
+  Pencil,
+  Check,
+  Trash2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,17 +38,23 @@ import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import WheelPagination from '@/components/ui/wheel-pagination';
 import DateRangePicker from '@/components/ui/date-range-picker';
+import AdminEditSessionModal from '@/components/AdminEditSessionModal';
 import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
-import { formatIstCalendarYmd } from '@/lib/wixFinanceDates';
+import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
 import { sessionBookedAtIso } from '@/lib/sessionBookedAt';
 
 export default function FinanceSessionsPage() {
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSessionDetailsOpen, setIsSessionDetailsOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionDetailsLoading, setSessionDetailsLoading] = useState(false);
+  const [isEditSessionOpen, setIsEditSessionOpen] = useState(false);
+  const [selectedEditSession, setSelectedEditSession] = useState(null);
+  const [isEditingCommission, setIsEditingCommission] = useState(false);
+  const [commissionEditValue, setCommissionEditValue] = useState('');
+  const [commissionSaving, setCommissionSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [wixFilterType, setWixFilterType] = useState('all');
@@ -53,7 +63,14 @@ export default function FinanceSessionsPage() {
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalSessions, setTotalSessions] = useState(0);
-  const [dateRange, setDateRange] = useState({ from: null, to: null });
+  const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [verifyTarget, setVerifyTarget] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [openRowId, setOpenRowId] = useState(null);
 
   // Today's stats — fetched once on mount, independent of page filters
   const [todayStats, setTodayStats] = useState(null);
@@ -63,63 +80,17 @@ export default function FinanceSessionsPage() {
     (async () => {
       try {
         const today = formatIstCalendarYmd(new Date());
-        const res = await financeApi.getSessions({
+        const res = await financeApi.getDashboard({
           dateFrom: today,
           dateTo: today,
-          dateBasis: 'booked',
-          includeUnpaid: 'true',
-          limit: 500,
+          includeCharts: false,
         });
         if (res?.success) {
-          const rows = (res.data?.sessions || []).filter((r) => {
-            const src = String(r.source || '').toLowerCase();
-            const wp = r.wix_payload;
-            const isUndefinedWix = src === 'wix' && !r.payment_id && (!wp || typeof wp !== 'object' || !wp.sessionId);
-            const isPackageChild = src === 'wix' && Number(r.package_session_number || 1) > 1;
-            return !(isUndefinedWix || isPackageChild);
+          const summary = res.data?.summary || {};
+          setTodayStats({
+            totalOrders: summary.total_sessions || 0,
+            totalAmount: summary.total_revenue || 0,
           });
-          const keys = new Set();
-          for (const r of rows) {
-            const pid = r.payment_id;
-            if (pid) { keys.add(`payment:${String(pid)}`); continue; }
-            const src = String(r.source || '').toLowerCase();
-            const wp = r.wix_payload;
-            if (src === 'wix') {
-              const sid = wp.sessionId;
-              if (sid) keys.add(`wixBooking:${String(sid)}`);
-              else if (r.id) keys.add(`row:${r.id}`);
-              continue;
-            }
-            if (wp?.sessionId) { keys.add(`wixBooking:${String(wp.sessionId)}`); continue; }
-            if (r.id) keys.add(`row:${r.id}`);
-          }
-          const totalOrders = keys.size;
-          // Sum price only for deduped rows.
-          let totalAmount = 0;
-          const seenKeys = new Set();
-          for (const r of rows) {
-            const pid = r.payment_id;
-            let key = '';
-            if (pid) {
-              key = `payment:${String(pid)}`;
-            } else {
-              const src = String(r.source || '').toLowerCase();
-              const wp = r.wix_payload;
-              if (src === 'wix') {
-                const sid = wp.sessionId;
-                if (sid) key = `wixBooking:${String(sid)}`;
-                else if (r.id) key = `row:${r.id}`;
-              } else {
-                if (wp?.sessionId) key = `wixBooking:${String(wp.sessionId)}`;
-                else if (r.id) key = `row:${r.id}`;
-              }
-            }
-            if (key && !seenKeys.has(key)) {
-              seenKeys.add(key);
-              totalAmount += parseFloat(r.price) || 0;
-            }
-          }
-          setTodayStats({ totalOrders, totalAmount });
         }
       } catch (e) {
         console.error('Failed to load today stats:', e);
@@ -186,6 +157,8 @@ export default function FinanceSessionsPage() {
     setSelectedSession(null);
     setIsSessionDetailsOpen(true);
     setSessionDetailsLoading(true);
+    setIsEditingCommission(false);
+    setCommissionEditValue('');
     try {
       const response = await financeApi.getSessionDetails(session.id);
       if (!response?.success) {
@@ -199,6 +172,62 @@ export default function FinanceSessionsPage() {
       setSelectedSession(session);
     } finally {
       setSessionDetailsLoading(false);
+    }
+  };
+
+  const handleEditSession = async (session) => {
+    if (!session?.id) return;
+    try {
+      const response = await financeApi.getSessionDetails(session.id);
+      const sessionData = response?.data?.session ?? session;
+      setSelectedEditSession(sessionData);
+      setIsEditSessionOpen(true);
+    } catch (err) {
+      console.error('Failed to load session for editing:', err);
+      setSelectedEditSession(session);
+      setIsEditSessionOpen(true);
+    }
+  };
+
+  const handleSaveCommission = async () => {
+    if (!selectedSession?.id) return;
+    const val = parseFloat(commissionEditValue);
+    if (isNaN(val) || val < 0) {
+      showError('Enter a valid commission amount');
+      return;
+    }
+    const sessionAmount = getCommissionSplit(selectedSession)?.sessionAmount ?? 0;
+    if (val > sessionAmount) {
+      showError(`Commission cannot exceed session amount (₹${sessionAmount})`);
+      return;
+    }
+    try {
+      setCommissionSaving(true);
+      const resp = await financeApi.updateSessionCommission(selectedSession.id, val);
+      if (!resp?.success) throw new Error(resp?.message || 'Failed to save');
+      // Optimistically update the displayed session data
+      const updated = {
+        ...selectedSession,
+        commission: {
+          ...(selectedSession.commission || {}),
+          commission_amount: val,
+          session_amount: sessionAmount,
+        },
+        commission_split: {
+          sessionAmount,
+          companyCommission: val,
+          doctorWallet: Math.max(0, sessionAmount - val),
+          paymentStatus: selectedSession.commission_split?.paymentStatus || selectedSession.commission?.payment_status || null,
+          source: 'commission_history',
+        },
+      };
+      setSelectedSession(updated);
+      setIsEditingCommission(false);
+      showSuccess('Commission updated successfully');
+    } catch (err) {
+      showError(err.message || 'Failed to update commission');
+    } finally {
+      setCommissionSaving(false);
     }
   };
 
@@ -375,26 +404,33 @@ export default function FinanceSessionsPage() {
 
   const deriveSessionType = (booking) => {
     const p = wixPayload(booking) || {};
+    const rawCredits = p.pricingPlanInfo?.credits || {};
     const type = booking?.session_type || p.bookingType || null;
-    const count = booking?.session_count;
-    const idx = booking?.package_session_number ?? booking?.session_index;
-    const isChild = !!booking?.package_parent_booking_id && !!idx;
-    const hasPlan = p.planSessionNumber && p.creditsAvailable;
-    const isPkg = type === 'package' || !!booking?.package_id || !!booking?.package || isChild;
     const isCouple = type === 'couple';
+    const isChild = !!booking?.package_parent_booking_id && !!booking?.session_index;
+    const isPkg = type === 'package' || !!booking?.package_id || !!booking?.package || isChild;
 
-    if (isCouple && (hasPlan || isPkg)) {
-      const suffix = hasPlan
-        ? ` (${p.planSessionNumber}/${p.creditsAvailable})`
-        : isChild ? (count ? ` (${idx}/${count})` : ` (${idx})`) : (count && count > 1 ? ` (1/${count})` : '');
-      return `Couple Package${suffix}`;
-    }
+    // Mirror wix-discover priority: DB column → Velo payload → raw pricingPlanInfo credits
+    const pkgNum = booking?.package_session_number
+      ?? p.planSessionNumber
+      ?? (rawCredits.available != null && rawCredits.remaining != null ? rawCredits.available - rawCredits.remaining : null)
+      ?? null;
+    const pkgTotal = booking?.session_count
+      ?? p.creditsAvailable
+      ?? rawCredits.available
+      ?? p.detectedSessionCount
+      ?? null;
+    const hasPlan = !!(pkgNum || rawCredits.available != null) && !!(p.creditsAvailable || rawCredits.available);
+    const pkgSuffix = pkgNum && pkgTotal ? ` (${pkgNum}/${pkgTotal})` : pkgNum ? ` (${pkgNum})` : pkgTotal && pkgTotal > 1 ? ` (1/${pkgTotal})` : '';
+
+    if (isCouple && (hasPlan || isPkg)) return `Couple Package${pkgSuffix}`;
     if (isCouple) return 'Couple';
     if (type === 'assessment') return 'Assessment';
     if (type === 'discovery') return 'Discovery';
-    if (hasPlan) return `Package (${p.planSessionNumber}/${p.creditsAvailable})`;
-    if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
-    if (isPkg) return count && count > 1 ? `Package (1/${count})` : 'Package';
+    if (type === 'free_assessment') return 'Free Assessment';
+    if (hasPlan || (isPkg && pkgNum)) return `Package${pkgSuffix}`;
+    if (isChild) return pkgTotal ? `Session ${booking.session_index} of ${pkgTotal} (Package)` : `Session ${booking.session_index} (Package)`;
+    if (isPkg) return pkgTotal && pkgTotal > 1 ? `Package (1/${pkgTotal})` : 'Package';
     return 'Individual';
   };
 
@@ -414,7 +450,9 @@ export default function FinanceSessionsPage() {
       if (v === 'Razorpay') return 'Razorpay';
       if (v) return v;
     }
-    if (p.paymentState === 'FREE' || getPriceDisplayAmount(booking) === 0) return 'Free';
+    if (p.paymentState === 'FREE') return 'Free';
+    if (p.paymentState === 'COMPLETE') return null;
+    if (getPriceDisplayAmount(booking) === 0) return 'Free';
     return null;
   };
 
@@ -427,6 +465,43 @@ export default function FinanceSessionsPage() {
       hour: 'numeric',
       minute: '2-digit'
     });
+  };
+
+  const getCommissionSplit = (session) => {
+    const split = session?.commission_split || null;
+    if (split) {
+      return {
+        sessionAmount: Number(split.session_amount || 0),
+        companyCommission: split.company_commission == null ? null : Number(split.company_commission || 0),
+        doctorWallet: split.doctor_wallet == null ? null : Number(split.doctor_wallet || 0),
+        paymentStatus: split.commission_payment_status || split.payment_status || null,
+      };
+    }
+
+    const commission = session?.commission || null;
+    if (commission) {
+      const sessionAmount = Number(commission.session_amount || session?.price || 0);
+      const companyCommission = Number(commission.commission_amount || 0);
+      return {
+        sessionAmount,
+        companyCommission,
+        doctorWallet: Math.max(0, sessionAmount - companyCommission),
+        paymentStatus: commission.payment_status || null,
+      };
+    }
+
+    if (session?.therapist_commission != null && session?.price != null) {
+      const sessionAmount = Number(session.price || 0);
+      const doctorWallet = Number(session.therapist_commission || 0);
+      return {
+        sessionAmount,
+        companyCommission: Math.max(0, sessionAmount - doctorWallet),
+        doctorWallet,
+        paymentStatus: null,
+      };
+    }
+
+    return null;
   };
 
   const normalizeStatus = (s) => (s === 'noshow' ? 'no_show' : (s || ''));
@@ -488,6 +563,61 @@ export default function FinanceSessionsPage() {
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Any session where payment was done manually (cash/in-person/plan-credit)
+  // needs finance team verification — same as the "Manual" badge logic
+  const isManualSession = (s) => {
+    if (!s) return false;
+    // Admin-created sessions
+    if (s.source === 'admin_manual') return true;
+    if (String(s.wix_booking_id || '').startsWith('admin_manual_')) return true;
+    if (s.wix_payload?.isAdminManual === true || s.wix_payload?.manualBooking === true) return true;
+    // Wix plan-credit / inPerson payment sessions
+    const vendor = (s.wix_payload?.paymentDetails?.wixPayMultipleDetails?.[0]?.paymentVendorName || '').toLowerCase();
+    if (vendor === 'inperson') return true;
+    const payState = (s.wix_payload?.paymentState || s.wix_payload?.paymentDetails?.state || '').toUpperCase();
+    if (payState === 'UNDEFINED' && !s.wix_payload?.paymentDetails?.balance?.finalPrice?.amount) return true;
+    return false;
+  };
+
+  const handleVerifyPayment = async () => {
+    if (!verifyTarget || isVerifying) return;
+    setIsVerifying(true);
+    try {
+      const res = await financeApi.verifyPayment(verifyTarget.id);
+      if (!res?.success) throw new Error(res?.error || res?.message || 'Failed');
+      showSuccess('Payment verified ✓', 'Verified');
+      setVerifyTarget(null);
+      loadSessions();
+    } catch (e) { showError(e.message || 'Failed to verify', 'Error'); }
+    finally { setIsVerifying(false); }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const res = await financeApi.deleteSession(deleteTarget.id);
+      if (!res?.success) throw new Error(res?.message || 'Failed to delete');
+      showSuccess('Session deleted', 'Deleted');
+      setDeleteTarget(null);
+      loadSessions();
+    } catch (e) { showError(e.message || 'Failed to delete', 'Error'); }
+    finally { setIsDeleting(false); }
+  };
+
+  const handleCancelRefundConfirm = async () => {
+    if (!cancelTarget || isCancelling) return;
+    setIsCancelling(true);
+    try {
+      const res = await financeApi.cancelRefundSession(cancelTarget.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess(`Cancelled & refunded${res.data?.calendarEventRemoved ? '. Calendar event removed.' : '.'}`, 'Cancelled');
+      setCancelTarget(null);
+      loadSessions();
+    } catch (e) { showError(e.message || 'Failed to cancel', 'Error'); }
+    finally { setIsCancelling(false); }
   };
 
   if (isLoading && sessions.length === 0) {
@@ -615,153 +745,127 @@ export default function FinanceSessionsPage() {
           </nav>
         </div>
 
-        {/* Sessions Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session Details</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Psychologist</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created at</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center">
-                      <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
-                        <span className="text-sm font-medium">Processing...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : paginatedSessions.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center">
-                      <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                      <h6 className="mt-2">No sessions found</h6>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {searchTerm || filterStatus !== 'all'
-                          ? 'Try adjusting your search or filter criteria.'
-                          : 'No therapy sessions have been booked yet.'}
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedSessions.map((booking) => (
-                    <tr key={booking.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5">
-                            <div className="text-sm font-medium text-gray-900">
-                              {booking.wix_order_number ? (
-                                <span className="font-semibold">#{booking.wix_order_number}</span>
-                              ) : (
-                                <span className="text-xs text-gray-400">ID: {booking.id?.slice(0, 6)}</span>
-                              )}
-                            </div>
-                          </div>
+        {/* Sessions Table — same style as Wix Discovery */}
+        <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
+          <table className="min-w-full divide-y divide-gray-100 text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Session</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Therapist</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created at</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 bg-white">
+              {isLoading ? (
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
+              ) : paginatedSessions.length === 0 ? (
+                <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">No sessions found{searchTerm || filterStatus !== 'all' ? ' for current filters' : ''}.</td></tr>
+              ) : (
+                paginatedSessions.map((booking) => {
+                  const typeLabel = deriveSessionType(booking);
+                  const typeKey = deriveSessionTypeKey(booking);
+                  const typeColour = typeLabel.startsWith('Couple')
+                    ? 'bg-pink-50 text-pink-700'
+                    : typeLabel.startsWith('Package') || typeLabel.includes('(Package)')
+                      ? 'bg-violet-50 text-violet-700'
+                      : typeLabel === 'Assessment' ? 'bg-purple-50 text-purple-700'
+                      : typeLabel === 'Discovery'  ? 'bg-sky-50 text-sky-700'
+                      : 'bg-indigo-50 text-indigo-700';
+                  const paymentLabel = derivePaymentMethod(booking);
+                  const paymentColour = paymentLabel === 'Manual'
+                    ? 'bg-orange-50 text-orange-700'
+                    : paymentLabel === 'Free'
+                      ? 'bg-sky-50 text-sky-700'
+                      : 'bg-emerald-50 text-emerald-700';
+                  const clientEmail = booking.client?.user?.email || booking.client_email || null;
+                  const clientPhone = booking.client?.phone_number || booking.client_phone || null;
 
-                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            {(() => {
-                              const typeLabel = deriveSessionType(booking);
-                              const typeKey = deriveSessionTypeKey(booking);
-                              const typeClasses =
-                                typeLabel.startsWith('Couple')
-                                  ? 'bg-pink-100 text-pink-800'
-                                  : typeLabel.startsWith('Package') || typeLabel.includes('(Package)')
-                                    ? 'bg-violet-100 text-violet-800'
-                                    : typeLabel === 'Assessment'
-                                      ? 'bg-purple-100 text-purple-800'
-                                      : typeLabel === 'Discovery'
-                                        ? 'bg-sky-100 text-sky-800'
-                                        : typeKey === 'individual'
-                                          ? 'bg-indigo-100 text-indigo-800'
-                                          : 'bg-gray-100 text-gray-800';
-                              const paymentLabel = derivePaymentMethod(booking);
-                              const paymentClasses =
-                                paymentLabel === 'Manual'
-                                  ? 'bg-orange-100 text-orange-800'
-                                  : paymentLabel === 'Razorpay'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : paymentLabel === 'Free'
-                                      ? 'bg-sky-100 text-sky-800'
-                                      : 'bg-slate-100 text-slate-700';
+                  const isManual = isManualSession(booking);
+                  const isVerified = booking.payment_verified === true;
 
-                              return (
-                                <>
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${typeClasses}`}>
-                                    {typeLabel}
-                                  </span>
-                                  {paymentLabel && (
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${paymentClasses}`}>
-                                      {paymentLabel}
-                                    </span>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                          
-                          <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(getScheduledDateValue(booking))} at {formatTime(getScheduledTimeValue(booking))}
-                          </div>
+                  return (
+                    <tr key={booking.id} className={`transition-colors ${openRowId === booking.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
+                      {/* Session */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium text-gray-900 text-xs leading-snug">
+                            {booking.wix_order_number ? `#${booking.wix_order_number}` : booking.wix_booking_id ? `ID: ${booking.wix_booking_id.slice(-6).toUpperCase()}` : `ID: ${booking.id?.slice(0, 6).toUpperCase()}`}
+                          </p>
+                        </div>
+                        <p className="text-gray-500 text-xs mt-0.5">{formatDate(getScheduledDateValue(booking))} at {formatTime(getScheduledTimeValue(booking))}</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${typeColour}`}>{typeLabel}</span>
+                          {paymentLabel && <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${paymentColour}`}>{paymentLabel}</span>}
+                          {isManual && (
+                            isVerified
+                              ? <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
+                                  <CheckCircle className="h-2.5 w-2.5" />Verified
+                                </span>
+                              : <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                  Pending verification
+                                </span>
+                          )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 text-gray-400 mr-2" />
-                          <div className="text-sm text-gray-900">
-                            {getClientDisplayName(booking)}
-                          </div>
-                        </div>
+                      {/* Client */}
+                      <td className="px-4 py-3">
+                        <p className="text-gray-900">{getClientDisplayName(booking)}</p>
+                        {clientEmail && <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{clientEmail}</div>}
+                        {clientPhone && <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{clientPhone}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <UserCheck className="h-4 w-4 text-gray-400 mr-2" />
-                          <div className="text-sm text-gray-900">
-                            {getPsychologistDisplayName(booking)}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status, booking)}`}>
+                      {/* Therapist */}
+                      <td className="px-4 py-3 text-gray-700">{getPsychologistDisplayName(booking)}</td>
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(booking.status, booking)}`}>
                           {getStatusText(booking.status, booking)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                        ₹{getPriceDisplayAmount(booking).toLocaleString('en-IN')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {formatBookedAt(sessionBookedAtIso(booking))}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <DropdownMenu>
+                      {/* Price */}
+                      <td className="px-4 py-3 text-gray-700">₹{getPriceDisplayAmount(booking).toLocaleString('en-IN')}</td>
+                      {/* Created at */}
+                      <td className="px-4 py-3 text-xs text-gray-400">{formatBookedAt(sessionBookedAtIso(booking))}</td>
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-center">
+                        <DropdownMenu open={openRowId === booking.id} onOpenChange={(o) => setOpenRowId(o ? booking.id : null)}>
                           <DropdownMenuTrigger asChild>
-                            <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
-                              <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <button className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700">
+                              <MoreVertical className="h-4 w-4" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuContent align="end" className="w-52">
                             <DropdownMenuItem onClick={() => handleViewSession(booking)} className="cursor-pointer">
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
+                              <Eye className="h-4 w-4 mr-2" />View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditSession(booking)} className="cursor-pointer">
+                              <Edit className="h-4 w-4 mr-2" />Edit
+                            </DropdownMenuItem>
+                            {isManual && !isVerified && (
+                              <DropdownMenuItem onClick={() => setVerifyTarget(booking)} className="cursor-pointer text-green-700">
+                                <CheckCircle className="h-4 w-4 mr-2" />Approve Payment
+                              </DropdownMenuItem>
+                            )}
+                            {!['cancelled', 'refunded', 'completed'].includes(booking.status) && (
+                              <DropdownMenuItem onClick={() => setCancelTarget(booking)} className="cursor-pointer text-red-600">
+                                <XCircle className="h-4 w-4 mr-2" />Cancel &amp; Refund
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => setDeleteTarget(booking)} className="cursor-pointer text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* Pagination */}
@@ -823,7 +927,7 @@ export default function FinanceSessionsPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setIsSessionDetailsOpen(false)}
+                  onClick={() => { setIsSessionDetailsOpen(false); setIsEditingCommission(false); setCommissionEditValue(''); }}
                   className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -890,13 +994,13 @@ export default function FinanceSessionsPage() {
                         <div>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Date</p>
                           <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                            {formatDate(selectedSession.scheduled_date)}
+                            {formatDate(selectedSession.scheduled_date || selectedSession.session_date)}
                           </div>
                         </div>
                         <div>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Time</p>
                           <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                            {formatTime(selectedSession.scheduled_time)}
+                            {formatTime(selectedSession.scheduled_time || selectedSession.session_time)}
                           </div>
                         </div>
                         {selectedSession.status === 'rescheduled' && selectedSession.original_scheduled_date && (
@@ -929,7 +1033,7 @@ export default function FinanceSessionsPage() {
                         <div>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Email</p>
                           <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                            {normRel(selectedSession.client)?.user?.email || 'Not provided'}
+                            {normRel(selectedSession.client)?.email || normRel(selectedSession.client)?.user?.email || 'Not provided'}
                           </div>
                         </div>
                         <div>
@@ -1001,6 +1105,10 @@ export default function FinanceSessionsPage() {
                     {(() => {
                       const amountPaid = getAmountPaid(selectedSession);
                       if (amountPaid === null || amountPaid === undefined) return null;
+                      const wp = selectedSession?.wix_payment;
+                      const razorpayOrderId = wp?.razorpay_order_id || selectedSession?.payment?.razorpay_order_id || null;
+                      const paymentType = wp?.vendor || selectedSession?.payment?.payment_method || null;
+                      const wixTxId = wp?.wix_transaction_id || null;
                       return (
                         <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Payment</div>
@@ -1009,6 +1117,133 @@ export default function FinanceSessionsPage() {
                               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Amount Paid</p>
                               <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-medium">
                                 ₹{amountPaid}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Type</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                                {paymentType || '—'}
+                              </div>
+                            </div>
+                            {razorpayOrderId && (
+                              <div className="md:col-span-2">
+                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Razorpay Order ID</p>
+                                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                                  {razorpayOrderId}
+                                </div>
+                              </div>
+                            )}
+                            {wixTxId && (
+                              <div className="md:col-span-2">
+                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Transaction ID</p>
+                                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                                  {wixTxId}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {(() => {
+                      const split = getCommissionSplit(selectedSession);
+                      if (!split) return null;
+                      const liveDocWallet = isEditingCommission
+                        ? Math.max(0, split.sessionAmount - (parseFloat(commissionEditValue) || 0))
+                        : split.doctorWallet;
+                      return (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider" role="heading" aria-level={3}>Commission Split</div>
+                              {selectedSession?.commission_split?.source === 'calculated' && !isEditingCommission && (
+                                <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded px-1.5 py-0.5 font-medium">estimated</span>
+                              )}
+                              {selectedSession?.commission_split?.source === 'commission_history' && !isEditingCommission && (
+                                <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5 font-medium">overridden</span>
+                              )}
+                            </div>
+                            {!isEditingCommission ? (
+                              <button
+                                onClick={() => {
+                                  setCommissionEditValue(String(split.companyCommission ?? ''));
+                                  setIsEditingCommission(true);
+                                }}
+                                className="flex items-center gap-1.5 text-xs text-[#025545] hover:text-[#025545]/80 font-medium border border-[#025545]/30 rounded-lg px-2.5 py-1 hover:bg-[#025545]/5 transition-colors"
+                              >
+                                <Pencil className="h-3 w-3" /> Edit Commission
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setIsEditingCommission(false)}
+                                  disabled={commissionSaving}
+                                  className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1 hover:bg-slate-100 transition-colors"
+                                >Cancel</button>
+                                <button
+                                  onClick={handleSaveCommission}
+                                  disabled={commissionSaving}
+                                  className="flex items-center gap-1.5 text-xs text-white bg-[#025545] hover:bg-[#025545]/90 rounded-lg px-2.5 py-1 font-medium transition-colors disabled:opacity-60"
+                                >
+                                  {commissionSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                  Save
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Amount</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-900">
+                                ₹{split.sessionAmount.toLocaleString('en-IN')}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Company Commission</p>
+                              {isEditingCommission ? (
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">₹</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={split.sessionAmount}
+                                    step="1"
+                                    value={commissionEditValue}
+                                    onChange={(e) => setCommissionEditValue(e.target.value)}
+                                    className="w-full bg-white border-2 border-[#025545]/50 rounded-lg pl-7 pr-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:border-[#025545]"
+                                    autoFocus
+                                  />
+                                </div>
+                              ) : (
+                                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-900">
+                                  {split.companyCommission == null ? '—' : `₹${split.companyCommission.toLocaleString('en-IN')}`}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Doctor Wallet</p>
+                              <div className={`bg-white border rounded-lg px-3 py-2 text-sm font-medium ${isEditingCommission ? 'border-amber-300 text-amber-700 bg-amber-50/50' : 'border-slate-200 text-slate-900'}`}>
+                                {liveDocWallet == null ? '—' : `₹${liveDocWallet.toLocaleString('en-IN')}`}
+                                {isEditingCommission && <span className="text-xs ml-1 opacity-60">(preview)</span>}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payout Status</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 capitalize">
+                                {split.paymentStatus || 'Pending'}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Order</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium">
+                                {selectedSession?.is_first_session == null ? (
+                                  <span className="text-slate-400">—</span>
+                                ) : selectedSession.is_first_session ? (
+                                  <span className="text-green-700">🟢 First Session</span>
+                                ) : (
+                                  <span className="text-blue-700">🔵 Follow-up</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1022,7 +1257,7 @@ export default function FinanceSessionsPage() {
               {/* Footer */}
               <div className="flex items-center justify-end px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
                 <button
-                  onClick={() => setIsSessionDetailsOpen(false)}
+                  onClick={() => { setIsSessionDetailsOpen(false); setIsEditingCommission(false); setCommissionEditValue(''); }}
                   className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
                 >
                   Close
@@ -1031,6 +1266,95 @@ export default function FinanceSessionsPage() {
             </div>
           </div>
         )}
+
+        <AdminEditSessionModal
+          isOpen={isEditSessionOpen}
+          onClose={() => {
+            setIsEditSessionOpen(false);
+            setSelectedEditSession(null);
+          }}
+          session={selectedEditSession}
+          apiClient={financeApi}
+          onUpdateSuccess={async () => {
+            await loadSessions();
+            if (selectedEditSession?.id) {
+              try {
+                const response = await financeApi.getSessionDetails(selectedEditSession.id);
+                const sessionData = response?.data?.session ?? null;
+                if (sessionData) setSelectedSession(sessionData);
+              } catch (err) {
+                console.error('Failed to refresh edited finance session:', err);
+              }
+            }
+          }}
+        />
+
+        {/* Approve Payment confirm */}
+        {verifyTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => !isVerifying && setVerifyTarget(null)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <h3 className="text-base font-semibold text-gray-900">Approve Payment?</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-5">
+                This confirms the manual payment for <strong>{getClientDisplayName(verifyTarget)}</strong> has been received and verified. A <strong className="text-green-700">✓ Verified</strong> badge will appear on this session.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setVerifyTarget(null)} disabled={isVerifying} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">Cancel</button>
+                <button onClick={handleVerifyPayment} disabled={isVerifying}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-40">
+                  {isVerifying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                  Yes, Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel & Refund confirm */}
+        {cancelTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => !isCancelling && setCancelTarget(null)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-2 mb-2">
+                <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                <h3 className="text-base font-semibold text-gray-900">Cancel &amp; Refund?</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-5">
+                This will mark the session as <strong>refunded</strong> and remove the Google Calendar event. Refund the client via your payment gateway separately.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setCancelTarget(null)} disabled={isCancelling} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">Back</button>
+                <button onClick={handleCancelRefundConfirm} disabled={isCancelling}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
+                  {isCancelling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                  Confirm Cancel &amp; Refund
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete confirm */}
+        {deleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => !isDeleting && setDeleteTarget(null)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Delete Session?</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                This will permanently delete the session for <strong>{getClientDisplayName(deleteTarget)}</strong>. This cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setDeleteTarget(null)} disabled={isDeleting} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">Cancel</button>
+                <button onClick={handleDeleteConfirm} disabled={isDeleting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
+                  {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

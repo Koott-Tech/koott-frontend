@@ -909,12 +909,14 @@ export const adminApi = {
     });
   },
 
-  // Upload image (admin)
-  async uploadImage(file) {
+  // Upload image (admin). Optional `bucket` targets a specific storage bucket
+  // (allowlist on backend: 'profile-pictures' default, 'manual-bookings' for payment proofs, etc.)
+  async uploadImage(file, options = {}) {
     const url = `${BACKEND_BASE_URL}/admin/upload/image`;
     const token = typeof window !== 'undefined' ? getStoredToken() : null;
     const formData = new FormData();
     formData.append('file', file);
+    if (options.bucket) formData.append('bucket', options.bucket);
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -1142,6 +1144,30 @@ export const adminApi = {
     });
   },
 
+  /** Cancel a session (any source) and mark as refunded. Removes the Google Calendar event. */
+  async cancelRefundSession(sessionId) {
+    return apiRequest(`/admin/sessions/${sessionId}/cancel-refund`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
+  /** Finance: mark manual/admin session payment as verified. */
+  async verifyPayment(sessionId) {
+    return apiRequest(`/admin/sessions/${sessionId}/verify-payment`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
+  /** Cancel a Wix booking and mark as refunded. Removes the Google Calendar event. */
+  async cancelRefundWixBooking(id) {
+    return apiRequest(`/admin/wix/bookings/${id}/cancel-refund`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
   // Create manual booking (admin only)
   async createManualBooking(bookingData) {
     return apiRequest('/admin/bookings/manual', {
@@ -1163,6 +1189,14 @@ export const adminApi = {
     return apiRequest('/admin/bookings/book-package-next-session', {
       method: 'POST',
       body: JSON.stringify({ client_id, package_id, scheduled_date, scheduled_time }),
+    });
+  },
+
+  // Book next session for a Wix package booking (uses wix_bookings.id, no internal package required)
+  async bookWixNextSession({ wix_row_id, scheduled_date, scheduled_time, duration_minutes }) {
+    return apiRequest(`/admin/wix/bookings/${wix_row_id}/book-next-session`, {
+      method: 'POST',
+      body: JSON.stringify({ scheduled_date, scheduled_time, duration_minutes }),
     });
   },
 
@@ -1885,6 +1919,28 @@ export const financeApi = {
     return apiRequest(`/finance/sessions/${sessionId}`);
   },
 
+  async updateSession(sessionId, sessionData) {
+    return apiRequest(`/finance/sessions/${sessionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(sessionData),
+    });
+  },
+
+  async updateSessionCommission(sessionId, commissionAmount) {
+    return apiRequest(`/finance/sessions/${sessionId}/commission`, {
+      method: 'PUT',
+      body: JSON.stringify({ commission_amount: commissionAmount }),
+    });
+  },
+
+  async getPsychologists() {
+    return apiRequest('/finance/psychologists');
+  },
+
+  async getClients() {
+    return apiRequest('/finance/clients');
+  },
+
   // Revenue
   async getRevenue(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -2024,6 +2080,29 @@ export const financeApi = {
   async getFreeAssessments(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/finance/free-assessments${queryString ? `?${queryString}` : ''}`);
+  },
+
+  /** Finance: verify manual session payment (finance-accessible route, no admin role needed). */
+  async verifyPayment(sessionId) {
+    return apiRequest(`/finance/sessions/${sessionId}/verify-payment`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
+  /** Finance: cancel & refund a session. */
+  async cancelRefundSession(sessionId) {
+    return apiRequest(`/finance/sessions/${sessionId}/cancel-refund`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
+  /** Finance: delete a session. */
+  async deleteSession(sessionId) {
+    return apiRequest(`/finance/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
   },
 };
 

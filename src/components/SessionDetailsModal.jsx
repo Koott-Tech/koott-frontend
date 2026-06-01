@@ -85,14 +85,6 @@ export default function SessionDetailsModal({
                   <label className={labelClass}>Phone</label>
                   <div className={valueBoxClass}>{session.client?.phone_number || '—'}</div>
                 </div>
-                <div>
-                  <label className={labelClass}>Child name</label>
-                  <div className={valueBoxClass}>{session.client?.child_name || '—'}</div>
-                </div>
-                <div>
-                  <label className={labelClass}>Child age</label>
-                  <div className={valueBoxClass}>{session.client?.child_age != null ? `${session.client.child_age} years` : '—'}</div>
-                </div>
               </div>
             </div>
           )}

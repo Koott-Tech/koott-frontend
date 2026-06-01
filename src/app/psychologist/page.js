@@ -23,7 +23,9 @@ export default function PsychologistDashboard() {
   const [stats, setStats] = useState({
     totalSessions: 0,
     upcomingSessions: 0,
-    completedSessions: 0
+    completedSessions: 0,
+    cancelledSessions: 0,
+    rescheduledSessions: 0
   });
   const [payoutStats, setPayoutStats] = useState({
     incomeEarned: 0,
@@ -69,7 +71,9 @@ export default function PsychologistDashboard() {
     }
   };
 
-  // Filter by UTC calendar day of booking creation (aligned with finance / admin session lists).
+  // Filter by scheduled_date so pending payout and income earned always reflect the
+  // month the session is/was scheduled in — not when it was originally booked.
+  // A rescheduled session naturally moves between months as its scheduled_date changes.
   const filteredSessions = useMemo(() => {
     let filtered = [...allSessions];
     if (dateRange?.all) return filtered;
@@ -78,7 +82,12 @@ export default function PsychologistDashboard() {
     const toYmd = formatIstCalendarYmd(dateRange.to);
     if (!fromYmd || !toYmd) return filtered;
     return filtered.filter((s) => {
-      const ymd = sessionBookingCreatedIstYmd(s);
+      // Cancelled sessions: use booking creation date (cancellation is a booking event,
+      // the scheduled date may be in a future month).
+      // All other sessions: use scheduled_date so income/pending aligns to the month worked.
+      const ymd = s.status === 'cancelled'
+        ? (sessionBookingCreatedIstYmd(s) || s.scheduled_date)
+        : s.scheduled_date;
       return ymd && ymd >= fromYmd && ymd <= toYmd;
     });
   }, [allSessions, dateRange]);
@@ -88,16 +97,23 @@ export default function PsychologistDashboard() {
     if (allSessions.length === 0) return;
 
     // Calculate session stats
-    const istTodayStr = formatIstCalendarYmd(new Date());
-
+    // All booked/rescheduled sessions in the selected date range are "pending" —
+    // past-dated ones that were never marked complete also stay in the month they
+    // were scheduled in, not forwarded to the current month.
     const upcomingSessions = filteredSessions.filter((session) => {
-      const sd = session.scheduled_date;
-      if (!sd) return false;
-      return sd >= istTodayStr && (session.status === 'booked' || session.status === 'rescheduled');
+      return session.status === 'booked' || session.status === 'rescheduled';
     });
 
     const completedSessions = filteredSessions.filter(session => {
       return session.status === 'completed';
+    });
+
+    const cancelledSessions = filteredSessions.filter(session => {
+      return session.status === 'cancelled';
+    });
+
+    const rescheduledSessions = filteredSessions.filter(session => {
+      return session.status === 'rescheduled';
     });
 
     // Calculate payout stats
@@ -105,25 +121,28 @@ export default function PsychologistDashboard() {
     let pendingPayout = 0; // Commission from upcoming sessions
 
     // Process completed sessions for earned commission
+    // doctor_wallet is computed by backend using commission_history → therapist_commission → doctor_commissions rates
     completedSessions.forEach(session => {
-      const sessionPrice = parseFloat(session.price || 0);
-      const commissionRate = 0.7; // Default 70% commission
-      const commission = session.doctor_commission_amount || (sessionPrice * commissionRate);
-      incomeEarned += commission;
+      const wallet = parseFloat(session.doctor_wallet);
+      if (!isNaN(wallet) && wallet > 0) {
+        incomeEarned += wallet;
+      }
     });
 
     // Process upcoming/booked sessions for pending payout
     upcomingSessions.forEach(session => {
-      const sessionPrice = parseFloat(session.price || 0);
-      const commissionRate = 0.7; // Default 70% commission
-      const commission = sessionPrice * commissionRate;
-      pendingPayout += commission;
+      const wallet = parseFloat(session.doctor_wallet);
+      if (!isNaN(wallet) && wallet > 0) {
+        pendingPayout += wallet;
+      }
     });
 
     setStats({
       totalSessions: filteredSessions.length,
       upcomingSessions: upcomingSessions.length,
-      completedSessions: completedSessions.length
+      completedSessions: completedSessions.length,
+      cancelledSessions: cancelledSessions.length,
+      rescheduledSessions: rescheduledSessions.length
     });
 
     setPayoutStats({
@@ -196,7 +215,7 @@ export default function PsychologistDashboard() {
       </div>
 
       {/* Sessions Stats Row */}
-      <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3">
+      <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 xl:grid-cols-5">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-4 sm:p-5">
             <div className="flex items-center">
@@ -244,6 +263,38 @@ export default function PsychologistDashboard() {
             </div>
           </div>
         </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-4 sm:p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+              </div>
+              <div className="ml-4 sm:ml-5 w-0 flex-1 min-w-0">
+                <dl>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">Cancelled</dt>
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">{stats.cancelledSessions}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-4 sm:p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
+              </div>
+              <div className="ml-4 sm:ml-5 w-0 flex-1 min-w-0">
+                <dl>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">Rescheduled</dt>
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">{stats.rescheduledSessions}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Payout Details Row */}
@@ -283,18 +334,6 @@ export default function PsychologistDashboard() {
                 </dl>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="mt-8">
-        <p className="font-medium text-gray-900 mb-4">Recent Activity</p>
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <p className="text-sm text-gray-500">
-              Your recent sessions and availability updates will appear here.
-            </p>
           </div>
         </div>
       </div>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Calendar, 
   Search,
   Filter,
   Eye,
   Edit,
+  Save,
   Clock,
   Loader2,
   User,
@@ -18,11 +19,7 @@ import {
   Phone,
   Mail,
   Package,
-  DollarSign,
-  MapPin,
   RefreshCw,
-  ChevronLeft,
-  ChevronRight,
   Trash2,
   MessageSquare,
   MoreVertical,
@@ -46,7 +43,6 @@ import AdminBookNextPackageSessionModal from '@/components/AdminBookNextPackageS
 import AdminEditSessionModal from '@/components/AdminEditSessionModal';
 import SessionCompletionModal from '@/components/SessionCompletionModal';
 import ConfirmModal from '@/components/ConfirmModal';
-import { cache } from '@/lib/cache';
 import WheelPagination from '@/components/ui/wheel-pagination';
 import DateRangePicker from '@/components/ui/date-range-picker';
 import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
@@ -80,6 +76,76 @@ function formatIstFromIso(iso) {
   }
 }
 
+function deriveWixSessionType(row) {
+  const type = row.session_type || null;
+  const count = row.session_count;
+  const idx = row.session_index;
+  const p = row.payload || {};
+  const rawCredits = p.pricingPlanInfo?.credits || {};
+  const isCouple = type === 'couple';
+  const isChild = !!row.package_parent_booking_id && !!idx;
+  const isPkg = type === 'package' || isChild;
+  const pkgNum = row.package_session_number
+    ?? p.planSessionNumber
+    ?? (rawCredits.available != null && rawCredits.remaining != null ? rawCredits.available - rawCredits.remaining : null)
+    ?? null;
+  const pkgTotal = count ?? p.creditsAvailable ?? rawCredits.available ?? p.detectedSessionCount ?? null;
+  const hasPlan = !!(pkgNum || rawCredits.available != null) && !!(p.creditsAvailable || rawCredits.available);
+  const pkgSuffix = pkgNum && pkgTotal ? ` (${pkgNum}/${pkgTotal})` : pkgNum ? ` (${pkgNum})` : pkgTotal && pkgTotal > 1 ? ` (1/${pkgTotal})` : '';
+
+  if (isCouple && (hasPlan || isPkg)) return `Couple Package${pkgSuffix}`;
+  if (isCouple) return 'Couple';
+  if (hasPlan || (isPkg && pkgNum)) return `Package${pkgSuffix}`;
+  if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
+  if (isPkg) {
+    if (count && count > 1) return `Package (1/${count})`;
+    return 'Package';
+  }
+  if (type === 'assessment') return 'Assessment';
+  if (type === 'discovery') return 'Discovery';
+  if (type === 'individual') return 'Individual';
+  if (type === 'class') return 'Class';
+  if (type) return type;
+  return null;
+}
+
+function deriveWixPaymentMethod(row) {
+  const vendors = row.payload?.paymentDetails?.wixPayMultipleDetails;
+  if (Array.isArray(vendors) && vendors.length > 0) {
+    const vendor = vendors[0].paymentVendorName;
+    if (vendor === 'inPerson') return 'Manual';
+    if (vendor === 'Razorpay') return 'Razorpay';
+    if (vendor) return vendor;
+  }
+  const state = row.payload?.paymentState;
+  if (state === 'FREE') return 'Free';
+  if (state === 'COMPLETE') return null;
+  if (parseFloat(row.price || '0') === 0) return 'Free';
+  return null;
+}
+
+function wixStatusBadge(status) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'completed') return 'bg-green-100 text-green-800';
+  if (s === 'cancelled') return 'bg-red-100 text-red-800';
+  if (s === 'deleted') return 'bg-red-50 text-red-400 line-through';
+  if (s === 'booked') return 'bg-emerald-100 text-emerald-800';
+  if (s === 'no_show') return 'bg-amber-100 text-amber-900';
+  if (s === 'pending') return 'bg-slate-100 text-slate-700';
+  if (s === 'rescheduled') return 'bg-yellow-100 text-yellow-800';
+  return 'bg-slate-100 text-slate-700';
+}
+
+function effectiveWixStatus(row) {
+  const primary = String(row?.status || '').toLowerCase();
+  const linked = String(row?.session_status || '').toLowerCase();
+  return linked || primary;
+}
+
+function isWixSessionLike(session) {
+  return String(session?.source || '').toLowerCase() === 'wix' || !!session?.wix_booking_id || !!session?.wix_payload;
+}
+
 export default function BookingsPage() {
   const { showError, showSuccess } = useNotification();
   const [bookings, setBookings] = useState([]);
@@ -99,6 +165,8 @@ export default function BookingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [cancelRefundTarget, setCancelRefundTarget] = useState(null);
+  const [isCancelRefunding, setIsCancelRefunding] = useState(false);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [selectedCompleteSession, setSelectedCompleteSession] = useState(null);
   const [isBookNextOpen, setIsBookNextOpen] = useState(false);
@@ -108,11 +176,19 @@ export default function BookingsPage() {
   const [wixBookings, setWixBookings] = useState([]);
   const [wixLoading, setWixLoading] = useState(false);
   const [wixSyncing, setWixSyncing] = useState(false);
+  const [viewingWixRow, setViewingWixRow] = useState(null);
+  const [editingWixRow, setEditingWixRow] = useState(null);
+  const [wixEditForm, setWixEditForm] = useState({});
+  const [wixActionLoading, setWixActionLoading] = useState(false);
+  const [wixDeleteConfirmId, setWixDeleteConfirmId] = useState(null);
+  const [wixCompleteConfirmRow, setWixCompleteConfirmRow] = useState(null);
+  const [wixCancelRefundRow, setWixCancelRefundRow] = useState(null);
   const [orphansLoading, setOrphansLoading] = useState(false);
   const [orphansData, setOrphansData] = useState(null); // { orphans: [], summary: {} }
   const [showOrphansModal, setShowOrphansModal] = useState(false);
   const [wixFilterType, setWixFilterType] = useState('all');
-  const wixAutoSyncedRef = useRef(false);
+  const [openWixRowId, setOpenWixRowId] = useState(null);
+  const [openPlatformRowId, setOpenPlatformRowId] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,17 +209,8 @@ export default function BookingsPage() {
 
   useEffect(() => {
     if (listSource !== 'wix') return;
-    let cancelled = false;
-    const initializeWixView = async () => {
-      if (!cancelled) {
-        await loadWixBookings();
-      }
-    };
-    initializeWixView();
-    return () => {
-      cancelled = true;
-    };
-  }, [listSource]);
+    loadWixBookings();
+  }, [currentPage, filterStatus, searchTerm, dateRange, listSource, wixFilterType]);
 
   useEffect(() => {
     if (currentPage !== 1) {
@@ -253,6 +320,9 @@ export default function BookingsPage() {
         page: currentPage,
         limit: itemsPerPage,
       };
+      if (filterStatus && filterStatus !== 'packages') {
+        params.status = filterStatus;
+      }
       // Only apply date filtering if explicitly requested or if not in Wix view
       // For Wix view, we want to see everything by default like in Discovery page
       if (hasDateRangeBounds(dateRange)) {
@@ -269,7 +339,8 @@ export default function BookingsPage() {
 
       // Parallel: total Wix sessions in the same date range, ignoring session_type filter.
       // `totalSessions` expands packages (Package of 3 = 3 sessions) so it's a true session count.
-      const allTypeParams = { ...params, session_type: undefined, page: 1, limit: 1 };
+      const allTypeParams = { ...params, status: undefined, session_type: undefined, page: 1, limit: 1 };
+      delete allTypeParams.status;
       delete allTypeParams.session_type;
       adminApi.getWixBookings(allTypeParams)
         .then(r => setTotalInRange(r?.data?.pagination?.totalSessions ?? r?.data?.pagination?.total ?? 0))
@@ -319,7 +390,6 @@ export default function BookingsPage() {
   const handleWixSync = async () => {
     const ok = await syncWixBookings({ silentSuccess: false });
     if (ok) {
-      wixAutoSyncedRef.current = true;
       await loadWixBookings();
     }
   };
@@ -371,6 +441,149 @@ export default function BookingsPage() {
   const handleReschedule = (session) => {
     setSelectedSession(session);
     setIsRescheduleOpen(true);
+  };
+
+  const canBookNextFromWixRow = (row) => {
+    if (!row) return false;
+    const status = effectiveWixStatus(row);
+    if (status !== 'completed') return false;
+    if (row.package_id && row.client_id && row.psychologist_id) return true;
+    const isWixPackage = row.session_type === 'package' && !row.package_id;
+    if (isWixPackage && row.client_id && row.psychologist_id) {
+      const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
+      const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
+      return total > done;
+    }
+    return false;
+  };
+
+  const buildWixSessionProxy = (row) => {
+    const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
+    const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
+    return {
+      ...row,
+      id: row.session_id || row.sessions?.[0]?.id || row.sessions?.id || null,
+      status: row.session_status || row.status,
+      scheduled_date: row.start_time?.slice(0, 10),
+      scheduled_time: row.start_time?.slice(11, 16),
+      package: {
+        id: row.package_id || null,
+        session_count: total,
+        total_sessions: total,
+        completed_sessions: done,
+        remaining_sessions: Math.max(total - done, 0),
+        package_type: row.session_type || 'package',
+      },
+      client: row.client_id ? {
+        id: row.client_id,
+        first_name: row.client_first_name || row.client_full_name?.split(' ')[0] || '',
+        last_name: row.client_last_name || row.client_full_name?.split(' ').slice(1).join(' ') || '',
+        user: { email: row.client_email || null },
+        phone_number: row.client_phone || null,
+      } : null,
+      psychologist: row.psychologist_id ? {
+        id: row.psychologist_id,
+        first_name: row.therapist_name?.split(' ')[0] || '',
+        last_name: row.therapist_name?.split(' ').slice(1).join(' ') || '',
+      } : null,
+      wix_row_id: row.package_id ? null : (row.id || null),
+    };
+  };
+
+  const handleViewWixBooking = (row) => {
+    setViewingWixRow(row);
+  };
+
+  const handleEditWixBooking = (row) => {
+    setEditingWixRow(row);
+    setWixEditForm({
+      status: row.status || '',
+      title: row.title || '',
+      price: row.price || '',
+      therapist_name: row.therapist_name || '',
+      notes: row.notes || '',
+    });
+  };
+
+  const handleWixEditSave = async () => {
+    if (!editingWixRow) return;
+    setWixActionLoading(true);
+    try {
+      const res = await adminApi.editWixBooking(editingWixRow.id, wixEditForm);
+      if (!res?.success) throw new Error(res?.error || 'Update failed');
+      showSuccess('Wix booking updated', 'Wix');
+      setEditingWixRow(null);
+      await loadWixBookings();
+    } catch (err) {
+      showError(err?.message || 'Update failed', 'Wix');
+    } finally {
+      setWixActionLoading(false);
+    }
+  };
+
+  const handleWixCompleteConfirm = async () => {
+    if (!wixCompleteConfirmRow) return;
+    setWixActionLoading(true);
+    try {
+      const res = await adminApi.completeWixBooking(wixCompleteConfirmRow.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess('Booking marked as completed', 'Wix');
+      setWixCompleteConfirmRow(null);
+      await loadWixBookings();
+    } catch (err) {
+      showError(err?.message || 'Failed', 'Wix');
+    } finally {
+      setWixActionLoading(false);
+    }
+  };
+
+  const handleWixNoShow = async (row) => {
+    setWixActionLoading(true);
+    try {
+      const res = await adminApi.noShowWixBooking(row.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess('Booking marked as no-show', 'Wix');
+      await loadWixBookings();
+    } catch (err) {
+      showError(err?.message || 'Failed', 'Wix');
+    } finally {
+      setWixActionLoading(false);
+    }
+  };
+
+  const handleWixDeleteConfirm = async () => {
+    if (!wixDeleteConfirmId) return;
+    setWixActionLoading(true);
+    try {
+      const res = await adminApi.deleteWixBooking(wixDeleteConfirmId);
+      if (!res?.success) throw new Error(res?.error || 'Delete failed');
+      showSuccess('Booking deleted', 'Wix');
+      setWixDeleteConfirmId(null);
+      await loadWixBookings();
+    } catch (err) {
+      showError(err?.message || 'Delete failed', 'Wix');
+    } finally {
+      setWixActionLoading(false);
+    }
+  };
+
+  const handleWixCancelRefundConfirm = async () => {
+    if (!wixCancelRefundRow) return;
+    setWixActionLoading(true);
+    try {
+      const res = await adminApi.cancelRefundWixBooking(wixCancelRefundRow.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess(
+        `Booking cancelled & refunded${res.data?.calendarEventRemoved ? '. Calendar event removed.' : '.'}`,
+        'Cancelled'
+      );
+      setWixCancelRefundRow(null);
+      await loadWixBookings();
+    } catch (err) {
+      showError(err?.message || 'Failed to cancel', 'Error');
+    } finally {
+      setWixActionLoading(false);
+    }
   };
 
   const handleEditSession = (session) => {
@@ -550,6 +763,19 @@ export default function BookingsPage() {
     setSessionToMarkNoShow(null);
   };
 
+  const handleCancelRefundConfirm = async () => {
+    if (!cancelRefundTarget) return;
+    setIsCancelRefunding(true);
+    try {
+      const res = await adminApi.cancelRefundSession(cancelRefundTarget.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess(`Session cancelled & refunded${res.data?.calendarEventRemoved ? '. Calendar event removed.' : '.'}`, 'Cancelled');
+      setCancelRefundTarget(null);
+      loadBookings();
+    } catch (e) { showError(e?.message || 'Failed to cancel', 'Error'); }
+    finally { setIsCancelRefunding(false); }
+  };
+
   const handleRescheduleSuccess = (updatedSession) => {
     // Update the booking in the list
     setBookings(prevBookings => 
@@ -585,6 +811,17 @@ export default function BookingsPage() {
   const openBookNextFromPackage = (pkg) => {
     setSelectedSession(pkg);
     setIsBookNextOpen(true);
+  };
+
+  const openBookNextFromSession = (session) => {
+    setSelectedSession(session);
+    setIsBookNextOpen(true);
+  };
+
+  const canBookNextFromSession = (session) => {
+    if (!session) return false;
+    const isPackage = session.session_type === 'package' || !!session.package_id || !!session.package || !!session.package_parent_booking_id;
+    return isPackage && session.status === 'completed' && !!session.package_id && !!session.client_id && !!session.psychologist_id;
   };
 
   const getMeetLink = (session) =>
@@ -875,6 +1112,15 @@ export default function BookingsPage() {
     { label: 'Packages', value: 'packages' }
   ];
 
+  const wixStatusTabs = [
+    { label: 'Upcoming', value: 'booked' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'No Show', value: 'no_show' },
+    { label: 'Cancelled', value: 'cancelled' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Rescheduled', value: 'rescheduled' },
+  ];
+
   const wixTypeTabs = [
     { label: 'All', value: 'all' },
     { label: 'Individual', value: 'individual' },
@@ -1023,6 +1269,36 @@ export default function BookingsPage() {
             aria-label="Filter by status"
           >
             {statusTabs.map((tab) => {
+              const isActive = filterStatus === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setFilterStatus(tab.value)}
+                  className={`
+                    relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
+                    transition-all duration-200 ease-out
+                    ${isActive
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      )}
+
+      {showWixView && (
+        <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-1.5">
+          <nav
+            className="flex gap-1 overflow-x-auto"
+            aria-label="Filter Wix bookings by status"
+          >
+            {wixStatusTabs.map((tab) => {
               const isActive = filterStatus === tab.value;
               return (
                 <button
@@ -1196,214 +1472,165 @@ export default function BookingsPage() {
               </tbody>
             </table>
           ) : showWixView ? (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Session (Wix)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Therapist
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created at
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+            <table className="min-w-full divide-y divide-gray-100 text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Session</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Therapist</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created at</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-50 bg-white">
                 {wixLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center">
-                      <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
-                        <span className="text-sm font-medium">Loading…</span>
-                      </div>
+                    <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…
                     </td>
                   </tr>
                 ) : wixBookings.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">
                       No Wix rows in Supabase for this range. Run the SQL migration, then click{' '}
                       <strong>Sync from Wix</strong>.
                     </td>
                   </tr>
                 ) : (
                   wixBookings.map((row) => (
-                    <tr key={row.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
+                    <tr key={row.id} className={`transition-colors ${openWixRowId === row.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <div className="text-sm font-medium text-gray-900">
-                            {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : '—')}
-                          </div>
+                          <p className="font-medium text-gray-900 text-xs leading-snug">
+                            {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID')}
+                          </p>
                           {row.session_type === 'package' && row.package_session_number && (
                             <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
                               {row.package_session_number} of {row.session_count || '?'}
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {formatIstFromIso(row.start_time)}
-                        </div>
+                        <p className="text-gray-500 text-xs mt-0.5">{formatIstFromIso(row.start_time)}</p>
                         {(() => {
-                          const wp = row.payload || {};
-                          const isChild = !!row.package_parent_booking_id;
-                          const count = row.session_count;
-                          const idx = row.session_index;
-                          let label, colour;
-
-                          const isCouple = wp.bookingType === 'couple' || row.session_type === 'couple';
-                          const isAssessment = wp.bookingType === 'assessment' || row.session_type === 'assessment';
-                          const isDiscovery = wp.bookingType === 'discovery' || row.session_type === 'discovery';
-                          const isPkg = row.session_type === 'package' || isChild;
-                          const hasPlanInfo = wp.planSessionNumber && wp.creditsAvailable;
-                          const pkgSuffix = hasPlanInfo
-                            ? ` (${wp.planSessionNumber}/${wp.creditsAvailable})`
-                            : isChild
-                              ? (count ? ` (${idx}/${count})` : ` (${idx})`)
-                              : (count && count > 1 ? ` (1/${count})` : '');
-
-                          if (isCouple && (hasPlanInfo || isPkg)) {
-                            label = `Couple Package${pkgSuffix}`; colour = 'bg-pink-50 text-pink-700';
-                          } else if (isCouple) {
-                            label = 'Couple'; colour = 'bg-pink-50 text-pink-700';
-                          } else if (isAssessment) {
-                            label = 'Assessment'; colour = 'bg-purple-50 text-purple-700';
-                          } else if (isDiscovery) {
-                            label = 'Discovery'; colour = 'bg-sky-50 text-sky-700';
-                          } else if (hasPlanInfo) {
-                            label = `Package (${wp.planSessionNumber}/${wp.creditsAvailable})`; colour = 'bg-violet-50 text-violet-700';
-                          } else if (isPkg) {
-                            label = count && count > 1 ? `Package (1/${count})` : 'Package'; colour = 'bg-violet-50 text-violet-700';
-                          } else {
-                            label = 'Individual'; colour = 'bg-indigo-50 text-indigo-700';
-                          }
-
-                          const pm = (() => {
-                            const vendors = wp.paymentDetails?.wixPayMultipleDetails;
-                            if (Array.isArray(vendors) && vendors[0]?.paymentVendorName === 'inPerson') return 'Manual';
-                            return null;
-                          })();
+                          const label = deriveWixSessionType(row);
+                          const lower = String(label || '').toLowerCase();
+                          const colour = lower.startsWith('couple')
+                            ? 'bg-pink-50 text-pink-700'
+                            : lower.includes('package')
+                              ? 'bg-violet-50 text-violet-700'
+                              : lower === 'assessment'
+                                ? 'bg-purple-50 text-purple-700'
+                                : lower === 'discovery'
+                                  ? 'bg-sky-50 text-sky-700'
+                                  : 'bg-indigo-50 text-indigo-700';
+                          const pm = deriveWixPaymentMethod(row);
 
                           return (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${colour}`}>{label}</span>
-                              {pm && <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-orange-50 text-orange-700">{pm}</span>}
+                              {label && <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{label}</span>}
+                              {row.payload?.isAdminManual && (
+                                <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>
+                              )}
+                              {!row.payload?.isAdminManual && pm && (() => {
+                                const isManual = pm === 'Manual';
+                                return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>;
+                              })()}
                             </div>
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <User className="h-4 w-4 text-gray-400 mr-2 shrink-0" />
-                          <div>
-                            <div className="text-sm text-gray-900">
-                              {row.client_full_name || row.client_first_name || '—'}
-                            </div>
-                            <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                              <Mail className="h-3 w-3 shrink-0" />
-                              {row.client_email || '—'}
-                            </div>
-                          </div>
-                        </div>
+                      <td className="px-4 py-3">
+                        <p className="text-gray-900">{row.client_full_name || row.client_first_name || '—'}</p>
+                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client_email || '—'}</div>
+                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client_phone || '—'}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {row.therapist_name || '—'}
-                      </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3 text-gray-700">{row.therapist_name || '—'}</td>
+                      <td className="px-4 py-3">
                         {(() => {
-                          const s = row.status && row.status !== 'undefined' && row.status !== 'null' ? row.status : null;
-                          const colours = s === 'completed' ? 'bg-sky-50 text-sky-800'
-                            : s === 'cancelled' ? 'bg-red-50 text-red-800'
-                            : s === 'no_show' ? 'bg-amber-50 text-amber-900'
-                            : s === 'booked' ? 'bg-emerald-50 text-emerald-800'
-                            : 'bg-slate-100 text-slate-700';
+                          const s = effectiveWixStatus(row);
+                          const resolved = s && s !== 'undefined' && s !== 'null' ? s : null;
                           return (
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${colours}`}>
-                              {s || '—'}
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${wixStatusBadge(resolved)}`}>
+                              {resolved || '—'}
                             </span>
                           );
                         })()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {row.price ? `${row.price} ${row.currency || ''}`.trim() : '—'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        {formatBookedAt(
-                          wixBookingBookedAtIso(row)
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="px-4 py-3 text-gray-700">{row.price ? `${row.price}${row.currency ? ` ${row.currency}` : ''}` : '—'}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400">{formatBookedAt(wixBookingBookedAtIso(row))}</td>
+                      <td className="px-4 py-3 text-center relative">
                         <div className="flex items-center justify-center gap-2">
                           {(() => {
-                            const sid = row.sessions?.[0]?.id || row.sessions?.id || row.session_id;
-                            if (!sid) {
-                              return (
-                                <span className="text-[10px] text-gray-400 italic">No linked session</span>
-                              );
-                            }
-                            // Minimal session object for the actions
-                            const bookingProxy = {
-                              ...row,
-                              id: sid,
-                              status: row.status,
-                              scheduled_date: row.start_time?.slice(0, 10),
-                              scheduled_time: row.start_time?.slice(11, 16),
-                              client: {
-                                first_name: row.client_first_name || row.client_full_name?.split(' ')[0],
-                                last_name: row.client_last_name || row.client_full_name?.split(' ').slice(1).join(' '),
-                                user: { email: row.client_email }
-                              }
-                            };
+                            const bookingProxy = buildWixSessionProxy(row);
+                            const wixStatus = effectiveWixStatus(row);
+                            const canReschedule = ['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(wixStatus);
                             return (
-                              <DropdownMenu>
+                              <DropdownMenu open={openWixRowId === row.id} onOpenChange={(o) => setOpenWixRowId(o ? row.id : null)}>
                                 <DropdownMenuTrigger asChild>
                                   <button className="text-gray-600 hover:text-gray-900 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                                     <MoreVertical className="h-4 w-4" />
                                   </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                  <DropdownMenuItem onClick={() => handleViewSession(bookingProxy)} className="cursor-pointer">
+                                <DropdownMenuContent align="end" className="w-52">
+                                  <DropdownMenuItem onClick={() => handleViewWixBooking(row)} className="cursor-pointer">
                                     <Eye className="h-4 w-4 mr-2" />
                                     View Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleEditSession(bookingProxy)} className="cursor-pointer">
+                                  <DropdownMenuItem onClick={() => handleEditWixBooking(row)} className="cursor-pointer">
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit
                                   </DropdownMenuItem>
-                                  {['booked', 'rescheduled', 'confirmed', 'scheduled'].includes(row.status) && (
-                                    <DropdownMenuItem onClick={() => handleReschedule(bookingProxy)} className="cursor-pointer">
+                                  {getMeetLink(row) && !['completed', 'cancelled'].includes(wixStatus) && (
+                                    <DropdownMenuItem onClick={() => handleOpenMeet(row)} className="cursor-pointer">
+                                      <Video className="h-4 w-4 mr-2" />
+                                      Open Meet
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canBookNextFromWixRow(row) && (
+                                    <DropdownMenuItem onClick={() => {
+                                      setSelectedSession(bookingProxy);
+                                      setIsBookNextOpen(true);
+                                    }} className="cursor-pointer">
+                                      <Package className="h-4 w-4 mr-2" />
+                                      Book Next Session
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canReschedule && (
+                                    <DropdownMenuItem onClick={() => {
+                                      if (!bookingProxy?.id || !bookingProxy?.psychologist_id) {
+                                        showError('This Wix row is not linked to a reschedulable session yet.', 'Reschedule');
+                                        return;
+                                      }
+                                      handleReschedule(bookingProxy);
+                                    }} className="cursor-pointer">
                                       <RefreshCw className="h-4 w-4 mr-2" />
                                       Reschedule
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuSeparator />
-                                  {row.status !== 'completed' && row.status !== 'no_show' && (
-                                    <>
-                                      <DropdownMenuItem onClick={() => openCompleteSessionModal(bookingProxy)} className="cursor-pointer text-green-600">
-                                        <CheckCircle className="h-4 w-4 mr-2" />
-                                        Mark Completed
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleMarkAsNoShowClick(bookingProxy)} className="cursor-pointer text-orange-600">
-                                        <XCircle className="h-4 w-4 mr-2" />
-                                        Mark No Show
-                                      </DropdownMenuItem>
-                                    </>
+                                  {wixStatus !== 'completed' && (
+                                    <DropdownMenuItem onClick={() => setWixCompleteConfirmRow(row)} className="cursor-pointer text-green-600">
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      Mark Complete
+                                    </DropdownMenuItem>
                                   )}
-                                  <DropdownMenuItem 
-                                    onClick={() => handleDeleteSessionClick(bookingProxy)} 
+                                  {wixStatus !== 'no_show' && wixStatus !== 'completed' && (
+                                    <DropdownMenuItem onClick={() => handleWixNoShow(row)} className="cursor-pointer text-orange-600">
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Mark No Show
+                                    </DropdownMenuItem>
+                                  )}
+                                  {!['cancelled', 'refunded', 'completed'].includes(wixStatus) && (
+                                    <DropdownMenuItem onClick={() => setWixCancelRefundRow(row)} className="cursor-pointer text-red-600">
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Cancel &amp; Refund
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => setWixDeleteConfirmId(row.id)}
                                     className="cursor-pointer text-red-600"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
@@ -1421,148 +1648,127 @@ export default function BookingsPage() {
               </tbody>
             </table>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Session Details
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Client
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Psychologist
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Booked at
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+            <table className="min-w-full divide-y divide-gray-100 text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Session</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Therapist</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created at</th>
+                <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-50 bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-10 text-center">
-                    <div className="inline-flex flex-col items-center gap-3 text-gray-500">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#025545]" />
-                      <span className="text-sm font-medium">Processing...</span>
-                    </div>
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">
+                    <Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…
                   </td>
                 </tr>
               ) : displayBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">
                     No bookings found matching your criteria.
                   </td>
                 </tr>
               ) : (
               displayBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {(() => {
-                          // Show session type instead of session ID
-                          if (booking.session_type === 'free_assessment') {
-                            return (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Free Assessment
-                              </span>
-                            );
-                          }
-                          if (booking.session_type === 'assessment' || booking.type === 'assessment') {
-                            return (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                Assessment
-                              </span>
-                            );
-                          }
-                          // Package session (use package_id so we show Package even when package object is missing)
-                          if (booking.package_id || booking.package || booking.session_type === 'package') {
-                            const pkg = booking.package || {};
-                            const totalSessions = booking.session_count ?? pkg.total_sessions ?? pkg.session_count ?? 0;
-                            const sessionNumber = booking.package_session_number ?? pkg.session_number;
-                            const packageLabel = adminPackageDisplayLabel(pkg) || (booking.session_type === 'package' ? 'Package' : null);
-                            const hasTotal = totalSessions > 0;
-                            const hasSessionNum = sessionNumber !== undefined && sessionNumber !== null;
-                            return (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#025545]/10 text-[#025545]">
-                                {packageLabel}
-                                {hasSessionNum && hasTotal && <span className="ml-1">({sessionNumber}/{totalSessions})</span>}
-                                {hasTotal && !hasSessionNum && <span className="ml-1">({totalSessions})</span>}
-                              </span>
-                            );
-                          }
-                          // Individual session
-                          return (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              Individual
-                            </span>
-                          );
-                        })()}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {formatDate(booking.scheduled_date)} at {formatTime(booking.scheduled_time)}
-                      </div>
-                      {booking.status === 'rescheduled' && booking.original_scheduled_date && (
-                        <div className="text-xs text-amber-600 mt-0.5">
-                          Originally: {formatDate(booking.original_scheduled_date)}
-                        </div>
-                      )}
-                      {(booking.session_type === 'assessment' || booking.type === 'assessment') && booking.assessment_title && (
-                        <div className="text-xs text-gray-400 mt-0.5">
-                          {booking.assessment_title}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 text-gray-400 mr-2" />
-                      <div className="text-sm text-gray-900">
-                        {booking.client?.first_name} {booking.client?.last_name}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {booking.session_type === 'free_assessment' ? (
-                      <div className="flex items-center">
-                        <UserCheck className="h-4 w-4 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">
-                          Free Assessment
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <UserCheck className="h-4 w-4 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">
-                          {booking.psychologist?.first_name} {booking.psychologist?.last_name}
-                        </div>
+                <tr key={booking.id} className={`transition-colors ${openPlatformRowId === booking.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
+                  <td className="px-4 py-3">
+                    {/* Top line: ID for Wix sessions, else nothing */}
+                    {isWixSessionLike(booking) && (
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="font-medium text-gray-900 text-xs leading-snug">
+                          {booking.wix_order_number ? `#${booking.wix_order_number}` : booking.wix_booking_id ? `ID: ${booking.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID'}
+                        </p>
                       </div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status, booking)}`}>
-                        {getStatusText(booking.status, booking)}
-                      </span>
+                    <p className="text-gray-500 text-xs mt-0.5">{formatDate(booking.scheduled_date)} at {formatTime(booking.scheduled_time)}</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {(() => {
+                        const type = booking.session_type || booking.type || '';
+                        const isCouple = type === 'couple';
+                        const isPkg = !!(booking.package_id || booking.package || type === 'package');
+                        const pkg = booking.package || {};
+                        const wp = booking.wix_payload || {};
+                        const rawCredits = wp.pricingPlanInfo?.credits || {};
+                        // Mirror Discovery: read from DB, then Velo-enriched payload, then raw Wix pricingPlanInfo.credits
+                        const pkgNum = booking.package_session_number
+                          ?? wp.planSessionNumber
+                          ?? (rawCredits.available != null && rawCredits.remaining != null ? rawCredits.available - rawCredits.remaining : null)
+                          ?? null;
+                        const pkgTotal = booking.session_count ?? pkg.total_sessions ?? pkg.session_count ?? wp.creditsAvailable ?? rawCredits.available ?? wp.detectedSessionCount ?? null;
+                        const pkgSuffix = pkgNum && pkgTotal ? ` (${pkgNum}/${pkgTotal})` : pkgNum ? ` (${pkgNum})` : pkgTotal && pkgTotal > 1 ? ` (1/${pkgTotal})` : '';
+
+                        let label, colour;
+                        if (type === 'free_assessment') {
+                          label = 'Free Assessment'; colour = 'bg-green-50 text-green-700';
+                        } else if (type === 'assessment') {
+                          label = 'Assessment'; colour = 'bg-purple-50 text-purple-700';
+                        } else if (isCouple && isPkg) {
+                          label = `Couple Package${pkgSuffix}`; colour = 'bg-pink-50 text-pink-700';
+                        } else if (isCouple) {
+                          label = 'Couple'; colour = 'bg-pink-50 text-pink-700';
+                        } else if (isPkg) {
+                          label = `Package${pkgSuffix}`; colour = 'bg-violet-50 text-violet-700';
+                        } else if (type === 'discovery') {
+                          label = 'Discovery'; colour = 'bg-sky-50 text-sky-700';
+                        } else {
+                          label = type || 'Individual'; colour = 'bg-indigo-50 text-indigo-700';
+                        }
+                        return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{label}</span>;
+                      })()}
+                      {/* Payment method badge — derived from wix_payload for Wix-linked sessions */}
+                      {(() => {
+                        const wp = booking.wix_payload || {};
+                        const vendors = wp.paymentDetails?.wixPayMultipleDetails;
+                        let pm = null;
+                        if (Array.isArray(vendors) && vendors.length > 0) {
+                          const v = vendors[0].paymentVendorName;
+                          if (v === 'inPerson') pm = 'Manual';
+                          else if (v === 'Razorpay') pm = 'Razorpay';
+                          else if (v) pm = v;
+                        } else if (wp.paymentState === 'FREE') {
+                          pm = 'Free';
+                        } else if (parseFloat(booking.price || '0') === 0 && isWixSessionLike(booking)) {
+                          pm = 'Free';
+                        }
+                        if (!pm) return null;
+                        const isManual = pm === 'Manual';
+                        return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>;
+                      })()}
+                      {booking.status === 'rescheduled' && booking.original_scheduled_date && (
+                        <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700">
+                          Was: {formatDate(booking.original_scheduled_date)}
+                        </span>
+                      )}
+                      {(booking.session_type === 'assessment' || booking.type === 'assessment') && booking.assessment_title && (
+                        <span className="text-[10px] text-gray-400">{booking.assessment_title}</span>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    {booking.price != null ? `₹${booking.price}` : <span className="text-gray-400">—</span>}
+                  <td className="px-4 py-3">
+                    <p className="text-gray-900">{booking.client?.first_name} {booking.client?.last_name}</p>
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{booking.client?.user?.email || '—'}</div>
+                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{booking.client?.phone_number || booking.client?.phone || '—'}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-4 py-3 text-gray-700">
+                    {booking.session_type === 'free_assessment' ? 'Free Assessment' : `${booking.psychologist?.first_name || ''} ${booking.psychologist?.last_name || ''}`.trim() || '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${getStatusColor(booking.status, booking)}`}>
+                      {getStatusText(booking.status, booking)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-700">
+                    {booking.price != null ? `₹${booking.price}` : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-400">
                     {formatBookedAt(sessionBookedAtIso(booking))}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
                       {/* View Feedback - icon only when feedback exists */}
                       {booking.status === 'completed' && (booking.feedback || booking.rating || booking.client_feedback) && (
@@ -1574,13 +1780,13 @@ export default function BookingsPage() {
                           <MessageSquare className="h-4 w-4" />
                         </button>
                       )}
-                      <DropdownMenu>
+                      <DropdownMenu open={openPlatformRowId === booking.id} onOpenChange={(o) => setOpenPlatformRowId(o ? booking.id : null)}>
                         <DropdownMenuTrigger asChild>
                           <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
                             <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-52">
                           <DropdownMenuItem onClick={() => handleViewSession(booking)} className="cursor-pointer">
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
@@ -1598,6 +1804,12 @@ export default function BookingsPage() {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          {canBookNextFromSession(booking) && (
+                            <DropdownMenuItem onClick={() => openBookNextFromSession(booking)} className="cursor-pointer">
+                              <Package className="h-4 w-4 mr-2" />
+                              Book Next Session
+                            </DropdownMenuItem>
+                          )}
                           {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(
                             booking.status
                           ) && (
@@ -1619,6 +1831,15 @@ export default function BookingsPage() {
                               <DropdownMenuItem onClick={() => handleMarkAsNoShowClick(booking)} className="cursor-pointer text-orange-600">
                                 <XCircle className="h-4 w-4 mr-2" />
                                 Mark No Show
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          {!['cancelled', 'refunded', 'completed'].includes(booking.status) && (
+                            <>
+                              <DropdownMenuItem onClick={() => setCancelRefundTarget(booking)} className="cursor-pointer text-red-600">
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Cancel &amp; Refund
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                             </>
@@ -1740,6 +1961,99 @@ export default function BookingsPage() {
           {showWixView && ' (from Supabase wix_bookings)'}
           {searchTerm && ` matching "${searchTerm}"`}
           {totalPages > 1 && ` - Page ${currentPage} of ${totalPages}`}
+        </div>
+      )}
+
+      {viewingWixRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setViewingWixRow(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h3 className="text-base font-semibold text-gray-900">Booking Details</h3>
+              <button onClick={() => setViewingWixRow(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="px-5 py-4 space-y-3 text-sm">
+              {[
+                ['Title', viewingWixRow.title],
+                ['Status', effectiveWixStatus(viewingWixRow)],
+                ['Client', viewingWixRow.client_full_name || viewingWixRow.client_first_name],
+                ['Email', viewingWixRow.client_email],
+                ['Phone', viewingWixRow.client_phone],
+                ['Therapist', viewingWixRow.therapist_name],
+                ['Date/Time', formatIstFromIso(viewingWixRow.start_time)],
+                ['Price', viewingWixRow.price ? `${viewingWixRow.price} ${viewingWixRow.currency || ''}` : '—'],
+                ['Session Type', deriveWixSessionType(viewingWixRow)],
+                ['Payment Method', deriveWixPaymentMethod(viewingWixRow) || '—'],
+                ['Payment State', viewingWixRow.payload?.paymentState || '—'],
+                ['Wix Booking ID', viewingWixRow.wix_booking_id],
+                ['Created at', formatBookedAt(wixBookingBookedAtIso(viewingWixRow))],
+              ].map(([label, val]) => (
+                <div key={label} className="flex justify-between">
+                  <span className="text-gray-500">{label}</span>
+                  <span className="text-gray-900 text-right max-w-[60%] break-all">{val || '—'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingWixRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !wixActionLoading && setEditingWixRow(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h3 className="text-base font-semibold text-gray-900">Edit Wix Booking</h3>
+              <button onClick={() => setEditingWixRow(null)} className="p-1 rounded hover:bg-gray-100">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              {[
+                { key: 'status', label: 'Status', type: 'select', options: ['booked', 'completed', 'cancelled', 'no_show', 'rescheduled'] },
+                { key: 'title', label: 'Title' },
+                { key: 'therapist_name', label: 'Therapist' },
+                { key: 'price', label: 'Price', type: 'number' },
+                { key: 'notes', label: 'Notes', type: 'textarea' },
+              ].map((field) => (
+                <div key={field.key}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
+                  {field.type === 'select' ? (
+                    <select
+                      value={wixEditForm[field.key] || ''}
+                      onChange={(e) => setWixEditForm((form) => ({ ...form, [field.key]: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                    >
+                      {field.options.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  ) : field.type === 'textarea' ? (
+                    <textarea
+                      value={wixEditForm[field.key] || ''}
+                      onChange={(e) => setWixEditForm((form) => ({ ...form, [field.key]: e.target.value }))}
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                    />
+                  ) : (
+                    <input
+                      type={field.type || 'text'}
+                      value={wixEditForm[field.key] || ''}
+                      onChange={(e) => setWixEditForm((form) => ({ ...form, [field.key]: e.target.value }))}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 px-5 py-4 border-t">
+              <button onClick={() => setEditingWixRow(null)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleWixEditSave} disabled={wixActionLoading} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#025545] text-white text-sm hover:bg-[#012f23] disabled:opacity-40">
+                {wixActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1947,6 +2261,69 @@ export default function BookingsPage() {
                   );
                 })()}
 
+                {isWixSessionLike(selectedSession) && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Wix Booking</div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Source</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                          {selectedSession.source || 'wix'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Booking ID</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                          {selectedSession.wix_booking_id || selectedSession.wix_payload?.id || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Order Number</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                          {selectedSession.wix_order_number || selectedSession.wix_payload?.wix_order_number || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Count</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                          {selectedSession.session_count || selectedSession.wix_payload?.creditsAvailable || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Package Session Number</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                          {selectedSession.package_session_number || selectedSession.wix_payload?.planSessionNumber || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Vendor</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                          {selectedSession.wix_payment?.vendor || deriveWixPaymentMethod(selectedSession) || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Transaction ID</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                          {selectedSession.wix_payment?.wix_transaction_id || selectedSession.wix_payload?.paymentDetails?.wixPayMultipleDetails?.[0]?.txId || '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Razorpay Order ID</p>
+                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                          {selectedSession.wix_payment?.razorpay_order_id || selectedSession.wix_payload?.paymentDetails?.wixPayMultipleDetails?.[0]?.orderId || '—'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Raw Wix Payload</p>
+                      <pre className="bg-slate-950 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-words">
+                        {JSON.stringify(selectedSession.wix_payload || {}, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
                 {/* Session completion fields */}
                 {(() => {
                   const { summary, report, privateNotes } = getSessionCompletionFields(selectedSession);
@@ -2053,6 +2430,74 @@ export default function BookingsPage() {
         session={selectedSession}
         onUpdateSuccess={handleEditSuccess}
       />
+
+      {wixCompleteConfirmRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !wixActionLoading && setWixCompleteConfirmRow(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <h3 className="text-base font-semibold text-gray-900">Mark as Completed?</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-5">
+              This will mark the Wix session with <strong>{wixCompleteConfirmRow.client_full_name || wixCompleteConfirmRow.client_email || 'this client'}</strong> as completed.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setWixCompleteConfirmRow(null)} disabled={wixActionLoading} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+                Cancel
+              </button>
+              <button onClick={handleWixCompleteConfirm} disabled={wixActionLoading} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-40">
+                {wixActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle className="h-3.5 w-3.5" />}
+                Yes, Mark Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {wixCancelRefundRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !wixActionLoading && setWixCancelRefundRow(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-2">
+              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <h3 className="text-base font-semibold text-gray-900">Cancel &amp; Refund?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">This will:</p>
+            <ul className="text-sm text-gray-500 list-disc ml-4 mb-4 space-y-1">
+              <li>Mark the booking as <strong>refunded</strong> in our system</li>
+              <li>Remove the therapist&apos;s <strong>Google Calendar event</strong> so the slot reopens</li>
+              <li>Keep finance reporting under <strong>Refunds</strong></li>
+            </ul>
+            <p className="text-xs text-gray-400 mb-5">Refund the client directly via your payment gateway if needed.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setWixCancelRefundRow(null)} disabled={wixActionLoading} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+                Back
+              </button>
+              <button onClick={handleWixCancelRefundConfirm} disabled={wixActionLoading} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
+                {wixActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                Confirm Cancel &amp; Refund
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {wixDeleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !wixActionLoading && setWixDeleteConfirmId(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">Delete Wix Booking?</h3>
+            <p className="text-sm text-gray-500 mb-5">This will soft-delete the Wix booking, and it will not be recreated by the next sync.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setWixDeleteConfirmId(null)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleWixDeleteConfirm} disabled={wixActionLoading} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
+                {wixActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Orphan Sessions Modal */}
       {showOrphansModal && orphansData && (
@@ -2167,6 +2612,33 @@ export default function BookingsPage() {
         isLoading={isDeleting}
         disabled={isDeleting}
       />
+
+      {cancelRefundTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !isCancelRefunding && setCancelRefundTarget(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-2">
+              <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <h3 className="text-base font-semibold text-gray-900">Cancel &amp; Refund?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">This will:</p>
+            <ul className="text-sm text-gray-500 list-disc ml-4 mb-4 space-y-1">
+              <li>Mark the session as <strong>refunded</strong> in our system</li>
+              <li>Remove the therapist&apos;s <strong>Google Calendar event</strong> so the slot reopens</li>
+              <li>Keep finance reporting under <strong>Refunds</strong></li>
+            </ul>
+            <p className="text-xs text-gray-400 mb-5">Refund the client directly via your payment gateway if needed.</p>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCancelRefundTarget(null)} disabled={isCancelRefunding} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+                Back
+              </button>
+              <button onClick={handleCancelRefundConfirm} disabled={isCancelRefunding} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
+                {isCancelRefunding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
+                Confirm Cancel &amp; Refund
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Complete Session Modal */}
       <SessionCompletionModal

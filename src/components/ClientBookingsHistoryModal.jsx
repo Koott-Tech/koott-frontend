@@ -84,6 +84,13 @@ function statusLabel(status) {
   return map[s] || status;
 }
 
+function formatPriceLabel(value) {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return String(value);
+  return `Rs ${n.toLocaleString('en-IN')}`;
+}
+
 function packageProgressLine(pkg, sessionsInGroup) {
   const total =
     pkg?.session_count ?? pkg?.total_sessions ?? (sessionsInGroup?.length || 0);
@@ -340,6 +347,11 @@ function SessionBlock({ s, packageId, onViewDetails }) {
               <span className="text-slate-400">Scheduled</span> {formatDateLabel(s.scheduled_date)}
               {s.scheduled_time ? ` · ${formatTimeLabel(s.scheduled_time)}` : ''}
             </div>
+            {s.price != null && s.price !== '' && (
+              <div>
+                <span className="text-slate-400">Price</span> {formatPriceLabel(s.price)}
+              </div>
+            )}
             <div className="flex items-center gap-1">
               <User className="h-3 w-3 text-slate-400 shrink-0" />
               <span>{name || '—'}</span>
@@ -615,6 +627,11 @@ export default function ClientBookingsHistoryModal({ isOpen, onClose, clientId, 
                                   {formatDateLabel(s.scheduled_date)}
                                   {s.scheduled_time ? ` · ${formatTimeLabel(s.scheduled_time)}` : ''}
                                 </div>
+                                {s.price != null && s.price !== '' && (
+                                  <div>
+                                    <span className="text-slate-400">Price</span> {formatPriceLabel(s.price)}
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-1">
                                   <User className="h-3 w-3 text-slate-400 shrink-0" />
                                   {s.psychologist

@@ -12,7 +12,8 @@ import {
   AlertCircle,
   CheckCircle,
   CalendarCheck,
-  ArrowRightLeft
+  ArrowRightLeft,
+  XCircle
 } from 'lucide-react';
 import { adminApi, dashboardApi } from '@/lib/backendApi';
 import { useAuth } from '@/contexts/AuthContext';
@@ -296,8 +297,18 @@ export default function AdminDashboard() {
       icon: AlertCircle,
       color: 'bg-red-600',
       description: 'Sessions where client did not show',
-      subValue: stats.totalBookings > 0 
+      subValue: stats.totalBookings > 0
         ? `${((stats.bookingStatuses?.noShow || 0) / stats.totalBookings * 100).toFixed(1)}% of total`
+        : ''
+    },
+    {
+      title: 'Cancelled',
+      value: stats.bookingStatuses?.cancelled || 0,
+      icon: XCircle,
+      color: 'bg-gray-500',
+      description: 'Sessions cancelled & refunded',
+      subValue: stats.totalBookings > 0
+        ? `${((stats.bookingStatuses?.cancelled || 0) / stats.totalBookings * 100).toFixed(1)}% of total`
         : ''
     }
   ];

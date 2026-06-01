@@ -9,7 +9,8 @@ export default function AdminEditSessionModal({
   isOpen, 
   onClose, 
   session, 
-  onUpdateSuccess 
+  onUpdateSuccess,
+  apiClient = adminApi
 }) {
   const { showError, showSuccess } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
@@ -208,12 +209,13 @@ export default function AdminEditSessionModal({
   const loadPsychologists = async () => {
     try {
       setIsLoadingData(true);
-      const response = await adminApi.getPsychologists({ limit: 1000 });
+      const response = await (apiClient.getPsychologists
+        ? apiClient.getPsychologists({ limit: 1000 })
+        : adminApi.getPsychologists({ limit: 1000 }));
       if (response?.success) {
-        // Backend returns an array for /admin/psychologists (not wrapped in { users })
         const list = Array.isArray(response.data)
           ? response.data
-          : response.data?.users || [];
+          : response.data?.psychologists || response.data?.users || [];
         setPsychologists(list);
       } else {
         console.warn('Failed to load psychologists:', response);
@@ -228,19 +230,24 @@ export default function AdminEditSessionModal({
   const loadClients = async () => {
     try {
       setIsLoadingData(true);
-      const response = await adminApi.getUsers({ role: 'client', limit: 1000 });
-      if (response.success && response.data?.users) {
-        // Map users to include client profile id
-        const clientsWithIds = response.data.users.map(user => {
-          // If user has profile, use profile.id (client.id), otherwise use user.id
-          const clientId = user.profile?.id || user.id;
+      const response = await (apiClient.getClients
+        ? apiClient.getClients({ limit: 1000 })
+        : adminApi.getUsers({ role: 'client', limit: 1000 }));
+      if (response.success) {
+        const rawClients = response.data?.clients || response.data?.users || [];
+        const clientsWithIds = rawClients.map(user => {
+          const clientId = user.profile?.id || user.client_id || user.id;
+          const firstName = user.profile?.first_name || user.first_name || '';
+          const lastName = user.profile?.last_name || user.last_name || '';
+          const email = user.email || user.profile?.email || user.user?.email || '';
           return {
             ...user,
-            id: clientId, // Use client.id as the main id for matching
-            client_id: clientId, // Store the actual client.id for use in dropdown
-            display_name: user.profile?.first_name && user.profile?.last_name
-              ? `${user.profile.first_name} ${user.profile.last_name}`
-              : user.email || 'Unknown'
+            id: clientId,
+            client_id: clientId,
+            email,
+            display_name: firstName && lastName
+              ? `${firstName} ${lastName}`
+              : email || 'Unknown'
           };
         });
         setClients(clientsWithIds);
@@ -288,7 +295,7 @@ export default function AdminEditSessionModal({
       
       console.log('Updating session with original_scheduled_date:', updateData.original_scheduled_date);
 
-      const response = await adminApi.updateSession(session.id, updateData);
+      const response = await apiClient.updateSession(session.id, updateData);
 
       if (response.success) {
         const successMsg = doctorChanged 
