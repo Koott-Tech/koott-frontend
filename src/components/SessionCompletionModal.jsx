@@ -146,50 +146,32 @@ export default function SessionCompletionModal({
           </button>
         </div>
 
-        {/* Session Info */}
-        {session && (
-          <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/30">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-4 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#025545]"></span>
-                Session Context
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Client</p>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 flex items-center gap-2.5 shadow-sm">
-                    <User className="h-4 w-4 text-[#025545]" />
-                    {session.client?.first_name} {session.client?.last_name}
-                  </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Session Info (Minimal) */}
+          {session && (
+            <div className="px-8 pt-6">
+              <div className="flex items-center gap-6 text-sm font-semibold text-slate-700 bg-slate-50 px-5 py-3 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-slate-400" />
+                  {session.client?.first_name} {session.client?.last_name}
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Child</p>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-sm">
-                    {session.client?.child_name || "—"} {session.client?.child_age ? `(${session.client.child_age}y)` : ""}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Appointment</p>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 flex items-center gap-2.5 shadow-sm">
-                    <Calendar className="h-4 w-4 text-[#025545]" />
-                    {session.scheduled_date ? new Date(session.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : "—"} · {formatSessionTime() || "—"}
-                  </div>
+                <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-400" />
+                  {session.scheduled_date ? new Date(session.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : "—"} · {formatSessionTime() || "—"}
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Form */}
-        <div className="flex-1 overflow-y-auto">
+          )}
           <form id="session-completion-form" onSubmit={handleSubmit} className="px-8 py-6 space-y-8">
             {/* Summary */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                  Session Summary {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                  Public Summary {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                 </label>
-                <span className="text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Visible to Client</span>
+                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">Shared via WhatsApp with Client</span>
               </div>
               <textarea
                 value={formData.summary}
@@ -211,7 +193,7 @@ export default function SessionCompletionModal({
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                   Session Findings {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                 </label>
-                <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Visible to Client</span>
+                <span className="text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">Visible to Admins & Other Therapists</span>
               </div>
               <textarea
                 value={formData.report}
@@ -233,7 +215,7 @@ export default function SessionCompletionModal({
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                   Private Clinical Notes {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                 </label>
-                <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Admin Only</span>
+                <span className="text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">Visible Only to You</span>
               </div>
               <textarea
                 value={formData.summary_notes}

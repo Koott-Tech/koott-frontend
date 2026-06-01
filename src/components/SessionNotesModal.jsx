@@ -162,14 +162,14 @@ export default function SessionNotesModal({
             <NotesSection
               icon={FileText}
               title="Session Summary"
-              subtitle="Visible to client"
+              subtitle="Shared via WhatsApp"
               value={session.summary}
               tone="blue"
             />
             <NotesSection
               icon={FileText}
               title="Session Report"
-              subtitle="Visible to client"
+              subtitle="Internal Only"
               value={session.report}
               tone="green"
             />

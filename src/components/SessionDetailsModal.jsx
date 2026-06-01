@@ -156,7 +156,7 @@ export default function SessionDetailsModal({
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Session Summary</div>
               </div>
               <div className={`${valueBoxClass} whitespace-pre-wrap`}>{summary}</div>
-              <p className="text-xs text-slate-500 mt-2">Visible to client</p>
+              <p className="text-xs text-slate-500 mt-2">Shared via WhatsApp</p>
             </div>
           )}
 
@@ -168,7 +168,7 @@ export default function SessionDetailsModal({
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider" role="heading" aria-level={2}>Session Report</div>
               </div>
               <div className={`${valueBoxClass} whitespace-pre-wrap`}>{report}</div>
-              <p className="text-xs text-slate-500 mt-2">Visible to client</p>
+              <p className="text-xs text-slate-500 mt-2">Internal Only</p>
             </div>
           )}
 

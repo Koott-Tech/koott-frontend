@@ -2334,7 +2334,7 @@ export default function BookingsPage() {
                       <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider" role="heading" aria-level={3}>Session completion notes</div>
                       {summary && (
                         <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session summary — visible to client</p>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Public Summary <span className="normal-case font-normal text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2 text-[10px]">Shared via WhatsApp</span></p>
                           <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{summary}</p>
                           </div>
@@ -2342,7 +2342,7 @@ export default function BookingsPage() {
                       )}
                       {report && (
                         <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session report — visible to client</p>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Findings <span className="normal-case font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-2 text-[10px]">Internal Only</span></p>
                           <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
                             <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{report}</p>
                           </div>
