@@ -120,7 +120,7 @@ export default function PsychologistSessions() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [selectedScheduleSession, setSelectedScheduleSession] = useState(null);
   const [feedbackToView, setFeedbackToView] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'completed', or 'cancelled'
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'completed', 'cancelled', or 'no_show'
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
@@ -426,6 +426,7 @@ export default function PsychologistSessions() {
 
   const completedSessions = dateFilteredSessions.filter(s => s.status === 'completed' && excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s));
   const cancelledSessions = dateFilteredSessions.filter(s => s.status === 'cancelled' && excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s));
+  const noShowSessions = dateFilteredSessions.filter(s => (s.status === 'no_show' || s.status === 'noshow') && excludeFreeAssessment(s) && isAssignedToCurrentPsychologist(s));
 
   // Keep pastSessions for any legacy references (completed + cancelled + no_show)
   const pastSessions = dateFilteredSessions.filter(s =>
@@ -436,6 +437,7 @@ export default function PsychologistSessions() {
   const sortedPastSessions = sortByDateDesc(pastSessions);
   const sortedCompletedSessions = sortByDateDesc(completedSessions);
   const sortedCancelledSessions = sortByDateDesc(cancelledSessions);
+  const sortedNoShowSessions = sortByDateDesc(noShowSessions);
 
   // Filter by search (client name) — after sorted lists are defined
   const filterBySearch = (list) => {
@@ -449,12 +451,14 @@ export default function PsychologistSessions() {
   const filteredUpcoming = filterBySearch(sortedUpcomingSessions);
   const filteredCompleted = filterBySearch(sortedCompletedSessions);
   const filteredCancelled = filterBySearch(sortedCancelledSessions);
+  const filteredNoShow = filterBySearch(sortedNoShowSessions);
   const filteredPast = filteredCompleted; // keep for any remaining references
 
   // Pagination
   const totalUpcomingPages = Math.max(1, Math.ceil(filteredUpcoming.length / sessionsPerPage));
   const totalCompletedPages = Math.max(1, Math.ceil(filteredCompleted.length / sessionsPerPage));
   const totalCancelledPages = Math.max(1, Math.ceil(filteredCancelled.length / sessionsPerPage));
+  const totalNoShowPages = Math.max(1, Math.ceil(filteredNoShow.length / sessionsPerPage));
 
   const upcomingStartIndex = (currentPage - 1) * sessionsPerPage;
   const paginatedUpcomingSessions = filteredUpcoming.slice(upcomingStartIndex, upcomingStartIndex + sessionsPerPage);
@@ -464,6 +468,10 @@ export default function PsychologistSessions() {
 
   const cancelledStartIndex = (currentPage - 1) * sessionsPerPage;
   const paginatedCancelledSessions = filteredCancelled.slice(cancelledStartIndex, cancelledStartIndex + sessionsPerPage);
+
+  const noShowStartIndex = (currentPage - 1) * sessionsPerPage;
+  const paginatedNoShowSessions = filteredNoShow.slice(noShowStartIndex, noShowStartIndex + sessionsPerPage);
+
   const paginatedPastSessions = paginatedCompletedSessions; // keep for remaining references
 
   // Get current sessions based on active tab
@@ -471,17 +479,23 @@ export default function PsychologistSessions() {
     ? paginatedUpcomingSessions
     : activeTab === 'cancelled'
       ? paginatedCancelledSessions
-      : paginatedCompletedSessions;
+      : activeTab === 'no_show'
+        ? paginatedNoShowSessions
+        : paginatedCompletedSessions;
   const totalPages = activeTab === 'upcoming'
     ? totalUpcomingPages
     : activeTab === 'cancelled'
       ? totalCancelledPages
-      : totalCompletedPages;
+      : activeTab === 'no_show'
+        ? totalNoShowPages
+        : totalCompletedPages;
   const totalSessions = activeTab === 'upcoming'
     ? filteredUpcoming.length
     : activeTab === 'cancelled'
       ? filteredCancelled.length
-      : filteredCompleted.length;
+      : activeTab === 'no_show'
+        ? filteredNoShow.length
+        : filteredCompleted.length;
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage + 1); // WheelPagination uses 0-indexed, we use 1-indexed
@@ -644,6 +658,21 @@ export default function PsychologistSessions() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => handleTabChange('no_show')}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'no_show'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            No Show
+            {sortedNoShowSessions.length > 0 && (
+              <span className={`ml-1.5 py-0.5 px-1.5 rounded text-xs ${activeTab === 'no_show' ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-600'}`}>
+                ({sortedNoShowSessions.length})
+              </span>
+            )}
+          </button>
         </div>
         <div className="relative w-full lg:w-80 xl:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -686,6 +715,12 @@ export default function PsychologistSessions() {
                         <XCircle className="mx-auto h-10 w-10 text-slate-300" />
                         <p className="mt-2 text-sm font-medium text-slate-700">No cancelled sessions</p>
                         <p className="mt-1 text-xs text-slate-500">Cancelled sessions for this period will appear here.</p>
+                      </>
+                    ) : activeTab === 'no_show' ? (
+                      <>
+                        <AlertCircle className="mx-auto h-10 w-10 text-slate-300" />
+                        <p className="mt-2 text-sm font-medium text-slate-700">No no-show sessions</p>
+                        <p className="mt-1 text-xs text-slate-500">Sessions marked as no-show will appear here.</p>
                       </>
                     ) : (
                       <>

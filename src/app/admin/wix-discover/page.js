@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle } from 'lucide-react';
-import { adminApi } from '@/lib/backendApi';
+import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { wixBookingBookedAtIso } from '@/lib/sessionBookedAt';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -101,6 +101,7 @@ export default function AdminWixDiscoverPage() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [rows, setRows] = useState([]);
+  const [platformRows, setPlatformRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('booked');
   const [wixFilterType, setWixFilterType] = useState('all');
@@ -162,27 +163,64 @@ export default function AdminWixDiscoverPage() {
   const load = useCallback(async (targetPage = 1) => {
     setLoading(true);
     try {
-      const res = await adminApi.getWixBookings({
-        page: targetPage, limit: 10,
-        ...(hasDateRangeBounds(dateRange) ? {
-          dateFrom: formatIstCalendarYmd(dateRange.from),
-          dateTo: formatIstCalendarYmd(dateRange.to),
-        } : {}),
-        search: searchTerm.trim() || undefined,
-        status: (statusFilter && statusFilter !== 'all') ? statusFilter : undefined,
-        session_type: wixFilterType !== 'all' ? wixFilterType : undefined
-      });
+      const dateParams = hasDateRangeBounds(dateRange) ? {
+        dateFrom: formatIstCalendarYmd(dateRange.from),
+        dateTo: formatIstCalendarYmd(dateRange.to),
+      } : {};
+
+      // Fetch Wix bookings (wix_bookings table)
+      const [res, platformRes] = await Promise.all([
+        adminApi.getWixBookings({
+          page: targetPage, limit: 10,
+          ...dateParams,
+          search: searchTerm.trim() || undefined,
+          status: (statusFilter && statusFilter !== 'all') ? statusFilter : undefined,
+          session_type: wixFilterType !== 'all' ? wixFilterType : undefined,
+        }),
+        // Fetch platform (manual) sessions from sessions table — non-wix source only
+        sessionsApi.getAllSessions({
+          page: 1,
+          limit: 200,
+          sort: 'created_at',
+          order: 'desc',
+          // Map wix status filter to platform status equivalents
+          status: statusFilter === 'booked' ? ['booked', 'rescheduled']
+            : statusFilter === 'all' ? undefined
+            : statusFilter || undefined,
+          ...dateParams,
+        }).catch(() => null),
+      ]);
+
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
-      // Backend already filters: deleted rows and UNDEFINED-state (no wix_session_id) excluded.
-      // No additional client-side filtering needed — use backend data directly.
+
       const bookings = res.data?.bookings || [];
       setRows(bookings);
       const p = res.data?.pagination || {};
       setPagination({ page: p.page || targetPage, limit: p.limit || 10, total: p.total || 0, totalPages: Math.max(1, Math.ceil((p.total || 0) / (p.limit || 10))) });
       setPage(p.page || targetPage);
+
+      // Filter platform sessions to non-wix source only (exclude sessions already in wix_bookings)
+      const allPlatformSessions = platformRes?.data?.sessions || [];
+      const wixBookingIdSet = new Set(bookings.map((b) => b.wix_booking_id).filter(Boolean));
+      const platformOnly = allPlatformSessions.filter((s) => {
+        const src = String(s.source || '').toLowerCase();
+        if (src === 'wix') return false; // already in wix view
+        if (s.wix_booking_id && wixBookingIdSet.has(s.wix_booking_id)) return false;
+        // Apply search filter client-side
+        if (searchTerm.trim()) {
+          const q = searchTerm.trim().toLowerCase();
+          const name = `${s.client?.first_name || ''} ${s.client?.last_name || ''}`.toLowerCase();
+          const email = String(s.client?.user?.email || '').toLowerCase();
+          const therapist = `${s.psychologist?.first_name || ''} ${s.psychologist?.last_name || ''}`.toLowerCase();
+          if (!name.includes(q) && !email.includes(q) && !therapist.includes(q)) return false;
+        }
+        return true;
+      });
+      setPlatformRows(platformOnly);
     } catch (e) {
       showError(e?.message || 'Failed to load Wix bookings', 'Wix');
       setRows([]);
+      setPlatformRows([]);
     } finally { setLoading(false); }
   }, [dateRange, searchTerm, showError, wixFilterType, statusFilter]);
 
@@ -429,7 +467,10 @@ export default function AdminWixDiscoverPage() {
             selectedRange={dateRange}
             onSelect={setDateRange}
           />
-          <span className="md:ml-auto text-xs text-gray-400">{pagination.total} booking{pagination.total === 1 ? '' : 's'}</span>
+          <span className="md:ml-auto text-xs text-gray-400">
+            {pagination.total + platformRows.length} booking{(pagination.total + platformRows.length) === 1 ? '' : 's'}
+            {platformRows.length > 0 && <span className="ml-1 text-[#025545]">({platformRows.length} platform)</span>}
+          </span>
         </div>
       </div>
 
@@ -503,148 +544,240 @@ export default function AdminWixDiscoverPage() {
         </nav>
       </div>
 
-      {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
-        <table className="min-w-full divide-y divide-gray-100 text-sm">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Session</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Therapist</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
-              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created at</th>
-              <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 bg-white">
-            {loading ? (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">No bookings found{hasActiveFilters ? ' for current filters' : ''}.</td></tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={row.id} className={`transition-colors ${openMenuId === row.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <p className="font-medium text-gray-900 text-xs leading-snug">
-                        {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID')}
-                      </p>
-                      {row.session_type === 'package' && row.package_session_number && (
-                        <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
-                          {row.package_session_number} of {row.session_count || '?'}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-500 text-xs mt-0.5">{fmtDateTime(row.start_time)}</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {(() => {
-                        const st = deriveSessionType(row);
-                        if (!st) return null;
-                        const sl = st.toLowerCase();
-                        const colour = sl.startsWith('couple')
-                          ? 'bg-pink-50 text-pink-700'
-                          : sl.includes('package')
-                            ? 'bg-violet-50 text-violet-700'
-                            : sl === 'assessment'
-                              ? 'bg-purple-50 text-purple-700'
-                              : sl === 'discovery'
-                                ? 'bg-sky-50 text-sky-700'
-                                : 'bg-indigo-50 text-indigo-700';
-                        return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{st}</span>;
-                      })()}
-                      {row.payload?.isAdminManual && (
-                        <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>
-                      )}
-                      {!row.payload?.isAdminManual && (() => {
-                        const pm = derivePaymentMethod(row);
-                        if (!pm) return null;
-                        const isManual = pm === 'Manual';
-                        return (
-                          <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>
-                        );
-                      })()}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-gray-900">{row.client_full_name || row.client_first_name || '—'}</p>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client_email || '—'}</div>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client_phone || '—'}</div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">{row.therapist_name || '—'}</td>
-                  <td className="px-4 py-3">
-                    {(() => {
-                      const resolved = effectiveCompletionStatus(row);
-                      const s = resolved && resolved !== 'undefined' && resolved !== 'null' ? resolved : null;
-                      return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(s)}`}>{s || '—'}</span>;
-                    })()}
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">{row.price ? `${row.price}${row.currency ? ` ${row.currency}` : ''}` : '—'}</td>
-                  <td className="px-4 py-3 text-xs text-gray-400">{fmtDateTime(wixBookingBookedAtIso(row))}</td>
-                  <td className="px-4 py-3 text-center relative">
-                    <button
-                      onClick={(e) => {
-                        if (openMenuId === row.id) { setOpenMenuId(null); return; }
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const menuHeight = 280;
-                        const spaceBelow = window.innerHeight - rect.bottom;
-                        const top = spaceBelow < menuHeight ? rect.top - menuHeight : rect.bottom;
-                        setMenuPos({ top, right: window.innerWidth - rect.right });
-                        setOpenMenuId(row.id);
-                      }}
-                      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700">
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                    {openMenuId === row.id && (
-                      <div style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 9999 }}
-                        className="w-52 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-left">
-                        <button onClick={() => handleView(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                          <Eye className="h-3.5 w-3.5" /> View Details
-                        </button>
-                        <button onClick={() => handleEdit(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                          <Edit className="h-3.5 w-3.5" /> Edit
-                        </button>
-                        {getMeetLink(row) && !['completed', 'cancelled'].includes(effectiveCompletionStatus(row)) && (
-                          <button onClick={() => handleOpenMeet(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <Video className="h-3.5 w-3.5" /> Open Meet
-                          </button>
-                        )}
-                        {canBookNextFromRow(row) && (
-                          <button onClick={() => openBookNext(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <Package className="h-3.5 w-3.5" /> Book Next Session
-                          </button>
-                        )}
-                        {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
-                          <button onClick={() => handleReschedule(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <RefreshCw className="h-3.5 w-3.5" /> Reschedule
-                          </button>
-                        )}
-                        {effectiveCompletionStatus(row) !== 'completed' && (
-                          <button onClick={() => handleComplete(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
-                            <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
-                          </button>
-                        )}
-
-                        {!['cancelled', 'refunded', 'completed'].includes(effectiveCompletionStatus(row)) && (
-                          <button onClick={() => { setOpenMenuId(null); setCancelRefundRow(row); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                            <XCircle className="h-3.5 w-3.5" /> Cancel &amp; Refund
-                          </button>
-                        )}
-                        <hr className="my-1 border-gray-100" />
-                        <button onClick={() => { setDeleteConfirmId(row.id); setOpenMenuId(null); }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
-                          <Trash2 className="h-3.5 w-3.5" /> Delete
-                        </button>
-                      </div>
-                    )}
-                  </td>
+      {/* Table — Wix bookings + Platform/manual sessions combined */}
+      {(() => {
+        const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
+        const allRows = [...rows, ...platformTagged];
+        return (
+          <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
+            <table className="min-w-full divide-y divide-gray-100 text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Session</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Client</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Therapist</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date / Booked at</th>
+                  <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-50 bg-white">
+                {loading ? (
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
+                ) : allRows.length === 0 ? (
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">No bookings found{hasActiveFilters ? ' for current filters' : ''}.</td></tr>
+                ) : (
+                  allRows.map((row) => {
+                    const isPlatform = !!row._isPlatform;
+
+                    if (isPlatform) {
+                      // ── Platform / manual booking row ──────────────────────────
+                      const clientName = [row.client?.first_name, row.client?.last_name].filter(Boolean).join(' ') || '—';
+                      const therapistName = [row.psychologist?.first_name, row.psychologist?.last_name].filter(Boolean).join(' ') || '—';
+                      const sessionDateStr = row.scheduled_date
+                        ? new Date(row.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : null;
+                      const sessionTimeStr = row.scheduled_time
+                        ? (() => {
+                            const [h, m] = row.scheduled_time.split(':');
+                            const hr = parseInt(h, 10);
+                            return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+                          })()
+                        : null;
+                      const bookedAt = row.booking_created_at || row.created_at;
+                      const typeLabel = row.session_type === 'package' ? 'Package'
+                        : row.session_type === 'couple' ? 'Couple'
+                        : row.session_type === 'assessment' ? 'Assessment'
+                        : row.session_type === 'discovery' ? 'Discovery'
+                        : 'Individual';
+                      const meetLink = row.google_meet_link || row.google_meet_join_url || row.google_calendar_link;
+                      return (
+                        <tr key={`platform-${row.id}`} className={`transition-colors bg-[#025545]/[0.02] ${openMenuId === `platform-${row.id}` ? 'bg-[#025545]/5' : 'hover:bg-[#025545]/[0.04]'}`}>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-gray-900 text-xs">{row.id?.slice(-6).toUpperCase()}</span>
+                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Manual</span>
+                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-[#025545]/10 text-[#025545]">{typeLabel}</span>
+                            </div>
+                            <p className="text-gray-500 text-xs mt-0.5">
+                              {sessionDateStr ? `${sessionDateStr}${sessionTimeStr ? ` · ${sessionTimeStr}` : ''}` : '—'}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-gray-900">{clientName}</p>
+                            {row.client?.user?.email && (
+                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client.user.email}</div>
+                            )}
+                            {row.client?.phone_number && (
+                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client.phone_number}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-gray-700">{therapistName}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(row.status)}`}>{row.status || '—'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-700">{row.price != null ? `₹${row.price}` : '—'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-400">{bookedAt ? fmtDateTime(bookedAt) : '—'}</td>
+                          <td className="px-4 py-3 text-center relative">
+                            <button
+                              onClick={(e) => {
+                                const uid = `platform-${row.id}`;
+                                if (openMenuId === uid) { setOpenMenuId(null); return; }
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const menuHeight = 160;
+                                const spaceBelow = window.innerHeight - rect.bottom;
+                                const top = spaceBelow < menuHeight ? rect.top - menuHeight : rect.bottom;
+                                setMenuPos({ top, right: window.innerWidth - rect.right });
+                                setOpenMenuId(uid);
+                              }}
+                              className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700">
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                            {openMenuId === `platform-${row.id}` && (
+                              <div style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 9999 }}
+                                className="w-52 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-left">
+                                {meetLink && !['completed', 'cancelled', 'no_show'].includes(row.status) && (
+                                  <button onClick={() => { window.open(meetLink.startsWith('http') ? meetLink : `https://${meetLink}`, '_blank', 'noopener,noreferrer'); setOpenMenuId(null); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <Video className="h-3.5 w-3.5" /> Open Meet
+                                  </button>
+                                )}
+                                {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(row.status) && (
+                                  <button onClick={() => { handleReschedule(row); setOpenMenuId(null); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <RefreshCw className="h-3.5 w-3.5" /> Reschedule
+                                  </button>
+                                )}
+                                <a href="/admin/bookings" className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#025545] hover:bg-[#025545]/5">
+                                  <Eye className="h-3.5 w-3.5" /> Manage on Bookings page
+                                </a>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    // ── Wix booking row ────────────────────────────────────────
+                    return (
+                      <tr key={row.id} className={`transition-colors ${openMenuId === row.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-gray-900 text-xs leading-snug">
+                              {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID')}
+                            </p>
+                            {row.session_type === 'package' && row.package_session_number && (
+                              <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                {row.package_session_number} of {row.session_count || '?'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-500 text-xs mt-0.5">{fmtDateTime(row.start_time)}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(() => {
+                              const st = deriveSessionType(row);
+                              if (!st) return null;
+                              const sl = st.toLowerCase();
+                              const colour = sl.startsWith('couple') ? 'bg-pink-50 text-pink-700'
+                                : sl.includes('package') ? 'bg-violet-50 text-violet-700'
+                                : sl === 'assessment' ? 'bg-purple-50 text-purple-700'
+                                : sl === 'discovery' ? 'bg-sky-50 text-sky-700'
+                                : 'bg-indigo-50 text-indigo-700';
+                              return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{st}</span>;
+                            })()}
+                            {row.payload?.isAdminManual && (
+                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>
+                            )}
+                            {!row.payload?.isAdminManual && (() => {
+                              const pm = derivePaymentMethod(row);
+                              if (!pm) return null;
+                              const isManual = pm === 'Manual';
+                              return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>;
+                            })()}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-gray-900">{row.client_full_name || row.client_first_name || '—'}</p>
+                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client_email || '—'}</div>
+                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client_phone || '—'}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">{row.therapist_name || '—'}</td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const resolved = effectiveCompletionStatus(row);
+                            const s = resolved && resolved !== 'undefined' && resolved !== 'null' ? resolved : null;
+                            return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(s)}`}>{s || '—'}</span>;
+                          })()}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">{row.price ? `${row.price}${row.currency ? ` ${row.currency}` : ''}` : '—'}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{fmtDateTime(wixBookingBookedAtIso(row))}</td>
+                        <td className="px-4 py-3 text-center relative">
+                          <button
+                            onClick={(e) => {
+                              if (openMenuId === row.id) { setOpenMenuId(null); return; }
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const menuHeight = 280;
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const top = spaceBelow < menuHeight ? rect.top - menuHeight : rect.bottom;
+                              setMenuPos({ top, right: window.innerWidth - rect.right });
+                              setOpenMenuId(row.id);
+                            }}
+                            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700">
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+                          {openMenuId === row.id && (
+                            <div style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 9999 }}
+                              className="w-52 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-left">
+                              <button onClick={() => handleView(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <Eye className="h-3.5 w-3.5" /> View Details
+                              </button>
+                              <button onClick={() => handleEdit(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <Edit className="h-3.5 w-3.5" /> Edit
+                              </button>
+                              {getMeetLink(row) && !['completed', 'cancelled'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => handleOpenMeet(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <Video className="h-3.5 w-3.5" /> Open Meet
+                                </button>
+                              )}
+                              {canBookNextFromRow(row) && (
+                                <button onClick={() => openBookNext(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <Package className="h-3.5 w-3.5" /> Book Next Session
+                                </button>
+                              )}
+                              {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => handleReschedule(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <RefreshCw className="h-3.5 w-3.5" /> Reschedule
+                                </button>
+                              )}
+                              {effectiveCompletionStatus(row) !== 'completed' && (
+                                <button onClick={() => handleComplete(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
+                                  <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
+                                </button>
+                              )}
+                              {!['cancelled', 'refunded', 'completed'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => { setOpenMenuId(null); setCancelRefundRow(row); }}
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                  <XCircle className="h-3.5 w-3.5" /> Cancel &amp; Refund
+                                </button>
+                              )}
+                              <hr className="my-1 border-gray-100" />
+                              <button onClick={() => { setDeleteConfirmId(row.id); setOpenMenuId(null); }}
+                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <Trash2 className="h-3.5 w-3.5" /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        );
+      })()}
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (

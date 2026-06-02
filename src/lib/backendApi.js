@@ -695,7 +695,7 @@ export const psychologistApi = {
 
   // Mark session as no-show
   async markSessionAsNoShow(sessionId, reason = '') {
-    return apiRequest(`/admin/sessions/${sessionId}/no-show`, {
+    return apiRequest(`/psychologists/sessions/${sessionId}/no-show`, {
       method: 'PUT',
       body: JSON.stringify({ reason }),
     });

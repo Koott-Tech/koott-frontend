@@ -250,38 +250,20 @@ export default function BookingsPage() {
       // Load sessions with pagination from backend
       const response = await sessionsApi.getAllSessions(params);
 
-      // Parallel fetch: total count across ALL statuses in the same date range
-      const allStatusParams = { ...params, status: undefined, page: 1, limit: 200 };
-      delete allStatusParams.status;
-      sessionsApi.getAllSessions(allStatusParams)
-        .then(r => {
-          const rows = r?.data?.sessions || [];
-          const hidden = rows.filter((s) => {
-            const src = String(s.source || '').toLowerCase();
-            const wp = s.wix_payload;
-            // wp.id is the Wix booking ID — treat as equivalent to sessionId
-            return src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || (!wp.sessionId && !wp.id));
-          }).length;
-          setTotalInRange(Math.max(0, (r?.data?.pagination?.total || 0) - hidden));
-        })
-        .catch(() => setTotalInRange(0));
-
       if (response && response.success) {
-        const bookingsData = (response.data?.sessions || []).filter((s) => {
-          const src = String(s.source || '').toLowerCase();
-          const wp = s.wix_payload;
-          // wp.id is the Wix booking ID — treat as equivalent to sessionId
-          return !(src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || (!wp.sessionId && !wp.id)));
-        });
+        const bookingsData = response.data?.sessions || [];
         const paginationData = response.data?.pagination || {};
-        const hiddenCount = (response.data?.sessions || []).length - bookingsData.length;
+        // pagination.total is already the backend-visible count (hidden rows already excluded server-side)
+        const total = paginationData.total || 0;
         setBookings(bookingsData);
-        setTotalBookings(Math.max(0, (paginationData.total || 0) - hiddenCount));
-        setTotalPages(Math.max(1, Math.ceil(Math.max(0, (paginationData.total || 0) - hiddenCount) / itemsPerPage)));
+        setTotalBookings(total);
+        setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
+        setTotalInRange(total);
       } else {
         setBookings([]);
         setTotalBookings(0);
         setTotalPages(1);
+        setTotalInRange(0);
       }
       
     } catch (error) {
@@ -337,24 +319,18 @@ export default function BookingsPage() {
       }
       const response = await adminApi.getWixBookings(params);
 
-      // Parallel: total Wix sessions in the same date range, ignoring session_type filter.
-      // `totalSessions` expands packages (Package of 3 = 3 sessions) so it's a true session count.
-      const allTypeParams = { ...params, status: undefined, session_type: undefined, page: 1, limit: 1 };
-      delete allTypeParams.status;
-      delete allTypeParams.session_type;
-      adminApi.getWixBookings(allTypeParams)
-        .then(r => setTotalInRange(r?.data?.pagination?.totalSessions ?? r?.data?.pagination?.total ?? 0))
-        .catch(() => setTotalInRange(0));
-
       if (response?.success && response.data) {
         setWixBookings(response.data.bookings || []);
         const p = response.data.pagination || {};
-        setTotalBookings(p.total || 0);
-        setTotalPages(Math.max(1, Math.ceil((p.total || 0) / itemsPerPage)));
+        const total = p.total || 0;
+        setTotalBookings(total);
+        setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
+        setTotalInRange(total);
       } else {
         setWixBookings([]);
         setTotalBookings(0);
         setTotalPages(1);
+        setTotalInRange(0);
       }
     } catch (err) {
       console.error('Failed to load Wix bookings:', err);
