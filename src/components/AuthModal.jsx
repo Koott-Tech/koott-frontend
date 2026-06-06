@@ -176,7 +176,17 @@ export default function AuthModal({
       closeAndReset();
       // Reload the page to refresh auth state
         if (!preventReload) {
-      window.location.reload();
+          if (loggedInUser?.role === 'admin') {
+            window.location.href = '/admin';
+          } else if (loggedInUser?.role === 'psychologist') {
+            window.location.href = '/psychologist';
+          } else if (loggedInUser?.role === 'finance') {
+            window.location.href = '/finance';
+          } else if (loggedInUser?.role === 'superadmin') {
+            window.location.href = '/superadmin';
+          } else {
+            window.location.reload();
+          }
         }
       }
     } catch (err) {

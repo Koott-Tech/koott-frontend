@@ -35,7 +35,13 @@ function deriveSessionType(row) {
   const rawCredits = p.pricingPlanInfo?.credits || {};
   const isCouple = type === 'couple';
   const isChild = !!row.package_parent_booking_id && !!idx;
-  const isPkg = type === 'package' || isChild;
+  const hasSeriesEvidence = (count ?? 0) > 1
+    || row.package_session_number != null
+    || isChild
+    || p.planSessionNumber != null
+    || (p.creditsAvailable != null && Number(p.creditsAvailable) > 1)
+    || (rawCredits.available != null && Number(rawCredits.available) > 1);
+  const isPkg = (type === 'package' && hasSeriesEvidence) || isChild;
 
   // Derive session number: DB column → Velo planSessionNumber → raw pricingPlanInfo.credits
   const pkgNum = row.package_session_number
@@ -126,10 +132,9 @@ export default function AdminWixDiscoverPage() {
     { label: 'Package', value: 'package' }
   ];
 
-  // When switching to a specific session type, reset status to 'all' so nothing is hidden
+  // Update wix filter type
   const handleTypeChange = (type) => {
     setWixFilterType(type);
-    if (type !== 'all') setStatusFilter('all');
   };
 
   // Action state
@@ -206,6 +211,17 @@ export default function AdminWixDiscoverPage() {
         const src = String(s.source || '').toLowerCase();
         if (src === 'wix') return false; // already in wix view
         if (s.wix_booking_id && wixBookingIdSet.has(s.wix_booking_id)) return false;
+        // Apply session_type filter — Discovery's type tabs must filter platform rows too
+        if (wixFilterType && wixFilterType !== 'all') {
+          const t = String(s.session_type || '').toLowerCase();
+          if (wixFilterType === 'package') {
+            // Real package only — has package_id, package_session_number, or session_count > 1
+            const isPkg = t === 'package' && (!!s.package_id || s.package_session_number != null || (Number(s.session_count) > 1));
+            if (!isPkg) return false;
+          } else if (t !== wixFilterType) {
+            return false;
+          }
+        }
         // Apply search filter client-side
         if (searchTerm.trim()) {
           const q = searchTerm.trim().toLowerCase();
@@ -350,12 +366,26 @@ export default function AdminWixDiscoverPage() {
   const buildSessionProxy = (row) => {
     const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
     const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
+    // start_time is stored as UTC in wix_bookings; convert to IST (UTC+5:30) for display
+    const startTimeIST = row.start_time
+      ? (() => {
+          const d = new Date(row.start_time);
+          const istOffset = 5.5 * 60 * 60 * 1000;
+          const ist = new Date(d.getTime() + istOffset);
+          const yyyy = ist.getUTCFullYear();
+          const mm = String(ist.getUTCMonth() + 1).padStart(2, '0');
+          const dd = String(ist.getUTCDate()).padStart(2, '0');
+          const hh = String(ist.getUTCHours()).padStart(2, '0');
+          const min = String(ist.getUTCMinutes()).padStart(2, '0');
+          return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${min}` };
+        })()
+      : { date: null, time: null };
     return {
       ...row,
       id: row.session_id || null,
       status: row.session_status || row.status,
-      scheduled_date: row.start_time?.slice(0, 10),
-      scheduled_time: row.start_time?.slice(11, 16),
+      scheduled_date: startTimeIST.date,
+      scheduled_time: startTimeIST.time,
       package: {
         id: row.package_id || null,
         session_count: total,

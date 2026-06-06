@@ -2,9 +2,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { psychologistApi } from "../../../lib/backendApi";
-import { 
-  Calendar, 
-  Clock, 
+import {
+  Calendar,
+  Clock,
   User,
   CheckCircle,
   AlertCircle,
@@ -18,7 +18,11 @@ import {
   XCircle,
   Search,
   History,
-  Filter
+  Filter,
+  Lock,
+  Unlock,
+  EyeOff,
+  Key
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,6 +35,7 @@ import {
 import SessionCompletionModal from "../../../components/SessionCompletionModal";
 import SessionDetailsModal from "../../../components/SessionDetailsModal";
 import SessionNotesModal from "../../../components/SessionNotesModal";
+import PrivateNotePasswordModal from "../../../components/PrivateNotePasswordModal";
 import ScheduleAssessmentSessionModal from "../../../components/ScheduleAssessmentSessionModal";
 import WheelPagination from "../../../components/ui/wheel-pagination";
 // Removed RescheduleRequestPopup import - reschedule requests are handled on rescheduling page
@@ -43,9 +48,9 @@ import { sessionBookedAtIso, sessionBookingCreatedIstYmd } from "@/lib/sessionBo
 const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
 const valueBoxClass = "bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800";
 
-function SessionHistoryDetailView({ session, currentPsychologistId, formatTime, formatDate }) {
+function SessionHistoryDetailView({ session, currentPsychologistId, formatTime, formatDate, privateUnlocked, hasPassword, onUnlockClick }) {
   const isOwnSession = session.psychologist_id === currentPsychologistId;
-  const showPrivateNotes = isOwnSession && session.summary_notes;
+  const hasPrivateNotes = isOwnSession && !!session.summary_notes;
 
   return (
     <div className="space-y-5">
@@ -90,11 +95,35 @@ function SessionHistoryDetailView({ session, currentPsychologistId, formatTime, 
           <div className={`${valueBoxClass} whitespace-pre-wrap`}>{session.report}</div>
         </div>
       )}
-      {showPrivateNotes && (
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Private notes</div>
-          <div className={`${valueBoxClass} whitespace-pre-wrap`}>{session.summary_notes}</div>
-          <p className="text-xs text-slate-500 mt-2">Visible only to you (therapist who conducted this session).</p>
+      {hasPrivateNotes && (
+        <div className="rounded-xl border border-purple-200 bg-purple-50/30 p-4">
+          <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-3 flex items-center gap-1.5" role="heading" aria-level={2}>
+            <EyeOff className="h-3.5 w-3.5" /> Private notes
+          </div>
+          {privateUnlocked ? (
+            <>
+              <div className={`${valueBoxClass} whitespace-pre-wrap`}>{session.summary_notes}</div>
+              <p className="text-xs text-slate-500 mt-2">Visible only to you.</p>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-6">
+              <Lock className="h-6 w-6 text-purple-600" />
+              <p className="text-xs text-slate-600 text-center">These notes are locked.</p>
+              {hasPassword ? (
+                <button
+                  type="button"
+                  onClick={onUnlockClick}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#025545] text-white text-xs font-semibold hover:bg-[#012f23]"
+                >
+                  <Unlock className="h-3.5 w-3.5" /> Unlock to view
+                </button>
+              ) : (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                  Set your private-notes password first from the sessions header.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -121,6 +150,16 @@ export default function PsychologistSessions() {
   const [selectedScheduleSession, setSelectedScheduleSession] = useState(null);
   const [feedbackToView, setFeedbackToView] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'completed', 'cancelled', or 'no_show'
+  // Private notes password
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [hasPrivatePassword, setHasPrivatePassword] = useState(null);
+  // Unlock state for the inline history view
+  const [historyPrivateUnlocked, setHistoryPrivateUnlocked] = useState(false);
+  const [showHistoryUnlock, setShowHistoryUnlock] = useState(false);
+  const [historyUnlockPwd, setHistoryUnlockPwd] = useState('');
+  const [historyUnlockErr, setHistoryUnlockErr] = useState('');
+  const [historyUnlockSubmitting, setHistoryUnlockSubmitting] = useState(false);
+  const [historyUnlockShowPlain, setHistoryUnlockShowPlain] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
@@ -138,8 +177,39 @@ export default function PsychologistSessions() {
   useEffect(() => {
     if (user) {
       loadSessions();
+      // Load private-note password status
+      psychologistApi.getPrivateNotePasswordStatus()
+        .then((r) => setHasPrivatePassword(!!r?.data?.hasPassword))
+        .catch(() => setHasPrivatePassword(false));
     }
   }, [user]);
+
+  const refreshPrivatePasswordStatus = async () => {
+    try {
+      const r = await psychologistApi.getPrivateNotePasswordStatus();
+      setHasPrivatePassword(!!r?.data?.hasPassword);
+    } catch { /* noop */ }
+  };
+
+  const handleHistoryUnlock = async (e) => {
+    e?.preventDefault();
+    if (!historyUnlockPwd) { setHistoryUnlockErr('Enter your password'); return; }
+    setHistoryUnlockSubmitting(true); setHistoryUnlockErr('');
+    try {
+      const r = await psychologistApi.verifyPrivateNotePassword(historyUnlockPwd);
+      if (r?.success) {
+        setHistoryPrivateUnlocked(true);
+        setShowHistoryUnlock(false);
+        setHistoryUnlockPwd('');
+      } else {
+        setHistoryUnlockErr(r?.error || 'Incorrect password');
+      }
+    } catch (err) {
+      setHistoryUnlockErr(err?.message || 'Incorrect password');
+    } finally {
+      setHistoryUnlockSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     setCurrentPage(1);
@@ -674,15 +744,30 @@ export default function PsychologistSessions() {
             )}
           </button>
         </div>
-        <div className="relative w-full lg:w-80 xl:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by client name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
-          />
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <button
+            type="button"
+            onClick={() => setShowPasswordModal(true)}
+            title={hasPrivatePassword ? "Change or reset private-notes password" : "Set your private-notes password"}
+            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border whitespace-nowrap transition-colors ${
+              hasPrivatePassword
+                ? 'bg-white text-[#025545] border-[#025545]/30 hover:bg-[#025545]/5'
+                : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 animate-pulse'
+            }`}
+          >
+            <Key className="h-3.5 w-3.5" />
+            {hasPrivatePassword ? 'Private Notes Password' : 'Set Notes Password'}
+          </button>
+          <div className="relative flex-1 lg:w-80 xl:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by client name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
+            />
+          </div>
         </div>
       </div>
 
@@ -1003,6 +1088,7 @@ export default function PsychologistSessions() {
                     setHistoryClientName('');
                     setHistorySessions([]);
                     setSelectedHistorySession(null);
+                    setHistoryPrivateUnlocked(false);
                   }}
                   className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
                   aria-label="Close"
@@ -1018,6 +1104,9 @@ export default function PsychologistSessions() {
                   currentPsychologistId={user?.id}
                   formatTime={formatTime}
                   formatDate={formatDate}
+                  privateUnlocked={historyPrivateUnlocked}
+                  hasPassword={hasPrivatePassword}
+                  onUnlockClick={() => setShowHistoryUnlock(true)}
                 />
               ) : historyLoading ? (
                 <div className="py-12 text-center">
@@ -1050,7 +1139,7 @@ export default function PsychologistSessions() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => setSelectedHistorySession(s)}
+                        onClick={() => { setSelectedHistorySession(s); setHistoryPrivateUnlocked(false); }}
                         className="shrink-0 px-3 py-1.5 text-xs font-medium text-[#025545] bg-[#025545]/10 rounded-lg hover:bg-[#025545]/20"
                       >
                         View
@@ -1114,6 +1203,16 @@ export default function PsychologistSessions() {
           setSelectedSession(null);
         }}
         isPsychologist={true}
+      />
+
+      {/* Private Note Password Modal */}
+      <PrivateNotePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSuccess={() => {
+          setShowPasswordModal(false);
+          setHasPrivatePassword(true);
+        }}
       />
 
       {/* Reschedule requests are now handled on the rescheduling page */}

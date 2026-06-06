@@ -84,7 +84,14 @@ function deriveWixSessionType(row) {
   const rawCredits = p.pricingPlanInfo?.credits || {};
   const isCouple = type === 'couple';
   const isChild = !!row.package_parent_booking_id && !!idx;
-  const isPkg = type === 'package' || isChild;
+  // session_type='package' with count=1 and no series evidence = single plan-credit booking → treat as individual
+  const hasSeriesEvidence = (count ?? 0) > 1
+    || row.package_session_number != null
+    || isChild
+    || p.planSessionNumber != null
+    || (p.creditsAvailable != null && Number(p.creditsAvailable) > 1)
+    || (rawCredits.available != null && Number(rawCredits.available) > 1);
+  const isPkg = (type === 'package' && hasSeriesEvidence) || isChild;
   const pkgNum = row.package_session_number
     ?? p.planSessionNumber
     ?? (rawCredits.available != null && rawCredits.remaining != null ? rawCredits.available - rawCredits.remaining : null)
@@ -187,6 +194,7 @@ export default function BookingsPage() {
   const [orphansData, setOrphansData] = useState(null); // { orphans: [], summary: {} }
   const [showOrphansModal, setShowOrphansModal] = useState(false);
   const [wixFilterType, setWixFilterType] = useState('all');
+  const [platformFilterType, setPlatformFilterType] = useState('all');
   const [openWixRowId, setOpenWixRowId] = useState(null);
   const [openPlatformRowId, setOpenPlatformRowId] = useState(null);
 
@@ -200,12 +208,8 @@ export default function BookingsPage() {
 
   useEffect(() => {
     if (listSource === 'wix') return;
-    if (filterStatus === 'packages') {
-      loadPackages();
-    } else {
-      loadBookings();
-    }
-  }, [currentPage, filterStatus, dateRange, listSource]);
+    loadBookings();
+  }, [currentPage, filterStatus, dateRange, listSource, platformFilterType]);
 
   useEffect(() => {
     if (listSource !== 'wix') return;
@@ -216,7 +220,7 @@ export default function BookingsPage() {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [filterStatus, searchTerm, dateRange, listSource, wixFilterType]);
+  }, [filterStatus, searchTerm, dateRange, listSource, wixFilterType, platformFilterType]);
 
   const loadBookings = async () => {
     try {
@@ -232,10 +236,17 @@ export default function BookingsPage() {
         order: 'desc'
       };
 
-      // Add filters (Upcoming tab = booked + rescheduled — repeated ?status= for reliable parsing)
-      if (filterStatus) {
+      // Add filters (Upcoming tab = booked + rescheduled — repeated ?status= for reliable parsing).
+      // Packages tab = session_type filter only, status = all (matches Discovery's behavior).
+      if (filterStatus === 'packages') {
+        params.session_type = 'package';
+      } else if (filterStatus && filterStatus !== 'all') {
         params.status =
           filterStatus === 'booked' ? ['booked', 'rescheduled'] : filterStatus;
+      }
+      // Session type tabs (platformFilterType) override the packages-via-status approach
+      if (platformFilterType && platformFilterType !== 'all') {
+        params.session_type = platformFilterType;
       }
 
       if (searchTerm.trim()) {
@@ -773,9 +784,7 @@ export default function BookingsPage() {
   };
 
   const handleBookNextSuccess = () => {
-    if (filterStatus === 'packages') {
-      loadPackages();
-    } else {
+    {
       loadBookings();
       setIsSessionDetailsOpen(false);
       setSelectedSession(null);
@@ -1016,6 +1025,7 @@ export default function BookingsPage() {
   const filteredBookings = bookings.filter(booking => {
     const st = normalizeStatus(booking.status);
     const statusMatch =
+      filterStatus === 'all' ||
       (filterStatus === 'booked' && (st === 'booked' || st === 'rescheduled')) ||
       (filterStatus === 'pending' && isBookingPastDue(booking)) ||
       st === filterStatus;
@@ -1079,13 +1089,13 @@ export default function BookingsPage() {
   }, [currentPage, totalPages, totalBookings, displayBookings.length]);
 
   const statusTabs = [
+    { label: 'All', value: 'all' },
     { label: 'Upcoming', value: 'booked' },
     { label: 'Completed', value: 'completed' },
     { label: 'No Show', value: 'no_show' },
     { label: 'Cancelled', value: 'cancelled' },
     { label: 'Pending', value: 'pending' },
-    { label: 'Refund Requested', value: 'refund_requested' },
-    { label: 'Packages', value: 'packages' }
+    { label: 'Rescheduled', value: 'rescheduled' },
   ];
 
   const wixStatusTabs = [
@@ -1111,8 +1121,10 @@ export default function BookingsPage() {
   };
 
   const showWixView = listSource === 'wix';
-  const showPackagesView = !showWixView && filterStatus === 'packages';
-  const isLoadingView = showWixView ? wixLoading : showPackagesView ? packagesLoading : isLoading;
+  // Packages tab now uses the normal session table (filtered by session_type=package server-side)
+  // so it matches Koott Discovery's Package filter behavior. The old aggregated packages view is retired.
+  const showPackagesView = false;
+  const isLoadingView = showWixView ? wixLoading : isLoading;
 
   if (
     isLoadingView &&
@@ -1268,6 +1280,37 @@ export default function BookingsPage() {
         </div>
       )}
 
+      {/* Session Type Tabs (Platform) */}
+      {!showWixView && (
+        <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-1.5">
+          <nav
+            className="flex gap-1 overflow-x-auto"
+            aria-label="Filter by session type"
+          >
+            {wixTypeTabs.map((tab) => {
+              const isActive = platformFilterType === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setPlatformFilterType(tab.value)}
+                  className={`
+                    relative px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap
+                    transition-all duration-200 ease-out
+                    ${isActive
+                      ? 'bg-[#025545] text-white shadow-sm'
+                      : 'text-gray-600 hover:text-[#025545] hover:bg-[#025545]/8 active:bg-[#025545]/12'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      )}
+
       {showWixView && (
         <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-1.5">
           <nav
@@ -1387,7 +1430,7 @@ export default function BookingsPage() {
                     const canBookNext = pkg.package?.can_book_next === true;
                     const upcomingSessions = pkg.upcoming_sessions ?? [];
                     return (
-                      <tr key={`${pkg.client_id}-${pkg.package_id}`} className="hover:bg-gray-50">
+                      <tr key={`${pkg.client_id}-${pkg.package_id || pkg.wix_package_group_id || pkg.psychologist_id}`} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <User className="h-4 w-4 text-gray-400 mr-2" />
@@ -1430,13 +1473,15 @@ export default function BookingsPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {canBookNext ? (
+                          {canBookNext && pkg.package_id ? (
                             <button
                               onClick={() => openBookNextFromPackage(pkg)}
                               className="inline-flex items-center px-3 py-1.5 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] transition-colors"
                             >
                               Book next session
                             </button>
+                          ) : pkg.package?.source === 'wix' ? (
+                            <span className="text-xs text-amber-600 italic">Book via Wix</span>
                           ) : (
                             <span className="text-gray-400 text-sm">—</span>
                           )}
@@ -1666,7 +1711,8 @@ export default function BookingsPage() {
                       {(() => {
                         const type = booking.session_type || booking.type || '';
                         const isCouple = type === 'couple';
-                        const isPkg = !!(booking.package_id || booking.package || type === 'package');
+                        const hasSeriesEvid = !!(booking.package_id || booking.package) || (booking.session_count ?? 0) > 1 || booking.package_session_number != null;
+                        const isPkg = !!(booking.package_id || booking.package) || (type === 'package' && hasSeriesEvid);
                         const pkg = booking.package || {};
                         const wp = booking.wix_payload || {};
                         const rawCredits = wp.pricingPlanInfo?.credits || {};
@@ -2033,333 +2079,42 @@ export default function BookingsPage() {
         </div>
       )}
 
-      {/* Enhanced Session Details Modal */}
+      {/* Session Details Modal */}
       {isSessionDetailsOpen && (selectedSession || sessionDetailsLoading) && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col border border-slate-200/80">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-[#025545]" />
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-slate-900 tracking-tight" role="heading" aria-level={2}>Session Details</div>
-                  <p className="text-xs text-slate-500 mt-0.5">{selectedSession ? `#${selectedSession.id?.slice(0, 8)}` : 'Loading...'}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsSessionDetailsOpen(false)}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setIsSessionDetailsOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <h3 className="text-base font-semibold text-gray-900">Session Details</h3>
+              <button onClick={() => setIsSessionDetailsOpen(false)} className="p-1 rounded hover:bg-gray-100"><X className="h-4 w-4" /></button>
             </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="px-5 py-4 space-y-3 text-sm">
               {sessionDetailsLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-10 w-10 animate-spin text-[#025545]" />
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="h-7 w-7 animate-spin text-[#025545]" />
                 </div>
               ) : selectedSession ? (
-              <div className="space-y-5">
-                {/* Session Information */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Session Information</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session ID</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono">
-                        #{selectedSession.id}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Status</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${getStatusColor(selectedSession.status, selectedSession)}`}>
-                          {getStatusText(selectedSession.status, selectedSession)}
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Type</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {selectedSession.package_id || selectedSession.package ? (
-                          (() => {
-                            const pkg = selectedSession.package || {};
-                            let totalSessions = pkg.total_sessions ?? pkg.session_count ?? 0;
-                            if (totalSessions === 0 && pkg.package_type) {
-                              const match = String(pkg.package_type).match(/\d+/);
-                              if (match) totalSessions = parseInt(match[0], 10);
-                            }
-                            const sessionNumber = pkg.session_number;
-                            const label = adminPackageDisplayLabel(pkg);
-                            if (totalSessions > 0 && sessionNumber !== undefined && sessionNumber !== null) {
-                              return <>{label} <span className="text-slate-600">(Session {sessionNumber}/{totalSessions})</span></>;
-                            }
-                            if (totalSessions > 0) return <>{label} <span className="text-slate-600">({totalSessions} sessions)</span></>;
-                            return label;
-                          })()
-                        ) : (
-                          'Individual'
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Date</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {formatDate(selectedSession.scheduled_date)}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Time</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {formatTime(selectedSession.scheduled_time)}
-                      </div>
-                    </div>
-                    {selectedSession.status === 'rescheduled' && selectedSession.original_scheduled_date && (
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Original Scheduled Date</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600">
-                          {formatDate(selectedSession.original_scheduled_date)}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Booked at</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {formatBookedAt(sessionBookedAtIso(selectedSession))}
-                      </div>
-                    </div>
+              <div className="space-y-3">
+                {[
+                  ['Status', getStatusText(selectedSession.status, selectedSession)],
+                  ['Client', (() => { const c = normRel(selectedSession.client); return c ? (`${(c.child_name || '')}${c.child_name ? '' : `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim()}`).trim() || '—' : '—'; })()],
+                  ['Email', normRel(selectedSession.client)?.user?.email || '—'],
+                  ['Phone', normRel(selectedSession.client)?.phone_number || '—'],
+                  ['Therapist', (() => { const p = normRel(selectedSession.psychologist); return p ? `${(p.first_name || '').trim()} ${(p.last_name || '').trim()}`.trim() || '—' : '—'; })()],
+                  ['Date', formatDate(selectedSession.scheduled_date)],
+                  ['Time', formatTime(selectedSession.scheduled_time)],
+                  ...(selectedSession.status === 'rescheduled' && selectedSession.original_scheduled_date ? [['Original Date', formatDate(selectedSession.original_scheduled_date)]] : []),
+                  ['Price', selectedSession.price != null ? `₹${selectedSession.price}` : '—'],
+                  ['Session Type', selectedSession.package_id || selectedSession.package ? adminPackageDisplayLabel(selectedSession.package || {}) : 'Individual'],
+                  ['Booked at', formatBookedAt(sessionBookedAtIso(selectedSession))],
+                  ['Session ID', `#${selectedSession.id?.slice(0, 8)}`],
+                ].map(([label, val]) => (
+                  <div key={label} className="flex justify-between">
+                    <span className="text-gray-500">{label}</span>
+                    <span className="text-gray-900 text-right max-w-[60%] break-all">{val || '—'}</span>
                   </div>
-                </div>
-
-                {/* Client Information */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Client Information</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Full Name</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {(() => { const c = normRel(selectedSession.client); return c ? `${(c.first_name || '').trim()} ${(c.last_name || '').trim()}`.trim() || '—' : '—'; })()}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Email</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {normRel(selectedSession.client)?.user?.email || 'Not provided'}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Phone Number</p>
-                      <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                        {normRel(selectedSession.client)?.phone_number || 'Not provided'}
-                      </div>
-                    </div>
-                    {normRel(selectedSession.client)?.child_name && (
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Child Name</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {normRel(selectedSession.client).child_name}
-                        </div>
-                      </div>
-                    )}
-                    {normRel(selectedSession.client)?.child_age != null && (
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Child Age</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {normRel(selectedSession.client).child_age} years
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Psychologist Information */}
-                <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Psychologist</div>
-                  <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                    {(() => { const p = normRel(selectedSession.psychologist); return p ? `${(p.first_name || '').trim()} ${(p.last_name || '').trim()}`.trim() || '—' : '—'; })()}
-                  </div>
-                </div>
-
-                {/* Package & Pricing Information */}
-                {selectedSession.package && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Package & Pricing</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Plan</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {adminPackageDisplayLabel(selectedSession.package)}
-                        </div>
-                        {selectedSession.package.package_type && (
-                          <p className="text-xs text-slate-400 mt-1 font-mono">
-                            {selectedSession.package.package_type}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Package Price</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          ₹{selectedSession.package.price}
-                        </div>
-                      </div>
-                      {selectedSession.package.description && (
-                        <div className="md:col-span-2">
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Description</p>
-                          <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                            {selectedSession.package.description}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Payment / Amount Paid */}
-                {(() => {
-                  const amountPaid = getAmountPaid(selectedSession);
-                  if (amountPaid === null || amountPaid === undefined) return null;
-                  return (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Payment</div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Amount Paid</p>
-                          <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-medium">
-                            ₹{amountPaid}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {isWixSessionLike(selectedSession) && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
-                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3" role="heading" aria-level={3}>Wix Booking</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Source</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {selectedSession.source || 'wix'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Booking ID</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
-                          {selectedSession.wix_booking_id || selectedSession.wix_payload?.id || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Order Number</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {selectedSession.wix_order_number || selectedSession.wix_payload?.wix_order_number || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Count</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {selectedSession.session_count || selectedSession.wix_payload?.creditsAvailable || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Package Session Number</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {selectedSession.package_session_number || selectedSession.wix_payload?.planSessionNumber || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Vendor</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                          {selectedSession.wix_payment?.vendor || deriveWixPaymentMethod(selectedSession) || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Wix Transaction ID</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
-                          {selectedSession.wix_payment?.wix_transaction_id || selectedSession.wix_payload?.paymentDetails?.wixPayMultipleDetails?.[0]?.txId || '—'}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Razorpay Order ID</p>
-                        <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
-                          {selectedSession.wix_payment?.razorpay_order_id || selectedSession.wix_payload?.paymentDetails?.wixPayMultipleDetails?.[0]?.orderId || '—'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Raw Wix Payload</p>
-                      <pre className="bg-slate-950 text-slate-100 text-xs rounded-xl p-4 overflow-x-auto whitespace-pre-wrap break-words">
-                        {JSON.stringify(selectedSession.wix_payload || {}, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-
-                {/* Session completion fields */}
-                {(() => {
-                  const { summary, report, privateNotes } = getSessionCompletionFields(selectedSession);
-                  const hasAny = summary || report || privateNotes;
-                  if (!hasAny) return null;
-                  return (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4 space-y-4">
-                      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider" role="heading" aria-level={3}>Session completion notes</div>
-                      {summary && (
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Public Summary <span className="normal-case font-normal text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-2 text-[10px]">Shared via WhatsApp</span></p>
-                          <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
-                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{summary}</p>
-                          </div>
-                        </div>
-                      )}
-                      {report && (
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Session Findings <span className="normal-case font-normal text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded ml-2 text-[10px]">Internal Only</span></p>
-                          <div className="bg-[#025545]/5 border border-[#025545]/20 rounded-lg p-3">
-                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{report}</p>
-                          </div>
-                        </div>
-                      )}
-                      {privateNotes && (
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Private session notes — therapist only</p>
-                          <div className="bg-slate-100 border border-slate-200 rounded-lg p-3">
-                            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{privateNotes}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                ))}
               </div>
               ) : null}
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50/30 flex-shrink-0">
-              <div>
-                {selectedSession?.status === 'completed' &&
-                  selectedSession?.package_id &&
-                  (selectedSession?.package?.remaining_sessions ?? 0) > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsBookNextOpen(true)}
-                    className="px-4 py-2 bg-[#025545] text-white rounded-lg hover:bg-[#012f23] transition-colors text-sm font-medium"
-                  >
-                    Book next session
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => setIsSessionDetailsOpen(false)}
-                className="px-4 py-2 text-[#025545] bg-white border border-[#025545]/40 rounded-lg hover:bg-[#025545]/10 transition-colors text-sm font-medium"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

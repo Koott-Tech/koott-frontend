@@ -408,7 +408,16 @@ export default function FinanceSessionsPage() {
     const type = booking?.session_type || p.bookingType || null;
     const isCouple = type === 'couple';
     const isChild = !!booking?.package_parent_booking_id && !!booking?.session_index;
-    const isPkg = type === 'package' || !!booking?.package_id || !!booking?.package || isChild;
+    // session_type='package' with session_count=1 and no series evidence = single plan-credit booking → treat as individual
+    const hasSeriesEvidence = (booking?.session_count ?? 0) > 1
+      || booking?.package_session_number != null
+      || !!booking?.package_id
+      || !!booking?.package
+      || isChild
+      || p.planSessionNumber != null
+      || (p.creditsAvailable != null && Number(p.creditsAvailable) > 1)
+      || (rawCredits.available != null && Number(rawCredits.available) > 1);
+    const isPkg = (type === 'package' && hasSeriesEvidence) || !!booking?.package_id || !!booking?.package || isChild;
 
     // Mirror wix-discover priority: DB column → Velo payload → raw pricingPlanInfo credits
     const pkgNum = booking?.package_session_number
@@ -512,9 +521,21 @@ export default function FinanceSessionsPage() {
     const typeMatch = wixFilterType === 'all' || deriveSessionTypeKey(s) === wixFilterType;
     if (!typeMatch) return false;
     if (!searchTerm) return true;
+    const q = searchTerm.toLowerCase().replace(/^#/, ''); // strip leading # if pasted from UI
     const clientName = getClientDisplayName(s).toLowerCase();
     const clientEmail = (s.client?.user?.email || s.client?.email || s.wix_payload?.client?.email || '').toLowerCase();
-    return clientName.includes(searchTerm.toLowerCase()) || clientEmail.includes(searchTerm.toLowerCase());
+    const sessionId = (s.id || '').toLowerCase();
+    const wixBookingId = (s.wix_booking_id || '').toLowerCase();
+    const displayId = s.wix_booking_id
+      ? s.wix_booking_id.slice(-6).toLowerCase()
+      : (s.id || '').slice(0, 6).toLowerCase();
+    return (
+      clientName.includes(q) ||
+      clientEmail.includes(q) ||
+      sessionId.includes(q) ||
+      wixBookingId.includes(q) ||
+      displayId.includes(q)
+    );
   });
 
   const displaySessions = [...filteredSessions].sort((a, b) => {
@@ -684,7 +705,7 @@ export default function FinanceSessionsPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by client name or email..."
+                  placeholder="Search by client name, email or session ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#025545] focus:border-transparent"
@@ -1122,7 +1143,16 @@ export default function FinanceSessionsPage() {
                             <div>
                               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Type</p>
                               <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
-                                {paymentType || '—'}
+                                {(() => {
+                                  const raw = (paymentType || '').toLowerCase().trim();
+                                  if (raw === 'inperson') return 'Manual (In Person)';
+                                  if (raw === 'razorpay') return 'Razorpay';
+                                  if (raw === 'cash' || raw === 'cash payment') return 'Cash';
+                                  if (raw === 'upi') return 'UPI';
+                                  if (raw === 'card' || raw === 'card payment') return 'Card';
+                                  if (raw === 'netbanking' || raw === 'net banking') return 'Net Banking';
+                                  return paymentType || '—';
+                                })()}
                               </div>
                             </div>
                             {razorpayOrderId && (
@@ -1145,6 +1175,94 @@ export default function FinanceSessionsPage() {
                         </div>
                       );
                     })()}
+
+                    {/* Manual Booking Payment Details — shown for all manual sessions */}
+                    {isManualSession(selectedSession) && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="text-xs font-semibold text-amber-800 uppercase tracking-wider" role="heading" aria-level={3}>Manual Booking — Payment Details</div>
+                          {selectedSession.payment_verified && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-100 border border-green-200 rounded-full px-2 py-0.5">
+                              <CheckCircle className="h-3 w-3" /> Verified
+                            </span>
+                          )}
+                        </div>
+                        {/* Fallback when no payment record linked */}
+                        {!selectedSession.payment && !selectedSession.wix_payment && !selectedSession.receipt_url && (
+                          <p className="text-sm text-amber-700/70 italic">No payment record linked to this manual booking.</p>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {(selectedSession.payment?.payment_method || selectedSession.wix_payment?.vendor) && (
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Method</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 capitalize">
+                                {(() => {
+                                  const raw = (selectedSession.payment?.payment_method || selectedSession.wix_payment?.vendor || '').toLowerCase().trim();
+                                  if (raw === 'inperson') return 'Manual (In Person)';
+                                  if (raw === 'cash' || raw === 'cash payment') return 'Cash';
+                                  if (raw === 'upi') return 'UPI';
+                                  if (raw === 'card' || raw === 'card payment') return 'Card';
+                                  if (raw === 'netbanking' || raw === 'net banking') return 'Net Banking';
+                                  if (raw === 'razorpay') return 'Razorpay';
+                                  return raw || '—';
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                          {selectedSession.payment?.transaction_id && (
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Transaction ID</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                                {selectedSession.payment.transaction_id}
+                              </div>
+                            </div>
+                          )}
+                          {selectedSession.payment?.reference_number && (
+                            <div className="md:col-span-2">
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Reference Number</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 font-mono break-all">
+                                {selectedSession.payment.reference_number}
+                              </div>
+                            </div>
+                          )}
+                          {(selectedSession.payment?.payment_date || selectedSession.payment?.razorpay_params?.notes?.payment_received_date) && (
+                            <div>
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Received</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900">
+                                {(() => {
+                                  const d = selectedSession.payment?.razorpay_params?.notes?.payment_received_date || selectedSession.payment?.payment_date;
+                                  try { return new Date(d).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' }); }
+                                  catch { return d; }
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                          {selectedSession.payment?.notes && (
+                            <div className="md:col-span-2">
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Notes</p>
+                              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 whitespace-pre-wrap">
+                                {selectedSession.payment.notes}
+                              </div>
+                            </div>
+                          )}
+                          {/* Payment proof link */}
+                          {(selectedSession.payment?.receipt_url || selectedSession.receipt_url) && (
+                            <div className="md:col-span-2">
+                              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payment Proof</p>
+                              <a
+                                href={selectedSession.payment?.receipt_url || selectedSession.receipt_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-white hover:bg-amber-50 hover:border-amber-400 text-sm text-amber-700 font-medium transition-colors"
+                              >
+                                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                View Payment Proof
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {(() => {
                       const split = getCommissionSplit(selectedSession);
@@ -1231,7 +1349,13 @@ export default function FinanceSessionsPage() {
                             <div>
                               <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">Payout Status</p>
                               <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 capitalize">
-                                {split.paymentStatus || 'Pending'}
+                                {(() => {
+                                  const ps = split.paymentStatus;
+                                  if (ps && ps !== 'null') return ps;
+                                  const src = selectedSession?.commission_split?.source;
+                                  if (src === 'none') return '—'; // no commission settings at all
+                                  return 'Pending'; // calculated or recorded but not yet paid
+                                })()}
                               </div>
                             </div>
                             <div>
@@ -1297,9 +1421,32 @@ export default function FinanceSessionsPage() {
                 <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
                 <h3 className="text-base font-semibold text-gray-900">Approve Payment?</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-5">
+              <p className="text-sm text-gray-500 mb-4">
                 This confirms the manual payment for <strong>{getClientDisplayName(verifyTarget)}</strong> has been received and verified. A <strong className="text-green-700">✓ Verified</strong> badge will appear on this session.
               </p>
+
+              {/* Payment proof image preview */}
+              {verifyTarget.receipt_url && (
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Payment Proof</p>
+                  <a
+                    href={verifyTarget.receipt_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-lg overflow-hidden border border-gray-200 hover:border-green-400 transition-colors"
+                    title="Click to open full image"
+                  >
+                    <img
+                      src={verifyTarget.receipt_url}
+                      alt="Payment proof"
+                      className="w-full max-h-48 object-contain bg-gray-50"
+                      onError={e => { e.currentTarget.parentElement.style.display = 'none'; }}
+                    />
+                  </a>
+                  <p className="text-[10px] text-gray-400 mt-1">Click image to open full size</p>
+                </div>
+              )}
+
               <div className="flex justify-end gap-2">
                 <button onClick={() => setVerifyTarget(null)} disabled={isVerifying} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">Cancel</button>
                 <button onClick={handleVerifyPayment} disabled={isVerifying}

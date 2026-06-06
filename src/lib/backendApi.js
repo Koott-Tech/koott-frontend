@@ -731,6 +731,35 @@ export const psychologistApi = {
     });
   },
 
+  // ── Private note password ──────────────────────────────
+  async getPrivateNotePasswordStatus() {
+    return apiRequest('/psychologists/private-notes/status');
+  },
+  async setupPrivateNotePassword(password) {
+    return apiRequest('/psychologists/private-notes/setup', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+  },
+  async changePrivateNotePassword(currentPassword, newPassword) {
+    return apiRequest('/psychologists/private-notes/change', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+  async verifyPrivateNotePassword(password) {
+    return apiRequest('/psychologists/private-notes/verify', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+  },
+  async resetPrivateNotePassword(loginPassword, newPassword) {
+    return apiRequest('/psychologists/private-notes/reset', {
+      method: 'POST',
+      body: JSON.stringify({ loginPassword, newPassword }),
+    });
+  },
+
 
   // Get availability
   async getAvailability(params = {}) {

@@ -228,10 +228,7 @@ export default function AdminRescheduleModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <div>
-            <h2 role="heading" aria-level={2} className="text-base font-semibold text-gray-900">Reschedule Session</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Choose a new date and time</p>
-          </div>
+          <div />
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
             <X className="h-5 w-5" />
           </button>
