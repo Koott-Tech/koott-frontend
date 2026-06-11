@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle } from 'lucide-react';
+import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft } from 'lucide-react';
 import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { wixBookingBookedAtIso } from '@/lib/sessionBookedAt';
@@ -11,6 +11,7 @@ import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDa
 import AdminBookNextPackageSessionModal from '@/components/AdminBookNextPackageSessionModal';
 import AdminRescheduleModal from '@/components/AdminRescheduleModal';
 import AdminManualBookingModal from '@/components/AdminManualBookingModal';
+import AdminTransferSessionModal from '@/components/AdminTransferSessionModal';
 
 function fmtDateTime(iso) {
   if (!iso) return '—';
@@ -149,6 +150,8 @@ export default function AdminWixDiscoverPage() {
   const [selectedBookNextSession, setSelectedBookNextSession] = useState(null);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [selectedRescheduleSession, setSelectedRescheduleSession] = useState(null);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [selectedTransferSession, setSelectedTransferSession] = useState(null);
   const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [cancelRefundRow, setCancelRefundRow] = useState(null);
@@ -437,6 +440,42 @@ export default function AdminWixDiscoverPage() {
     setIsRescheduleOpen(true);
   };
 
+  const handleTransfer = (row) => {
+    const isPlatform = !!row._isPlatform;
+    setOpenMenuId(null);
+
+    if (isPlatform) {
+      // Platform rows ARE sessions — row.id is the session id directly
+      setSelectedTransferSession({
+        ...row,
+        id: row.id,
+        psychologist_id: row.psychologist_id || row.psychologist?.id || null,
+        _isWixBooking: false,
+      });
+    } else {
+      // Wix booking row — transfer operates on wix_bookings directly via row.id (UUID pk)
+      setSelectedTransferSession({
+        ...row,
+        // Expose the wix_bookings primary key so the modal calls the right endpoint
+        _isWixBooking: true,
+        _wixBookingId: row.id,
+        // Provide display fields the modal uses for its session summary
+        id: row.session_id || null,
+        psychologist_id: row.psychologist_id || null,
+        scheduled_date: row.start_time ? row.start_time.slice(0, 10) : null,
+        scheduled_time: row.start_time ? row.start_time.slice(11, 16) : null,
+        psychologist: row.psychologist_id
+          ? { id: row.psychologist_id, first_name: row.therapist_name?.split(' ')[0] || '', last_name: row.therapist_name?.split(' ').slice(1).join(' ') || '' }
+          : null,
+        client: row.client_id
+          ? { first_name: row.client_first_name || row.client_full_name?.split(' ')[0] || '', last_name: row.client_full_name?.split(' ').slice(1).join(' ') || '', child_name: null }
+          : null,
+      });
+    }
+
+    setIsTransferOpen(true);
+  };
+
   const openBookNext = (row) => {
     setOpenMenuId(null);
     const sessionProxy = buildSessionProxy(row);
@@ -679,6 +718,12 @@ export default function AdminWixDiscoverPage() {
                                     <RefreshCw className="h-3.5 w-3.5" /> Reschedule
                                   </button>
                                 )}
+                                {!['completed', 'cancelled', 'refunded'].includes(row.status) && (
+                                  <button onClick={() => { handleTransfer(row); setOpenMenuId(null); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
+                                  </button>
+                                )}
                                 <a href="/admin/bookings" className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#025545] hover:bg-[#025545]/5">
                                   <Eye className="h-3.5 w-3.5" /> Manage on Bookings page
                                 </a>
@@ -778,6 +823,11 @@ export default function AdminWixDiscoverPage() {
                               {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
                                 <button onClick={() => handleReschedule(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                   <RefreshCw className="h-3.5 w-3.5" /> Reschedule
+                                </button>
+                              )}
+                              {!['completed', 'cancelled', 'refunded'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => handleTransfer(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
                                 </button>
                               )}
                               {effectiveCompletionStatus(row) !== 'completed' && (
@@ -994,6 +1044,20 @@ export default function AdminWixDiscoverPage() {
         }}
         session={selectedRescheduleSession}
         onRescheduleSuccess={handleRescheduleSuccess}
+      />
+
+      <AdminTransferSessionModal
+        isOpen={isTransferOpen}
+        onClose={() => {
+          setIsTransferOpen(false);
+          setSelectedTransferSession(null);
+        }}
+        session={selectedTransferSession}
+        onTransferSuccess={async () => {
+          setIsTransferOpen(false);
+          setSelectedTransferSession(null);
+          await load(page);
+        }}
       />
 
       <AdminManualBookingModal

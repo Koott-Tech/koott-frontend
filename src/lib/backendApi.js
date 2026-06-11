@@ -995,6 +995,22 @@ export const adminApi = {
     });
   },
 
+  // Transfer a platform session to a different therapist (optionally with a new date/time)
+  async transferSession(sessionId, { new_psychologist_id, new_date, new_time }) {
+    return apiRequest(`/admin/sessions/${sessionId}/transfer`, {
+      method: 'POST',
+      body: JSON.stringify({ new_psychologist_id, new_date, new_time }),
+    });
+  },
+
+  // Transfer a Wix booking to a different therapist (optionally with a new date/time)
+  async transferWixBooking(wixBookingId, { new_psychologist_id, new_date, new_time }) {
+    return apiRequest(`/admin/wix/bookings/${wixBookingId}/transfer`, {
+      method: 'POST',
+      body: JSON.stringify({ new_psychologist_id, new_date, new_time }),
+    });
+  },
+
   // Reschedule session
   async rescheduleSession(sessionId, rescheduleData) {
     const mappedData = {
