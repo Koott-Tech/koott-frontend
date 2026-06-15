@@ -1011,6 +1011,13 @@ export const adminApi = {
     });
   },
 
+  async rescheduleWixBooking(wixBookingId, { new_date, new_time }) {
+    return apiRequest(`/admin/wix/bookings/${wixBookingId}/reschedule`, {
+      method: 'POST',
+      body: JSON.stringify({ new_date, new_time }),
+    });
+  },
+
   // Reschedule session
   async rescheduleSession(sessionId, rescheduleData) {
     const mappedData = {

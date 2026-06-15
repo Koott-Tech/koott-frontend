@@ -430,13 +430,29 @@ export default function AdminWixDiscoverPage() {
   };
 
   const handleReschedule = (row) => {
-    const sessionProxy = buildSessionProxy(row);
-    if (!sessionProxy?.id || !sessionProxy?.psychologist_id) {
-      showError('This Wix row is not linked to a reschedulable session yet.', 'Reschedule');
-      return;
-    }
     setOpenMenuId(null);
-    setSelectedRescheduleSession(sessionProxy);
+    const isPlatform = !!row._isPlatform;
+
+    if (isPlatform) {
+      const sessionProxy = buildSessionProxy(row);
+      if (!sessionProxy?.id) {
+        showError('This session cannot be rescheduled.', 'Reschedule');
+        return;
+      }
+      setSelectedRescheduleSession({ ...sessionProxy, _isWixBooking: false });
+    } else {
+      // Wix booking — reschedule directly via wix_bookings endpoint.
+      // Prefer wix_booking_id (Wix string) over row.id because row.id can be the
+      // wix_bookings UUID pk OR a sessions UUID depending on how the row was built.
+      // The backend accepts both, but wix_booking_id is always unambiguous.
+      const wixKey = row.wix_booking_id || row.id;
+      setSelectedRescheduleSession({
+        ...buildSessionProxy(row),
+        _isWixBooking: true,
+        _wixBookingId: wixKey,
+        id: row.session_id || null,
+      });
+    }
     setIsRescheduleOpen(true);
   };
 

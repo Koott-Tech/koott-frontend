@@ -77,7 +77,7 @@ export default function SessionCompletionModal({
     }
     if (!formData.summary.trim()) newErrors.summary = "Required";
     if (!formData.report.trim()) newErrors.report = "Required";
-    if (!formData.summary_notes.trim()) newErrors.summary_notes = "Required";
+    // Therapist Notes (summary_notes) is optional — not required to complete a session.
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -241,7 +241,7 @@ export default function SessionCompletionModal({
             <div className="space-y-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] flex items-center gap-1.5">
-                  Therapist Notes — Only Visible to You {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                  Therapist Notes — Only Visible to You <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
                 </label>
                 {!fieldsOptional && hasPassword === false && (
                   <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">

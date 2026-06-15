@@ -109,19 +109,19 @@ export default function AdminRescheduleModal({
     setError(null);
 
     try {
-      const rescheduleData = {
-        new_date: selectedDate,
-        new_time: convertTo24Hour(selectedTime),
-        reason: 'Admin rescheduled'
-      };
+      const new_date = selectedDate;
+      const new_time = convertTo24Hour(selectedTime);
 
-      console.log('Rescheduling session:', session.id, 'with data:', rescheduleData);
-      console.log('Time conversion:', {
-        original: selectedTime,
-        converted: convertTo24Hour(selectedTime)
-      });
-
-      const response = await adminApi.rescheduleSession(session.id, rescheduleData);
+      let response;
+      if (session._isWixBooking && session._wixBookingId) {
+        response = await adminApi.rescheduleWixBooking(session._wixBookingId, { new_date, new_time });
+      } else {
+        response = await adminApi.rescheduleSession(session.id, {
+          new_date,
+          new_time,
+          reason: 'Admin rescheduled',
+        });
+      }
 
       if (response.success) {
         showSuccess('Session rescheduled successfully!', 'Reschedule Success');
