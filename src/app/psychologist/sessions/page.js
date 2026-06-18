@@ -257,8 +257,9 @@ export default function PsychologistSessions() {
         summary_notes: sessionData.summary_notes?.trim?.() || ''
       };
       
-      if (!mappedData.summary || !mappedData.report || !mappedData.summary_notes) {
-        throw new Error('Summary, report, and summary notes are required.');
+      // Therapist notes (summary_notes) is optional; only summary + report are required.
+      if (!mappedData.summary || !mappedData.report) {
+        throw new Error('Summary and report are required.');
       }
       
       await psychologistApi.completeSession(sessionId, mappedData);
