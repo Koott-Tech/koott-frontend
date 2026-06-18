@@ -75,27 +75,28 @@ export default function AdminLayout({ children }) {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
-    { name: 'Doctors', href: '/admin/doctors', icon: UserCheck },
+    // Temporarily hidden from menu (pages still exist & accessible by URL):
+    // { name: 'Doctors', href: '/admin/doctors', icon: UserCheck },
     { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-    { name: 'Koott Discover', href: '/admin/wix-discover', icon: Globe },
+    { name: 'Legacy', href: '/admin/bookings', icon: Calendar },
+    { name: 'Bookings', href: '/admin/wix-discover', icon: Globe },
     { name: 'Koott Therapists', href: '/admin/wix-therapists', icon: UserCheck },
-    { name: 'Events', href: '/admin/events', icon: Ticket },
-    { name: 'Assessment Sessions', href: '/admin/assessment-sessions', icon: Package },
-    { name: 'Rescheduling', href: '/admin/rescheduling', icon: RefreshCw },
-    { 
-      name: 'CMS', 
-      icon: Layers, 
-      hasSubmenu: true,
-      submenu: [
-        { name: 'Blogs', href: '/admin/blogs', icon: FileText },
-        { name: 'Counselling Pages', href: '/admin/counselling', icon: MessageSquare },
-        { name: 'Assessment Pages', href: '/admin/assessments', icon: FileText },
-        { name: 'Better Parenting', href: '/admin/better-parenting', icon: FileText },
-        { name: 'Careers', href: '/admin/careers', icon: Briefcase },
-        { name: 'Event pages', href: '/admin/events-cms', icon: Ticket },
-      ]
-    },
+    // { name: 'Events', href: '/admin/events', icon: Ticket },
+    // { name: 'Assessment Sessions', href: '/admin/assessment-sessions', icon: Package },
+    // { name: 'Rescheduling', href: '/admin/rescheduling', icon: RefreshCw },
+    // {
+    //   name: 'CMS',
+    //   icon: Layers,
+    //   hasSubmenu: true,
+    //   submenu: [
+    //     { name: 'Blogs', href: '/admin/blogs', icon: FileText },
+    //     { name: 'Counselling Pages', href: '/admin/counselling', icon: MessageSquare },
+    //     { name: 'Assessment Pages', href: '/admin/assessments', icon: FileText },
+    //     { name: 'Better Parenting', href: '/admin/better-parenting', icon: FileText },
+    //     { name: 'Careers', href: '/admin/careers', icon: Briefcase },
+    //     { name: 'Event pages', href: '/admin/events-cms', icon: Ticket },
+    //   ]
+    // },
   ];
 
   if (authLoading) {

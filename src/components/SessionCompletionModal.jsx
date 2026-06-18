@@ -333,8 +333,8 @@ export default function SessionCompletionModal({
             Go Back
           </button>
           <button
-            type="submit"
-            form="session-completion-form"
+            type="button"
+            onClick={handleSubmit}
             disabled={isSubmitting}
             className="px-6 py-2 text-sm font-bold text-white bg-gradient-to-r from-[#025545] to-[#189e4f] hover:shadow-lg rounded-xl transition-all disabled:opacity-50 flex items-center gap-2"
           >

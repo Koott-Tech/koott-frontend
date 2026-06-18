@@ -195,17 +195,20 @@ export default function UsersPage() {
 
 
   // Note: Search and role filtering are now handled on the backend via API
-  // Keep client-side filtering as fallback if backend doesn't support it
+  // Client-side filtering as a fallback. Use debouncedSearchTerm (NOT the instant
+  // searchTerm) so it stays consistent with what the server actually fetched — otherwise
+  // typing filters the previously-loaded page against the new text and briefly shows
+  // "no results" until the debounced fetch lands. Token-based so a "first last" query
+  // matches even when the name spans first_name + last_name.
   const filteredUsers = users.filter(user => {
-    const fullName = `${user.profile?.first_name || ''} ${user.profile?.last_name || ''}`.trim().toLowerCase() || 
+    const q = debouncedSearchTerm.trim().toLowerCase();
+    if (!q) return true;
+    const fullName = `${user.profile?.first_name || ''} ${user.profile?.last_name || ''}`.trim().toLowerCase() ||
                      user.name?.toLowerCase() || '';
     const email = user.email?.toLowerCase() || '';
-    
-    const matchesSearch = !searchTerm || 
-                         fullName.includes(searchTerm.toLowerCase()) ||
-                         email.includes(searchTerm.toLowerCase());
-    
-    return matchesSearch;
+    const child = (user.profile?.child_name || '').toLowerCase();
+    const haystack = `${fullName} ${email} ${child}`;
+    return q.split(/\s+/).filter(Boolean).every(tok => haystack.includes(tok));
   });
   
   const handlePageChange = (newPage) => {

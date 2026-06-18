@@ -110,6 +110,10 @@ export default function AdminWixDiscoverPage() {
   const [rows, setRows] = useState([]);
   const [platformRows, setPlatformRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  // Debounced copy used for the actual fetch — typing updates searchTerm instantly (input
+  // stays responsive) but we only query after a short pause, so rapid keystrokes don't fire
+  // a burst of overlapping requests whose out-of-order responses flicker "no results".
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('booked');
   const [wixFilterType, setWixFilterType] = useState('all');
   const [page, setPage] = useState(1);
@@ -181,7 +185,7 @@ export default function AdminWixDiscoverPage() {
         adminApi.getWixBookings({
           page: targetPage, limit: 10,
           ...dateParams,
-          search: searchTerm.trim() || undefined,
+          search: debouncedSearchTerm.trim() || undefined,
           status: (statusFilter && statusFilter !== 'all') ? statusFilter : undefined,
           session_type: wixFilterType !== 'all' ? wixFilterType : undefined,
         }),
@@ -226,8 +230,8 @@ export default function AdminWixDiscoverPage() {
           }
         }
         // Apply search filter client-side
-        if (searchTerm.trim()) {
-          const q = searchTerm.trim().toLowerCase();
+        if (debouncedSearchTerm.trim()) {
+          const q = debouncedSearchTerm.trim().toLowerCase();
           const name = `${s.client?.first_name || ''} ${s.client?.last_name || ''}`.toLowerCase();
           const email = String(s.client?.user?.email || '').toLowerCase();
           const therapist = `${s.psychologist?.first_name || ''} ${s.psychologist?.last_name || ''}`.toLowerCase();
@@ -241,7 +245,7 @@ export default function AdminWixDiscoverPage() {
       setRows([]);
       setPlatformRows([]);
     } finally { setLoading(false); }
-  }, [dateRange, searchTerm, showError, wixFilterType, statusFilter]);
+  }, [dateRange, debouncedSearchTerm, showError, wixFilterType, statusFilter]);
 
   const syncAndReload = useCallback(async ({ silentSuccess = false } = {}) => {
     setSyncing(true);
@@ -261,11 +265,19 @@ export default function AdminWixDiscoverPage() {
     load(1).finally(() => setInitialSyncDone(true));
   }, [load]);
 
+  // Debounce the search box → debouncedSearchTerm (used by load()). 350ms after the user
+  // stops typing. Empty search applies immediately so clearing the box is instant.
+  useEffect(() => {
+    if (!searchTerm) { setDebouncedSearchTerm(''); return; }
+    const t = setTimeout(() => setDebouncedSearchTerm(searchTerm), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
   useEffect(() => {
     if (!initialSyncDone || syncing) return;
     if (page !== 1) { setPage(1); load(1); return; }
     load(1);
-  }, [dateRange, searchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing]);
+  }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing]);
 
   const handlePageChange = async (nextPage) => {
     const safePage = Math.max(1, Math.min(pagination.totalPages, nextPage));

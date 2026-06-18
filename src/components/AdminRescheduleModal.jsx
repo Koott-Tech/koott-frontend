@@ -224,6 +224,40 @@ export default function AdminRescheduleModal({
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
 
+  // 24-hour value → 12-hour label with AM/PM for the dropdown (value stays "HH" 24-hour)
+  const to12HourLabel = (hh) => {
+    const h = parseInt(hh, 10);
+    if (Number.isNaN(h)) return hh;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const dh = h % 12 === 0 ? 12 : h % 12;
+    return `${dh} ${ampm}`;
+  };
+
+  // Session length: prefer the booking's own start/end window, else couple→80, default 50.
+  const getDurationMinutes = () => {
+    if (session.start_time && session.end_time) {
+      const d = Math.round((new Date(session.end_time).getTime() - new Date(session.start_time).getTime()) / 60000);
+      if (Number.isFinite(d) && d > 0 && d <= 600) return d;
+    }
+    const t = String(session.session_type || session.package?.package_type || '').toLowerCase();
+    if (t.includes('couple')) return 80;
+    return 50;
+  };
+  const durationMinutes = getDurationMinutes();
+  const formatDurationLabel = (m) => (m % 60 === 0 ? `${m / 60} hr${m / 60 > 1 ? 's' : ''}` : m >= 60 ? `${Math.floor(m / 60)} hr ${m % 60} min` : `${m} min`);
+
+  // Given a "HH:MM" 24-hour start and a duration, return the 12-hour AM/PM end time.
+  const computeEndTime12h = (hhmm, mins) => {
+    if (!hhmm) return '';
+    const [h, mn] = hhmm.split(':').map(Number);
+    const total = h * 60 + mn + mins;
+    const eh = Math.floor((total % 1440) / 60);
+    const em = total % 60;
+    const ampm = eh >= 12 ? 'PM' : 'AM';
+    const dh = eh % 12 === 0 ? 12 : eh % 12;
+    return `${dh}:${String(em).padStart(2, '0')} ${ampm}`;
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -372,7 +406,7 @@ export default function AdminRescheduleModal({
                           >
                             <option value="">HH</option>
                             {hours.map((hour) => (
-                              <option key={hour} value={hour}>{hour}</option>
+                              <option key={hour} value={hour}>{to12HourLabel(hour)}</option>
                             ))}
                           </select>
                         </div>
@@ -391,9 +425,14 @@ export default function AdminRescheduleModal({
                         </div>
                       </div>
 
+                      <div className="text-xs text-gray-500">
+                        Session duration: <span className="font-semibold text-gray-700">{formatDurationLabel(durationMinutes)}</span>
+                      </div>
+
                       {selectedTime && (
                         <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-sm text-emerald-800">
-                          {formatDate(selectedDate)} at {formatTime(selectedTime)}
+                          {formatDate(selectedDate)} at {formatTime(selectedTime)} – {computeEndTime12h(selectedTime, durationMinutes)}
+                          <span className="text-emerald-600"> ({formatDurationLabel(durationMinutes)})</span>
                         </div>
                       )}
                     </div>
