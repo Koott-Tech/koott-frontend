@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft } from 'lucide-react';
+import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft, PauseCircle } from 'lucide-react';
 import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { wixBookingBookedAtIso } from '@/lib/sessionBookedAt';
@@ -92,6 +92,7 @@ function statusBadge(status) {
   if (s === 'deleted') return 'bg-red-50 text-red-400 line-through';
   if (s === 'booked') return 'bg-emerald-100 text-emerald-800';
   if (s === 'no_show') return 'bg-amber-100 text-amber-900';
+  if (s === 'on_hold') return 'bg-orange-100 text-orange-800';
   return 'bg-slate-100 text-slate-700';
 }
 
@@ -114,7 +115,7 @@ export default function AdminWixDiscoverPage() {
   // stays responsive) but we only query after a short pause, so rapid keystrokes don't fire
   // a burst of overlapping requests whose out-of-order responses flicker "no results".
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('booked');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [wixFilterType, setWixFilterType] = useState('all');
   const [page, setPage] = useState(1);
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
@@ -126,6 +127,7 @@ export default function AdminWixDiscoverPage() {
     { label: 'Completed', value: 'completed' },
     { label: 'No Show', value: 'no_show' },
     { label: 'Cancelled', value: 'cancelled' },
+    { label: 'On Hold', value: 'on_hold' },
     { label: 'Pending', value: 'pending' },
     { label: 'Rescheduled', value: 'rescheduled' },
   ];
@@ -159,6 +161,7 @@ export default function AdminWixDiscoverPage() {
   const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [cancelRefundRow, setCancelRefundRow] = useState(null);
+  const [cancelOnlyRow, setCancelOnlyRow] = useState(null);
   const [completeConfirmRow, setCompleteConfirmRow] = useState(null);
 
   // Close action menu when user scrolls (menu is fixed-position so it won't follow the row)
@@ -343,6 +346,19 @@ export default function AdminWixDiscoverPage() {
         'Cancelled'
       );
       setCancelRefundRow(null);
+      await load(page);
+    } catch (e) { showError(e?.message || 'Failed to cancel', 'Error'); }
+    finally { setActionLoading(false); }
+  };
+
+  const handleCancelOnlyConfirm = async () => {
+    if (!cancelOnlyRow) return;
+    setActionLoading(true);
+    try {
+      const res = await adminApi.cancelOnlyWixBooking(cancelOnlyRow.id);
+      if (!res?.success) throw new Error(res?.error || 'Failed');
+      showSuccess('Cancelled without refund and put on hold. The slot is now free — reschedule it when the client confirms a new time.', 'On Hold');
+      setCancelOnlyRow(null);
       await load(page);
     } catch (e) { showError(e?.message || 'Failed to cancel', 'Error'); }
     finally { setActionLoading(false); }
@@ -740,7 +756,7 @@ export default function AdminWixDiscoverPage() {
                                     <Video className="h-3.5 w-3.5" /> Open Meet
                                   </button>
                                 )}
-                                {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(row.status) && (
+                                {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold'].includes(row.status) && (
                                   <button onClick={() => { handleReschedule(row); setOpenMenuId(null); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     <RefreshCw className="h-3.5 w-3.5" /> Reschedule
@@ -848,7 +864,7 @@ export default function AdminWixDiscoverPage() {
                                   <Package className="h-3.5 w-3.5" /> Book Next Session
                                 </button>
                               )}
-                              {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
+                              {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold'].includes(effectiveCompletionStatus(row)) && (
                                 <button onClick={() => handleReschedule(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                   <RefreshCw className="h-3.5 w-3.5" /> Reschedule
                                 </button>
@@ -861,6 +877,12 @@ export default function AdminWixDiscoverPage() {
                               {effectiveCompletionStatus(row) !== 'completed' && (
                                 <button onClick={() => handleComplete(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
                                   <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
+                                </button>
+                              )}
+                              {!['cancelled', 'refunded', 'completed', 'on_hold'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => { setOpenMenuId(null); setCancelOnlyRow(row); }}
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
+                                  <PauseCircle className="h-3.5 w-3.5" /> Cancel (No Refund)
                                 </button>
                               )}
                               {!['cancelled', 'refunded', 'completed'].includes(effectiveCompletionStatus(row)) && (
@@ -905,33 +927,52 @@ export default function AdminWixDiscoverPage() {
 
       {/* View Modal */}
       {viewingRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setViewingRow(null)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h3 className="text-base font-semibold text-gray-900">Booking Details</h3>
-              <button onClick={() => setViewingRow(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-5 py-4 space-y-3 text-sm">
-              {[
-                ['Title', viewingRow.title],
-                ['Status', viewingRow.status],
-                ['Client', viewingRow.client_full_name || viewingRow.client_first_name],
-                ['Email', viewingRow.client_email],
-                ['Phone', viewingRow.client_phone],
-                ['Therapist', viewingRow.therapist_name],
-                ['Date/Time', fmtDateTime(viewingRow.start_time)],
-                ['Price', viewingRow.price ? `${viewingRow.price} ${viewingRow.currency || ''}` : '—'],
-                ['Session Type', deriveSessionType(viewingRow)],
-                ['Payment Method', derivePaymentMethod(viewingRow) || '—'],
-                ['Payment State', viewingRow.payload?.paymentState || '—'],
-                ['Wix Booking ID', viewingRow.wix_booking_id],
-                ['Created at', fmtDateTime(wixBookingBookedAtIso(viewingRow))],
-              ].map(([label, val]) => (
-                <div key={label} className="flex justify-between">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="text-gray-900 text-right max-w-[60%] break-all">{val || '—'}</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4" onClick={() => setViewingRow(null)}>
+          <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-white/20" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md text-white shadow-inner"><Eye className="h-5 w-5" /></div>
+                <div>
+                  <div className="text-lg font-bold text-white tracking-tight leading-tight">Booking Details</div>
+                  <p className="text-xs text-white/70 mt-0.5 font-medium">{viewingRow.wix_order_number ? `Order #${viewingRow.wix_order_number}` : 'Wix booking'}</p>
                 </div>
-              ))}
+              </div>
+              <button onClick={() => setViewingRow(null)} className="p-2 rounded-xl text-white/60 hover:bg-white/10 hover:text-white transition-all"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50/40 space-y-4">
+              {/* Client header card */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-[#025545]/10 text-[#025545] flex items-center justify-center font-bold text-lg shrink-0">
+                  {(viewingRow.client_full_name || viewingRow.client_first_name || '?').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold text-slate-900 truncate">{viewingRow.client_full_name || viewingRow.client_first_name || '—'}</div>
+                  <div className="text-xs text-slate-500 truncate">{viewingRow.title || 'Session'}</div>
+                </div>
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize shrink-0 ${statusBadge(effectiveCompletionStatus(viewingRow))}`}>
+                  {effectiveCompletionStatus(viewingRow) || '—'}
+                </span>
+              </div>
+              {/* Detail grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  ['Email', viewingRow.client_email, false],
+                  ['Phone', viewingRow.client_phone, false],
+                  ['Therapist', viewingRow.therapist_name, false],
+                  ['Date / Time', fmtDateTime(viewingRow.start_time), false],
+                  ['Session Type', deriveSessionType(viewingRow), false],
+                  ['Price', viewingRow.price ? `${viewingRow.price} ${viewingRow.currency || ''}` : '—', false],
+                  ['Payment Method', derivePaymentMethod(viewingRow) || '—', false],
+                  ['Payment State', viewingRow.payload?.paymentState || '—', false],
+                  ['Created at', fmtDateTime(wixBookingBookedAtIso(viewingRow)), false],
+                  ['Wix Booking ID', viewingRow.wix_booking_id, true],
+                ].map(([label, val, full]) => (
+                  <div key={label} className={`rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm ${full ? 'sm:col-span-2' : ''}`}>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.06em]">{label}</div>
+                    <div className="text-sm font-semibold text-slate-900 mt-1 break-words">{val || '—'}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -939,42 +980,50 @@ export default function AdminWixDiscoverPage() {
 
       {/* Edit Modal */}
       {editingRow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setEditingRow(null)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h3 className="text-base font-semibold text-gray-900">Edit Booking</h3>
-              <button onClick={() => setEditingRow(null)} className="p-1 rounded hover:bg-gray-100"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="px-5 py-4 space-y-3">
-              {[
-                { key: 'status', label: 'Status', type: 'select', options: ['booked', 'completed', 'cancelled', 'no_show'] },
-                { key: 'title', label: 'Title' },
-                { key: 'therapist_name', label: 'Therapist' },
-                { key: 'price', label: 'Price', type: 'number' },
-                { key: 'notes', label: 'Notes', type: 'textarea' },
-              ].map((field) => (
-                <div key={field.key}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">{field.label}</label>
-                  {field.type === 'select' ? (
-                    <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15">
-                      {field.options.map(o => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  ) : field.type === 'textarea' ? (
-                    <textarea value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      rows={3} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
-                  ) : (
-                    <input type={field.type || 'text'} value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
-                  )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4" onClick={() => !actionLoading && setEditingRow(null)}>
+          <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden border border-white/20" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md text-white shadow-inner"><Edit className="h-5 w-5" /></div>
+                <div>
+                  <div className="text-lg font-bold text-white tracking-tight leading-tight">Edit Booking</div>
+                  <p className="text-xs text-white/70 mt-0.5 font-medium">Update status, therapist, price &amp; notes</p>
                 </div>
-              ))}
+              </div>
+              <button onClick={() => setEditingRow(null)} className="p-2 rounded-xl text-white/60 hover:bg-white/10 hover:text-white transition-all"><X className="h-5 w-5" /></button>
             </div>
-            <div className="flex justify-end gap-2 px-5 py-4 border-t">
-              <button onClick={() => setEditingRow(null)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+            <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50/40">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { key: 'status', label: 'Status', type: 'select', options: ['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested', 'on_hold', 'completed', 'no_show', 'cancelled', 'refunded'] },
+                  { key: 'price', label: 'Price', type: 'number' },
+                  { key: 'therapist_name', label: 'Therapist', full: true },
+                  { key: 'title', label: 'Title', full: true },
+                  { key: 'notes', label: 'Notes', type: 'textarea', full: true },
+                ].map((field) => (
+                  <div key={field.key} className={`space-y-1.5 ${field.full ? 'sm:col-span-2' : ''}`}>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">{field.label}</label>
+                    {field.type === 'select' ? (
+                      <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm capitalize focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
+                        {field.options.map(o => <option key={o} value={o} className="capitalize">{o}</option>)}
+                      </select>
+                    ) : field.type === 'textarea' ? (
+                      <textarea value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
+                        rows={3} className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm text-slate-900 shadow-sm resize-none focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all" />
+                    ) : (
+                      <input type={field.type || 'text'} value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 px-7 py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
+              <button onClick={() => setEditingRow(null)} disabled={actionLoading} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40">Cancel</button>
               <button onClick={handleEditSave} disabled={actionLoading}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#025545] text-white text-sm hover:bg-[#012f23] disabled:opacity-40">
-                {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-[#025545] to-[#189e4f] rounded-xl hover:shadow-lg transition-all disabled:opacity-50">
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save Changes
               </button>
             </div>
           </div>
@@ -1032,6 +1081,35 @@ export default function AdminWixDiscoverPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-40">
                 {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <XCircle className="h-3.5 w-3.5" />}
                 Confirm Cancel &amp; Refund
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel (No Refund) — put on hold, free the slot, reschedule later */}
+      {cancelOnlyRow && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => !actionLoading && setCancelOnlyRow(null)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-2">
+              <PauseCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              <h3 className="text-base font-semibold text-gray-900">Cancel without refund?</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">For a client who can't attend but doesn't want a refund and will reschedule later. This will:</p>
+            <ul className="text-sm text-gray-500 list-disc ml-4 mb-4 space-y-1">
+              <li>Set the status to <strong>On Hold</strong> (no refund — money is kept)</li>
+              <li>Remove the calendar events from the <strong>therapist's and client's</strong> calendars so the slot reopens</li>
+              <li>Keep the booking so you can <strong>Reschedule</strong> it once the client confirms a new date/time</li>
+            </ul>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setCancelOnlyRow(null)} disabled={actionLoading}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-40">
+                Back
+              </button>
+              <button onClick={handleCancelOnlyConfirm} disabled={actionLoading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 disabled:opacity-40">
+                {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PauseCircle className="h-3.5 w-3.5" />}
+                Confirm — On Hold
               </button>
             </div>
           </div>

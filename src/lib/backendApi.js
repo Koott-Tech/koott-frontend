@@ -1018,6 +1018,13 @@ export const adminApi = {
     });
   },
 
+  // Cancel a Wix booking WITHOUT refund — frees the slot, keeps it reschedulable (on_hold).
+  async cancelOnlyWixBooking(wixBookingId) {
+    return apiRequest(`/admin/wix/bookings/${wixBookingId}/cancel-only`, {
+      method: 'POST',
+    });
+  },
+
   // Reschedule session
   async rescheduleSession(sessionId, rescheduleData) {
     const mappedData = {
