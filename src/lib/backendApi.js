@@ -1235,6 +1235,15 @@ export const adminApi = {
     });
   },
 
+  // Create a manual PACKAGE booking — schedules all N sessions upfront (one payment,
+  // N sessions each with calendar event + Meet link + email/WhatsApp).
+  async createManualPackageBooking(bookingData) {
+    return apiRequest('/admin/bookings/manual-package', {
+      method: 'POST',
+      body: JSON.stringify(bookingData),
+    });
+  },
+
   // Create record-only booking (admin only): session record only, no Meet, no notifications
   async createRecordOnlyBooking(bookingData) {
     return apiRequest('/admin/bookings/record-only', {

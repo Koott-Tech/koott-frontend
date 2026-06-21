@@ -58,6 +58,84 @@ const MANUAL_SESSION_STAGE_OPTIONS = [
   { value: 'follow_up', label: 'Follow-up' },
 ];
 
+// How many sessions each package contains → drives the upfront multi-date schedulers.
+const PACKAGE_SESSION_COUNTS = { package_3: 3, package_6: 6, package_9: 9, couple_package_3: 3 };
+const getPackageSessionCount = (t) => PACKAGE_SESSION_COUNTS[t] || 0;
+
+// Hour-only 12h label ("01" → "1 AM") for a separate hour dropdown (minutes are picked separately).
+const hourLabel12 = (hh) => {
+  const h = parseInt(hh, 10);
+  if (Number.isNaN(h)) return hh;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const dh = h % 12 === 0 ? 12 : h % 12;
+  return `${dh} ${ampm}`;
+};
+
+// Compact calendar popover used by the package multi-date rows. value is 'YYYY-MM-DD'.
+function CompactDatePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(() => (value ? new Date(`${value}T00:00:00`) : new Date()));
+  const ref = useRef(null);
+  useEffect(() => {
+    const onDocClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    if (open) document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [open]);
+
+  const y = view.getFullYear();
+  const m = view.getMonth();
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const monthLabel = view.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const todayYmd = new Date().toISOString().split('T')[0];
+  const fmt = (d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const display = value ? new Date(`${value}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Pick date';
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full px-3 py-2 border rounded-lg text-sm text-left bg-white hover:border-slate-300 transition-colors ${value ? 'border-slate-200 text-slate-900' : 'border-slate-200 text-slate-400'}`}
+      >
+        {display}
+      </button>
+      {open && (
+        <div className="absolute z-40 mt-1 w-56 rounded-lg border border-slate-200 bg-white shadow-lg p-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <button type="button" onClick={() => setView(new Date(y, m - 1, 1))} className="p-1 rounded hover:bg-gray-100 text-gray-500">‹</button>
+            <span className="text-xs font-semibold text-gray-800">{monthLabel}</span>
+            <button type="button" onClick={() => setView(new Date(y, m + 1, 1))} className="p-1 rounded hover:bg-gray-100 text-gray-500">›</button>
+          </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+              <div key={`h${i}`} className="text-center text-[10px] font-medium text-gray-400 py-0.5">{d}</div>
+            ))}
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const ymd = fmt(day);
+              const disabled = ymd < todayYmd;
+              const selected = value === ymd;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => { onChange(ymd); setOpen(false); }}
+                  className={`h-7 text-xs rounded transition-colors ${selected ? 'bg-[#025545] text-white font-semibold' : disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-[#025545]/10'}`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminManualBookingModal({ 
   isOpen, 
   onClose, 
@@ -120,10 +198,28 @@ export default function AdminManualBookingModal({
   const [selectedHour, setSelectedHour] = useState('');
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [searchClient, setSearchClient] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [showPsychologistDropdown, setShowPsychologistDropdown] = useState(false);
   const [searchPsychologist, setSearchPsychologist] = useState('');
   const [meetLink, setMeetLink] = useState(''); // For recordOnly: optional Meet link if created elsewhere
   const [status, setStatus] = useState('booked'); // For recordOnly: session status (booked, completed, cancelled, no_show, rescheduled)
   const [therapistCommission, setTherapistCommission] = useState('');
+  // Multi-date schedules when a PACKAGE is selected (one row per session). Each: {date, hour, minute}
+  const [packageSchedules, setPackageSchedules] = useState([]);
+  // false = book first session now, schedule the rest later (sequential, "like before")
+  // true  = schedule ALL sessions of the package upfront (one date/time per session)
+  const [scheduleAllUpfront, setScheduleAllUpfront] = useState(false);
+  const packageCount = getPackageSessionCount(sessionType);
+
+  // Resize the per-session schedule rows whenever the package type changes.
+  useEffect(() => {
+    setPackageSchedules((prev) => {
+      if (packageCount <= 0) return prev.length ? [] : prev;
+      return Array.from({ length: packageCount }, (_, i) => prev[i] || { date: '', hour: '', minute: '00' });
+    });
+    if (packageCount <= 0) setScheduleAllUpfront(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionType]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -546,7 +642,13 @@ export default function AdminManualBookingModal({
       setError('Please wait for the payment screenshot to finish uploading');
       return;
     }
-    
+
+    // Payment screenshot is required for manual bookings (record-only mode is exempt).
+    if (!recordOnly && !paymentScreenshotUrl) {
+      setError('Please upload the payment screenshot');
+      return;
+    }
+
     // Mark as submitting immediately (atomic operation)
     isSubmittingRef.current = true;
     console.log('🔒 Lock acquired for submission');
@@ -668,6 +770,65 @@ export default function AdminManualBookingModal({
         isSubmittingRef.current = false;
         return;
       }
+    }
+
+    // ── PACKAGE PATH: schedule ALL N sessions upfront (distinct dates/times) ──
+    // Only when the admin chose "Schedule all now". Sequential mode falls through to
+    // the normal single-session createManualBooking flow (books the first session).
+    if (packageCount > 0 && scheduleAllUpfront && !recordOnly) {
+      if (!finalClientId || !psychologistId || !amount || !paymentReceivedDate) {
+        setError('Please fill in all required booking fields');
+        setIsLoading(false); isSubmittingRef.current = false; return;
+      }
+      if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        setError('Please enter a valid amount');
+        setIsLoading(false); isSubmittingRef.current = false; return;
+      }
+      const schedules = packageSchedules.map((r) => ({ date: r.date, time: r.hour ? `${r.hour}:${r.minute || '00'}:00` : '' }));
+      if (schedules.length !== packageCount || schedules.some((s) => !s.date || !s.time)) {
+        setError(`Please pick a date & time for all ${packageCount} sessions`);
+        setIsLoading(false); isSubmittingRef.current = false; return;
+      }
+      const seenSlots = new Set();
+      for (const s of schedules) {
+        const k = `${s.date}T${s.time.slice(0, 5)}`;
+        if (seenSlots.has(k)) {
+          setError('Two sessions have the same date & time — pick distinct slots');
+          setIsLoading(false); isSubmittingRef.current = false; return;
+        }
+        seenSlots.add(k);
+      }
+      if (!isNewClient) setIsLoading(true);
+      try {
+        const response = await adminApi.createManualPackageBooking({
+          client_id: finalClientId,
+          psychologist_id: psychologistId,
+          session_type: sessionType,
+          schedules,
+          amount: parseFloat(amount),
+          payment_received_date: paymentReceivedDate,
+          payment_method: paymentMethod,
+          receipt_url: paymentScreenshotUrl || null,
+          therapist_commission: therapistCommission ? parseFloat(therapistCommission) : 0,
+          notes: notes || null,
+        });
+        if (response.success) {
+          setShowSuccessModal(true);
+          onBookingSuccess?.(response.data);
+          setTimeout(() => { isSubmittingRef.current = false; onClose(); }, 1500);
+        } else {
+          setFailureMessage(response.message || 'Failed to create package booking');
+          setShowFailureModal(true);
+          isSubmittingRef.current = false;
+        }
+      } catch (err) {
+        setFailureMessage(err.message || 'Failed to create package booking');
+        setShowFailureModal(true);
+        isSubmittingRef.current = false;
+      } finally {
+        setIsLoading(false);
+      }
+      return;
     }
 
     // Validate booking data
@@ -1006,29 +1167,47 @@ export default function AdminManualBookingModal({
                   </p>
                 </div>
               ) : (
-                /* Existing Client Selection */
+                /* Existing Client Selection — typeahead dropdown */
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search client by name or email..."
                     value={searchClient}
-                    onChange={(e) => setSearchClient(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                  />
-                  <select
-                    value={clientId}
-                    onChange={(e) => setClientId(e.target.value)}
-                    required
+                    onChange={(e) => { setSearchClient(e.target.value); setShowClientDropdown(true); if (clientId) setClientId(''); }}
+                    onFocus={() => setShowClientDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowClientDropdown(false), 150)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                  >
-                    <option value="">Select a client</option>
-                    {filteredClients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {getClientDisplayName(client)}
-                        {(client.email || client.user?.email) ? ` (${client.email || client.user?.email})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  />
+                  {showClientDropdown && searchClient.trim() && (
+                    <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                      {filteredClients.length === 0 ? (
+                        <div className="px-3 py-2.5 text-sm text-slate-400">No matching clients</div>
+                      ) : (
+                        filteredClients.map((client) => {
+                          const email = client.email || client.user?.email;
+                          return (
+                            <button
+                              type="button"
+                              key={client.id}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                setClientId(client.id);
+                                setSearchClient(`${getClientDisplayName(client)}${email ? ` (${email})` : ''}`);
+                                setShowClientDropdown(false);
+                              }}
+                              className={`flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[#025545]/5 ${clientId === client.id ? 'bg-[#025545]/10' : ''}`}
+                            >
+                              <span className="text-sm font-medium text-slate-900">{getClientDisplayName(client)}</span>
+                              {email && <span className="text-xs text-slate-500">{email}</span>}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                  {clientId && !showClientDropdown && (
+                    <p className="mt-1 text-xs text-emerald-600 font-medium">✓ Client selected</p>
+                  )}
                 </div>
               )}
             </div>
@@ -1044,22 +1223,38 @@ export default function AdminManualBookingModal({
                   type="text"
                   placeholder="Search psychologist by name or email..."
                   value={searchPsychologist}
-                  onChange={(e) => setSearchPsychologist(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg mb-2 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                />
-                <select
-                  value={psychologistId}
-                  onChange={(e) => setPsychologistId(e.target.value)}
-                  required
+                  onChange={(e) => { setSearchPsychologist(e.target.value); setShowPsychologistDropdown(true); if (psychologistId) setPsychologistId(''); }}
+                  onFocus={() => setShowPsychologistDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowPsychologistDropdown(false), 150)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                >
-                  <option value="">Select a psychologist</option>
-                  {filteredPsychologists.map(psych => (
-                    <option key={psych.id} value={psych.id}>
-                      {psych.first_name} {psych.last_name}{psych.email ? ` (${psych.email})` : ''}
-                    </option>
-                  ))}
-                </select>
+                />
+                {showPsychologistDropdown && searchPsychologist.trim() && (
+                  <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                    {filteredPsychologists.length === 0 ? (
+                      <div className="px-3 py-2.5 text-sm text-slate-400">No matching psychologists</div>
+                    ) : (
+                      filteredPsychologists.map((psych) => (
+                        <button
+                          type="button"
+                          key={psych.id}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setPsychologistId(psych.id);
+                            setSearchPsychologist(`${psych.first_name || ''} ${psych.last_name || ''}`.trim() + (psych.email ? ` (${psych.email})` : ''));
+                            setShowPsychologistDropdown(false);
+                          }}
+                          className={`flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[#025545]/5 ${psychologistId === psych.id ? 'bg-[#025545]/10' : ''}`}
+                        >
+                          <span className="text-sm font-medium text-slate-900">{`${psych.first_name || ''} ${psych.last_name || ''}`.trim() || '—'}</span>
+                          {psych.email && <span className="text-xs text-slate-500">{psych.email}</span>}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+                {psychologistId && !showPsychologistDropdown && (
+                  <p className="mt-1 text-xs text-emerald-600 font-medium">✓ Psychologist selected</p>
+                )}
               </div>
             </div>
 
@@ -1074,11 +1269,7 @@ export default function AdminManualBookingModal({
                   <select
                     value={sessionType}
                     onChange={(e) => {
-                      const nextType = e.target.value;
-                      setSessionType(nextType);
-                      if (nextType !== 'package' && nextType !== 'couple_package') {
-                        setPackageId('');
-                      }
+                      setSessionType(e.target.value);
                     }}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   >
@@ -1103,12 +1294,79 @@ export default function AdminManualBookingModal({
               </div>
             )}
 
-            {/* Date Selection - Calendar */}
-            {psychologistId && (
+            {/* Package: choose how to schedule (sequential vs all upfront) */}
+            {psychologistId && packageCount > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  <CalendarDays className="h-4 w-4 inline mr-1" />
+                  How to schedule this package of {packageCount}?
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setScheduleAllUpfront(false)}
+                    className={`text-left rounded-lg border px-3 py-2.5 text-sm transition-all ${!scheduleAllUpfront ? 'border-[#025545] bg-[#025545]/5 ring-2 ring-[#025545]/15' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                  >
+                    <div className="font-semibold text-slate-900">Book first session now</div>
+                    <div className="text-xs text-slate-500 mt-0.5">Schedule the rest later, one at a time</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setScheduleAllUpfront(true)}
+                    className={`text-left rounded-lg border px-3 py-2.5 text-sm transition-all ${scheduleAllUpfront ? 'border-[#025545] bg-[#025545]/5 ring-2 ring-[#025545]/15' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                  >
+                    <div className="font-semibold text-slate-900">Schedule all {packageCount} now</div>
+                    <div className="text-xs text-slate-500 mt-0.5">Pick {packageCount} dates upfront</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Package + "all upfront": one date/time per session */}
+            {psychologistId && packageCount > 0 && scheduleAllUpfront && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                  <CalendarDays className="h-4 w-4 inline mr-1" />
+                  Schedule all {packageCount} sessions *
+                </label>
+                <p className="text-xs text-slate-400 mb-3">Pick a date &amp; time for each session. All {packageCount} are booked now with their own Meet link, email &amp; WhatsApp.</p>
+                <div className="space-y-3">
+                  {packageSchedules.map((row, idx) => (
+                    <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3">
+                      <div className="text-[11px] font-bold text-[#025545] uppercase tracking-wide mb-2">Session {idx + 1}</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <CompactDatePicker
+                          value={row.date || ''}
+                          onChange={(d) => setPackageSchedules((p) => p.map((r, i) => i === idx ? { ...r, date: d } : r))}
+                        />
+                        <select
+                          value={row.hour || ''}
+                          onChange={(e) => setPackageSchedules((p) => p.map((r, i) => i === idx ? { ...r, hour: e.target.value } : r))}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          <option value="">Hour</option>
+                          {MANUAL_BOOKING_HOURS.map((h) => <option key={h.value} value={h.value}>{hourLabel12(h.value)}</option>)}
+                        </select>
+                        <select
+                          value={row.minute || '00'}
+                          onChange={(e) => setPackageSchedules((p) => p.map((r, i) => i === idx ? { ...r, minute: e.target.value } : r))}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          {MANUAL_BOOKING_MINUTES.map((m) => <option key={m} value={m}>{m} min</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Date Selection - Calendar (single session: individual / couple, OR package's first session in sequential mode) */}
+            {psychologistId && !(packageCount > 0 && scheduleAllUpfront) && (
               <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                   <CalendarDays className="h-4 w-4 inline mr-1" />
-                  Session Date *
+                  {packageCount > 0 ? 'First session date *' : 'Session Date *'}
                 </label>
                 {/* Calendar */}
                 <div className="border border-slate-200 rounded-lg p-4 bg-white">
@@ -1332,7 +1590,7 @@ export default function AdminManualBookingModal({
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                   <ImageIcon className="h-4 w-4 inline mr-1" />
-                  Payment Screenshot
+                  Payment Screenshot {!recordOnly && <span className="text-rose-500">*</span>}
                 </label>
                 <input
                   type="file"
