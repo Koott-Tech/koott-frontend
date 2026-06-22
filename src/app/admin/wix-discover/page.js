@@ -377,19 +377,24 @@ export default function AdminWixDiscoverPage() {
     finally { setActionLoading(false); }
   };
 
-  const canBookNextFromRow = (row) => {
+  const canBookNextFromRow = (row, groupMaxMap) => {
     if (!row) return false;
     const status = effectiveCompletionStatus(row);
-    if (status !== 'completed') return false;
-    // Internal package path (has an internal package_id)
-    if (row.package_id && row.client_id && row.psychologist_id) return true;
-    // Wix package path: session_type=package + resolved client & psychologist
+    // Never offer "Book Next" from a terminated session.
+    if (['cancelled', 'refunded', 'deleted', 'no_show', 'noshow'].includes(status)) return false;
+    // Internal package path (has an internal package_id) — keep requiring completion.
+    if (row.package_id && row.client_id && row.psychologist_id) return status === 'completed';
+    // Wix package path: book the next session WITHOUT needing the current one completed.
     const isWixPackage = row.session_type === 'package' && !row.package_id;
     if (isWixPackage && row.client_id && row.psychologist_id) {
-      // Only show if there are remaining sessions: session_count > package_session_number (or > 1 if unknown)
       const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
       const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
-      return total > done;
+      if (total <= done) return false; // no sessions remaining in the package
+      // Only the LATEST booked session in the package shows "Book Next" — so you progress
+      // 1 → 2 → 3 from the most recent one, not repeatedly from the first.
+      const gid = row.package_group_id;
+      if (gid && groupMaxMap && groupMaxMap[gid] != null && done < groupMaxMap[gid]) return false;
+      return true;
     }
     return false;
   };
@@ -661,6 +666,16 @@ export default function AdminWixDiscoverPage() {
       {(() => {
         const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
         const allRows = [...rows, ...platformTagged];
+        // Highest booked session number per package group → "Book Next" shows only on the latest.
+        const packageGroupMax = {};
+        for (const r of allRows) {
+          const gid = r.package_group_id;
+          if (!gid) continue;
+          const st = effectiveCompletionStatus(r);
+          if (['cancelled', 'refunded', 'deleted'].includes(st)) continue;
+          const num = r.package_session_number ?? 1;
+          if (packageGroupMax[gid] == null || num > packageGroupMax[gid]) packageGroupMax[gid] = num;
+        }
         return (
           <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
             <table className="min-w-full divide-y divide-gray-100 text-sm">
@@ -859,7 +874,7 @@ export default function AdminWixDiscoverPage() {
                                   <Video className="h-3.5 w-3.5" /> Open Meet
                                 </button>
                               )}
-                              {canBookNextFromRow(row) && (
+                              {canBookNextFromRow(row, packageGroupMax) && (
                                 <button onClick={() => openBookNext(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                   <Package className="h-3.5 w-3.5" /> Book Next Session
                                 </button>

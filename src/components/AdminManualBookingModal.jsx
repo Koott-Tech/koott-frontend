@@ -45,6 +45,18 @@ const MANUAL_BOOKING_HOURS = Array.from({ length: 24 }, (_, hour) => ({
 }));
 
 const MANUAL_BOOKING_MINUTES = ['00', '15', '30', '45'];
+// Selectable session durations (minutes). '' = auto (derive from session type).
+const MANUAL_DURATION_OPTIONS = [
+  { value: '', label: 'Auto (by session type)' },
+  { value: '15', label: '15 minutes' },
+  { value: '30', label: '30 minutes' },
+  { value: '45', label: '45 minutes' },
+  { value: '50', label: '50 minutes' },
+  { value: '60', label: '1 hour' },
+  { value: '80', label: '1 hr 20 min' },
+  { value: '90', label: '1.5 hours' },
+  { value: '120', label: '2 hours' },
+];
 const MANUAL_SESSION_TYPE_OPTIONS = [
   { value: 'individual', label: 'Individual' },
   { value: 'couple', label: 'Couple' },
@@ -204,6 +216,7 @@ export default function AdminManualBookingModal({
   const [meetLink, setMeetLink] = useState(''); // For recordOnly: optional Meet link if created elsewhere
   const [status, setStatus] = useState('booked'); // For recordOnly: session status (booked, completed, cancelled, no_show, rescheduled)
   const [therapistCommission, setTherapistCommission] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState(''); // '' = auto by session type
   // Multi-date schedules when a PACKAGE is selected (one row per session). Each: {date, hour, minute}
   const [packageSchedules, setPackageSchedules] = useState([]);
   // false = book first session now, schedule the rest later (sequential, "like before")
@@ -293,6 +306,7 @@ export default function AdminManualBookingModal({
     setPsychologistId('');
     setSessionType('individual');
     setSessionStage('first');
+    setDurationMinutes('');
     setSelectedDateObj(null);
     setSelectedTime('');
     setSelectedHour('');
@@ -811,6 +825,7 @@ export default function AdminManualBookingModal({
           receipt_url: paymentScreenshotUrl || null,
           therapist_commission: therapistCommission ? parseFloat(therapistCommission) : 0,
           notes: notes || null,
+          duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : undefined,
         });
         if (response.success) {
           setShowSuccessModal(true);
@@ -873,7 +888,8 @@ export default function AdminManualBookingModal({
         payment_method: paymentMethod,
         receipt_url: paymentScreenshotUrl || null,
         therapist_commission: therapistCommission ? parseFloat(therapistCommission) : 0,
-        notes: notes || null
+        notes: notes || null,
+        duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : undefined,
       };
       if (recordOnly) {
         bookingData.meet_link = meetLink?.trim() || undefined;
@@ -1290,6 +1306,20 @@ export default function AdminManualBookingModal({
                       </option>
                     ))}
                   </select>
+                </div>
+                {/* Session duration override (e.g. 15 min for psychiatry) */}
+                <div className="mt-3">
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Session Duration</label>
+                  <select
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                  >
+                    {MANUAL_DURATION_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-slate-400 mt-1">Sets the Google Calendar event length. Choose 15 min for psychiatry, etc.</p>
                 </div>
               </div>
             )}
