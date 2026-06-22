@@ -75,9 +75,9 @@ export default function SessionCompletionModal({
       setErrors(newErrors);
       return true;
     }
-    if (!formData.summary.trim()) newErrors.summary = "Required";
+    // Only the "Message to Team" (report) is required — it's what's sent to operations.
+    // Client summary and Therapist Notes are optional.
     if (!formData.report.trim()) newErrors.report = "Required";
-    // Therapist Notes (summary_notes) is optional — not required to complete a session.
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -196,7 +196,7 @@ export default function SessionCompletionModal({
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                    Visible to Client {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                    Visible to Client {!fieldsOptional && <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>}
                   </label>
                   <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md self-start">Will be sent to client via WhatsApp</span>
                 </div>

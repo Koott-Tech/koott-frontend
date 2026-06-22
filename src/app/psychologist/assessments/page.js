@@ -215,9 +215,10 @@ export default function PsychologistAssessments() {
         summary_notes: sessionData.summary_notes?.trim?.() || ''
       };
 
-      // Therapist notes (summary_notes) is optional; only summary + report are required.
-      if (!mappedData.summary || !mappedData.report) {
-        throw new Error('Summary and report are required.');
+      // Only the "Message to Team" (report) is required — it's sent to operations.
+      // Client summary and therapist notes are optional.
+      if (!mappedData.report) {
+        throw new Error('Message to Team (report) is required.');
       }
       
       await psychologistApi.completeSession(sessionId, mappedData);
