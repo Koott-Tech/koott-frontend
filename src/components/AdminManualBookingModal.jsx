@@ -345,13 +345,23 @@ export default function AdminManualBookingModal({
   };
 
   const generateRandomPassword = () => {
-    // Generate a secure random password (12 characters)
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Must satisfy the backend password policy: >=8 chars with at least one uppercase,
+    // lowercase, number AND special character. Guarantee one of each, then fill + shuffle.
+    // (Ambiguous chars like O/0/I/l and obvious sequences are avoided.)
+    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lower = 'abcdefghijkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const special = '!@#$%^&*';
+    const pick = (set) => set.charAt(Math.floor(Math.random() * set.length));
+    const all = upper + lower + digits + special;
+    const chars = [pick(upper), pick(lower), pick(digits), pick(special)];
+    while (chars.length < 14) chars.push(pick(all));
+    // Fisher–Yates shuffle so the guaranteed chars aren't always at the front
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [chars[i], chars[j]] = [chars[j], chars[i]];
     }
-    return password;
+    return chars.join('');
   };
 
   const fetchInitialData = async () => {
@@ -1150,33 +1160,7 @@ export default function AdminManualBookingModal({
                       </div>
                     </div>
 
-                    {/* Client login password (optional) */}
-                    <div className="md:col-span-2">
-                      <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1.5">
-                        <Lock className="h-4 w-4 inline mr-1" />
-                        Client login password (optional)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showNewClientPassword ? 'text' : 'password'}
-                          value={newClientData.password}
-                          onChange={(e) => handleNewClientInputChange('password', e.target.value)}
-                          className="w-full px-3 py-2 pr-10 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                          placeholder="Leave blank to auto-generate; if set, client uses this to log in"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewClientPassword(!showNewClientPassword)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-                          aria-label={showNewClientPassword ? 'Hide password' : 'Show password'}
-                        >
-                          {showNewClientPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        If you set a password, the client will use this to log in. Otherwise a random password is generated (they can reset it later).
-                      </p>
-                    </div>
+                    {/* Client login password is auto-generated on the backend — no UI field. */}
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
                     A new client account will be created. Set a login password above or leave it blank to auto-generate.
