@@ -377,26 +377,39 @@ export default function AdminWixDiscoverPage() {
     finally { setActionLoading(false); }
   };
 
+  // A package's "group key": real package_group_id when present, else a stable fallback of
+  // client+therapist+type so siblings without a group_id (admin couple/individual packages)
+  // still resolve to the same group for "latest session only" gating.
+  const packageGroupKey = (row) => row.package_group_id || `cp:${row.client_id}:${row.psychologist_id}:${String(row.session_type || '').toLowerCase()}`;
+
   const canBookNextFromRow = (row, groupMaxMap) => {
     if (!row) return false;
     const status = effectiveCompletionStatus(row);
     // Never offer "Book Next" from a terminated session.
     if (['cancelled', 'refunded', 'deleted', 'no_show', 'noshow'].includes(status)) return false;
-    // Internal package path (has an internal package_id) — keep requiring completion.
-    if (row.package_id && row.client_id && row.psychologist_id) return status === 'completed';
-    // Wix package path: book the next session WITHOUT needing the current one completed.
-    const isWixPackage = row.session_type === 'package' && !row.package_id;
-    if (isWixPackage && row.client_id && row.psychologist_id) {
-      const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
-      const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
-      if (total <= done) return false; // no sessions remaining in the package
-      // Only the LATEST booked session in the package shows "Book Next" — so you progress
-      // 1 → 2 → 3 from the most recent one, not repeatedly from the first.
-      const gid = row.package_group_id;
-      if (gid && groupMaxMap && groupMaxMap[gid] != null && done < groupMaxMap[gid]) return false;
+    if (!row.client_id || !row.psychologist_id) return false;
+
+    // Internal package path (has a real internal package_id).
+    if (row.package_id) {
+      const total = row.session_count ?? 0;
+      const done = row.package_session_number ?? 1;
+      if (total > 0 && done >= total) return false; // package already fully booked
       return true;
     }
-    return false;
+
+    // Package path — covers BOTH individual packages (session_type 'package') AND couple
+    // packages (session_type 'couple' with more than one session). Book next WITHOUT
+    // requiring the current session to be completed.
+    const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
+    const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
+    const isPackage = row.session_type === 'package' || Number(total) > 1;
+    if (!isPackage) return false;
+    if (Number(total) <= Number(done)) return false; // no sessions remaining
+    // Only the LATEST booked session in the package shows "Book Next" (progress 1→2→3),
+    // using the real group id or the client+therapist+type fallback key.
+    const key = packageGroupKey(row);
+    if (groupMaxMap && groupMaxMap[key] != null && Number(done) < groupMaxMap[key]) return false;
+    return true;
   };
 
   const buildSessionProxy = (row) => {
@@ -667,14 +680,19 @@ export default function AdminWixDiscoverPage() {
         const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
         const allRows = [...rows, ...platformTagged];
         // Highest booked session number per package group → "Book Next" shows only on the latest.
+        // Keyed by real package_group_id when present, else client+therapist+type fallback,
+        // so couple/individual packages without a group_id are still tracked.
         const packageGroupMax = {};
         for (const r of allRows) {
-          const gid = r.package_group_id;
-          if (!gid) continue;
+          if (!r.client_id || !r.psychologist_id) continue;
+          const total = r.session_count ?? r.payload?.creditsAvailable ?? 0;
+          const isPackage = r.session_type === 'package' || Number(total) > 1 || !!r.package_id;
+          if (!isPackage) continue;
           const st = effectiveCompletionStatus(r);
           if (['cancelled', 'refunded', 'deleted'].includes(st)) continue;
+          const key = packageGroupKey(r);
           const num = r.package_session_number ?? 1;
-          if (packageGroupMax[gid] == null || num > packageGroupMax[gid]) packageGroupMax[gid] = num;
+          if (packageGroupMax[key] == null || num > packageGroupMax[key]) packageGroupMax[key] = num;
         }
         return (
           <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
