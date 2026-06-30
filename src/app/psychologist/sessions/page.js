@@ -860,42 +860,33 @@ export default function PsychologistSessions() {
                         )}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        {(session.session_type === 'assessment' || session.type === 'assessment') ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">Assessment</span>
-                        ) : (session.package_id || session.package || session.session_type === 'package') ? (
-                          (() => {
-                            const p = session.package || {};
-                            const idx = p.session_index ?? session.package_session_number ?? null;
-                            const total = p.total_sessions ?? p.session_count ?? session.session_count ?? 0;
-                            const raw = (p.package_type || 'Package').replace(/_\d+$/, '') || 'Package';
-                            const label = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-                            if (total > 0 && idx != null) {
-                              return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
-                                  {label} {idx}/{total}
-                                </span>
-                              );
-                            }
-                            if (total > 0) {
-                              return (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
-                                  {label} ({total})
-                                </span>
-                              );
-                            }
-                            return (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">
-                                {label}
-                              </span>
-                            );
-                          })()
-                        ) : (session.session_type === 'couple') ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">Couple</span>
-                        ) : (session.session_type === 'discovery') ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-700">Discovery</span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Individual</span>
-                        )}
+                        {(() => {
+                          if (session.session_type === 'assessment' || session.type === 'assessment') {
+                            return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#025545]/10 text-[#025545]">Assessment</span>;
+                          }
+                          if (session.session_type === 'discovery') {
+                            return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-700">Discovery</span>;
+                          }
+                          const p = session.package || {};
+                          const idx = p.session_index ?? session.package_session_number ?? null;
+                          const total = p.total_sessions ?? p.session_count ?? session.session_count ?? 0;
+                          const isCouple = session.session_type === 'couple' || String(p.package_type || '').toLowerCase().includes('couple');
+                          // A package = has a package link, an explicit 'package' type, OR more than one session.
+                          const isPackage = !!(session.package_id || session.package || session.session_type === 'package' || Number(total) > 1);
+                          // Numbered suffix (e.g. " 2/3") when we know the position + total.
+                          const suffix = (Number(total) > 0 && idx != null) ? ` ${idx}/${total}` : (Number(total) > 1 ? ` (${total})` : '');
+                          if (isPackage) {
+                            const cls = isCouple ? 'bg-pink-100 text-pink-700' : 'bg-[#025545]/10 text-[#025545]';
+                            const base = isCouple ? 'Couple' : 'Package';
+                            // "Couple 2/3" / "Package 1/3"; when the position isn't known: "Couple Package" / "Package".
+                            const text = suffix ? `${base}${suffix}` : (isCouple ? 'Couple Package' : 'Package');
+                            return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{text}</span>;
+                          }
+                          if (isCouple) {
+                            return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">Couple</span>;
+                          }
+                          return <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">Individual</span>;
+                        })()}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}>

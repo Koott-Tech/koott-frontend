@@ -151,6 +151,7 @@ export default function AdminWixDiscoverPage() {
   const [editingRow, setEditingRow] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deleteIsPlatform, setDeleteIsPlatform] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [isBookNextOpen, setIsBookNextOpen] = useState(false);
   const [selectedBookNextSession, setSelectedBookNextSession] = useState(null);
@@ -290,22 +291,50 @@ export default function AdminWixDiscoverPage() {
   };
 
   // --- Actions ---
-  const handleView = (row) => { setViewingRow(row); setOpenMenuId(null); };
+  // Normalize a platform/manual session into the same shape the View/Edit modals expect
+  // (Wix rows already carry these flat fields).
+  const normalizeRowForModal = (row) => {
+    if (!row._isPlatform) return row;
+    const email = (Array.isArray(row.client?.user) ? row.client?.user?.[0]?.email : row.client?.user?.email) || row.client?.email || null;
+    return {
+      ...row,
+      _isPlatform: true,
+      title: row.title || `Session with ${[row.psychologist?.first_name, row.psychologist?.last_name].filter(Boolean).join(' ')}`.trim(),
+      client_full_name: [row.client?.first_name, row.client?.last_name].filter(Boolean).join(' ') || row.client?.child_name || '—',
+      client_first_name: row.client?.first_name || null,
+      client_email: email,
+      client_phone: row.client?.phone_number || null,
+      therapist_name: [row.psychologist?.first_name, row.psychologist?.last_name].filter(Boolean).join(' ') || '—',
+      start_time: (row.scheduled_date && row.scheduled_time) ? `${row.scheduled_date}T${row.scheduled_time}` : (row.scheduled_date || null),
+    };
+  };
+
+  const handleView = (row) => { setViewingRow(normalizeRowForModal(row)); setOpenMenuId(null); };
   const handleEdit = (row) => {
-    setEditingRow(row);
-    setEditForm({ status: row.status || '', title: row.title || '', price: row.price || '', therapist_name: row.therapist_name || '', notes: row.notes || '' });
+    setEditingRow(normalizeRowForModal(row));
+    setEditForm({ status: row.status || '', title: row.title || '', price: row.price ?? '', therapist_name: row.therapist_name || '', notes: row.notes || row.session_notes || '' });
     setOpenMenuId(null);
   };
   const handleEditSave = async () => {
     if (!editingRow) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.editWixBooking(editingRow.id, editForm);
-      if (!res?.success) throw new Error(res?.error || 'Update failed');
-      showSuccess('Booking updated', 'Wix');
+      let res;
+      if (editingRow._isPlatform) {
+        // Platform session — update via the session endpoint (status / price / notes).
+        res = await adminApi.updateSession(editingRow.id, {
+          status: editForm.status || undefined,
+          price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
+          session_notes: editForm.notes || undefined,
+        });
+      } else {
+        res = await adminApi.editWixBooking(editingRow.id, editForm);
+      }
+      if (!res?.success) throw new Error(res?.error || res?.message || 'Update failed');
+      showSuccess('Booking updated', editingRow._isPlatform ? 'Session' : 'Wix');
       setEditingRow(null);
       await load(page);
-    } catch (e) { showError(e?.message || 'Update failed', 'Wix'); }
+    } catch (e) { showError(e?.message || 'Update failed', 'Error'); }
     finally { setActionLoading(false); }
   };
   const handleComplete = (row) => {
@@ -316,9 +345,11 @@ export default function AdminWixDiscoverPage() {
     if (!completeConfirmRow) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.completeWixBooking(completeConfirmRow.id);
+      const res = completeConfirmRow._isPlatform
+        ? await adminApi.completeSession(completeConfirmRow.id, { status: 'completed' })
+        : await adminApi.completeWixBooking(completeConfirmRow.id);
       if (!res?.success) throw new Error(res?.error || 'Failed');
-      showSuccess('Booking marked as completed', 'Wix');
+      showSuccess('Booking marked as completed', completeConfirmRow._isPlatform ? 'Session' : 'Wix');
       setCompleteConfirmRow(null);
       await load(page);
     } catch (e) { showError(e?.message || 'Failed', 'Wix'); }
@@ -339,7 +370,9 @@ export default function AdminWixDiscoverPage() {
     if (!cancelRefundRow) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.cancelRefundWixBooking(cancelRefundRow.id);
+      const res = cancelRefundRow._isPlatform
+        ? await adminApi.cancelRefundSession(cancelRefundRow.id)
+        : await adminApi.cancelRefundWixBooking(cancelRefundRow.id);
       if (!res?.success) throw new Error(res?.error || 'Failed');
       showSuccess(
         `Booking cancelled & refunded${res.data?.calendarEventRemoved ? '. Calendar event removed.' : '.'}`,
@@ -368,12 +401,15 @@ export default function AdminWixDiscoverPage() {
     if (!deleteConfirmId) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.deleteWixBooking(deleteConfirmId);
+      const res = deleteIsPlatform
+        ? await adminApi.deleteSession(deleteConfirmId)
+        : await adminApi.deleteWixBooking(deleteConfirmId);
       if (!res?.success) throw new Error(res?.error || 'Failed');
-      showSuccess('Booking deleted', 'Wix');
+      showSuccess('Booking deleted', deleteIsPlatform ? 'Session' : 'Wix');
       setDeleteConfirmId(null);
+      setDeleteIsPlatform(false);
       await load(page);
-    } catch (e) { showError(e?.message || 'Delete failed', 'Wix'); }
+    } catch (e) { showError(e?.message || 'Delete failed', 'Error'); }
     finally { setActionLoading(false); }
   };
 
@@ -720,40 +756,38 @@ export default function AdminWixDiscoverPage() {
                     if (isPlatform) {
                       // ── Platform / manual booking row ──────────────────────────
                       const clientName = [row.client?.first_name, row.client?.last_name].filter(Boolean).join(' ') || '—';
+                      // The user relation can come back as an array or object; emails live on
+                      // users.email (clients.email is usually empty for manual bookings).
+                      const clientEmail = (Array.isArray(row.client?.user) ? row.client?.user?.[0]?.email : row.client?.user?.email) || row.client?.email || null;
                       const therapistName = [row.psychologist?.first_name, row.psychologist?.last_name].filter(Boolean).join(' ') || '—';
-                      const sessionDateStr = row.scheduled_date
-                        ? new Date(row.scheduled_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : null;
-                      const sessionTimeStr = row.scheduled_time
-                        ? (() => {
-                            const [h, m] = row.scheduled_time.split(':');
-                            const hr = parseInt(h, 10);
-                            return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
-                          })()
-                        : null;
                       const bookedAt = row.booking_created_at || row.created_at;
-                      const typeLabel = row.session_type === 'package' ? 'Package'
+                      const typeLabelRaw = row.session_type === 'package' ? 'Package'
                         : row.session_type === 'couple' ? 'Couple'
                         : row.session_type === 'assessment' ? 'Assessment'
                         : row.session_type === 'discovery' ? 'Discovery'
                         : 'Individual';
+                      const typeColour = typeLabelRaw === 'Couple' ? 'bg-pink-50 text-pink-700'
+                        : typeLabelRaw === 'Package' ? 'bg-violet-50 text-violet-700'
+                        : typeLabelRaw === 'Assessment' ? 'bg-purple-50 text-purple-700'
+                        : typeLabelRaw === 'Discovery' ? 'bg-sky-50 text-sky-700'
+                        : 'bg-indigo-50 text-indigo-700';
+                      const startIso = (row.scheduled_date && row.scheduled_time) ? `${row.scheduled_date}T${row.scheduled_time}` : row.scheduled_date;
                       const meetLink = row.google_meet_link || row.google_meet_join_url || row.google_calendar_link;
                       return (
                         <tr key={`platform-${row.id}`} className={`transition-colors bg-[#025545]/[0.02] ${openMenuId === `platform-${row.id}` ? 'bg-[#025545]/5' : 'hover:bg-[#025545]/[0.04]'}`}>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-medium text-gray-900 text-xs">{row.id?.slice(-6).toUpperCase()}</span>
+                            <p className="font-medium text-gray-900 text-xs leading-snug">{startIso ? fmtDateTime(startIso) : '—'}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${typeColour}`}>
+                                {typeLabelRaw}{(Number(row.session_count) > 1 && row.package_session_number) ? ` (${row.package_session_number}/${row.session_count})` : ''}
+                              </span>
                               <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Manual</span>
-                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-[#025545]/10 text-[#025545]">{typeLabel}</span>
                             </div>
-                            <p className="text-gray-500 text-xs mt-0.5">
-                              {sessionDateStr ? `${sessionDateStr}${sessionTimeStr ? ` · ${sessionTimeStr}` : ''}` : '—'}
-                            </p>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-gray-900">{clientName}</p>
-                            {row.client?.user?.email && (
-                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client.user.email}</div>
+                            <p className="text-gray-900 font-medium truncate max-w-[180px]" title={clientName}>{clientName}</p>
+                            {clientEmail && (
+                              <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 max-w-[200px]"><Mail className="h-3 w-3 shrink-0" /><span className="truncate" title={clientEmail}>{clientEmail}</span></div>
                             )}
                             {row.client?.phone_number && (
                               <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client.phone_number}</div>
@@ -771,7 +805,7 @@ export default function AdminWixDiscoverPage() {
                                 const uid = `platform-${row.id}`;
                                 if (openMenuId === uid) { setOpenMenuId(null); return; }
                                 const rect = e.currentTarget.getBoundingClientRect();
-                                const menuHeight = 160;
+                                const menuHeight = 280;
                                 const spaceBelow = window.innerHeight - rect.bottom;
                                 const top = spaceBelow < menuHeight ? rect.top - menuHeight : rect.bottom;
                                 setMenuPos({ top, right: window.innerWidth - rect.right });
@@ -783,6 +817,12 @@ export default function AdminWixDiscoverPage() {
                             {openMenuId === `platform-${row.id}` && (
                               <div style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, zIndex: 9999 }}
                                 className="w-52 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-left">
+                                <button onClick={() => handleView(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <Eye className="h-3.5 w-3.5" /> View Details
+                                </button>
+                                <button onClick={() => handleEdit(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                  <Edit className="h-3.5 w-3.5" /> Edit
+                                </button>
                                 {meetLink && !['completed', 'cancelled', 'no_show'].includes(row.status) && (
                                   <button onClick={() => { window.open(meetLink.startsWith('http') ? meetLink : `https://${meetLink}`, '_blank', 'noopener,noreferrer'); setOpenMenuId(null); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
@@ -801,9 +841,23 @@ export default function AdminWixDiscoverPage() {
                                     <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
                                   </button>
                                 )}
-                                <a href="/admin/bookings" className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#025545] hover:bg-[#025545]/5">
-                                  <Eye className="h-3.5 w-3.5" /> Manage on Bookings page
-                                </a>
+                                {row.status !== 'completed' && (
+                                  <button onClick={() => { handleComplete(row); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
+                                    <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
+                                  </button>
+                                )}
+                                {!['cancelled', 'refunded', 'completed'].includes(row.status) && (
+                                  <button onClick={() => { setOpenMenuId(null); setCancelRefundRow(row); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <XCircle className="h-3.5 w-3.5" /> Cancel &amp; Refund
+                                  </button>
+                                )}
+                                <hr className="my-1 border-gray-100" />
+                                <button onClick={() => { setDeleteConfirmId(row.id); setDeleteIsPlatform(true); setOpenMenuId(null); }}
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+                                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                                </button>
                               </div>
                             )}
                           </td>
@@ -815,17 +869,7 @@ export default function AdminWixDiscoverPage() {
                     return (
                       <tr key={row.id} className={`transition-colors ${openMenuId === row.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <p className="font-medium text-gray-900 text-xs leading-snug">
-                              {row.wix_order_number ? `#${row.wix_order_number}` : (row.wix_booking_id ? `ID: ${row.wix_booking_id.slice(-6).toUpperCase()}` : 'No ID')}
-                            </p>
-                            {row.session_type === 'package' && row.package_session_number && (
-                              <span className="text-[10px] font-semibold text-[#025545] bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
-                                {row.package_session_number} of {row.session_count || '?'}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-gray-500 text-xs mt-0.5">{fmtDateTime(row.start_time)}</p>
+                          <p className="font-medium text-gray-900 text-xs leading-snug">{fmtDateTime(row.start_time)}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {(() => {
                               const st = deriveSessionType(row);
@@ -836,6 +880,7 @@ export default function AdminWixDiscoverPage() {
                                 : sl === 'assessment' ? 'bg-purple-50 text-purple-700'
                                 : sl === 'discovery' ? 'bg-sky-50 text-sky-700'
                                 : 'bg-indigo-50 text-indigo-700';
+                              // deriveSessionType already includes the "(n/m)" suffix for packages.
                               return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{st}</span>;
                             })()}
                             {row.payload?.isAdminManual && (
@@ -850,8 +895,8 @@ export default function AdminWixDiscoverPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="text-gray-900">{row.client_full_name || row.client_first_name || '—'}</p>
-                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{row.client_email || '—'}</div>
+                          {(() => { const nm = row.client_full_name || row.client_first_name || '—'; return <p className="text-gray-900 font-medium truncate max-w-[180px]" title={nm}>{nm}</p>; })()}
+                          <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 max-w-[200px]"><Mail className="h-3 w-3 shrink-0" /><span className="truncate" title={row.client_email || ''}>{row.client_email || '—'}</span></div>
                           <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{row.client_phone || '—'}</div>
                         </td>
                         <td className="px-4 py-3 text-gray-700">{row.therapist_name || '—'}</td>
@@ -925,7 +970,7 @@ export default function AdminWixDiscoverPage() {
                                 </button>
                               )}
                               <hr className="my-1 border-gray-100" />
-                              <button onClick={() => { setDeleteConfirmId(row.id); setOpenMenuId(null); }}
+                              <button onClick={() => { setDeleteConfirmId(row.id); setDeleteIsPlatform(false); setOpenMenuId(null); }}
                                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50">
                                 <Trash2 className="h-3.5 w-3.5" /> Delete
                               </button>
@@ -989,6 +1034,7 @@ export default function AdminWixDiscoverPage() {
               {/* Detail grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
+                  ['Booking ID', viewingRow.wix_order_number ? `#${viewingRow.wix_order_number}` : (viewingRow._isPlatform ? `ID: ${String(viewingRow.id || '').slice(-6).toUpperCase()}` : (viewingRow.wix_booking_id ? `ID: ${String(viewingRow.wix_booking_id).slice(-6).toUpperCase()}` : '—')), false],
                   ['Email', viewingRow.client_email, false],
                   ['Phone', viewingRow.client_phone, false],
                   ['Therapist', viewingRow.therapist_name, false],
@@ -998,7 +1044,7 @@ export default function AdminWixDiscoverPage() {
                   ['Payment Method', derivePaymentMethod(viewingRow) || '—', false],
                   ['Payment State', viewingRow.payload?.paymentState || '—', false],
                   ['Created at', fmtDateTime(wixBookingBookedAtIso(viewingRow)), false],
-                  ['Wix Booking ID', viewingRow.wix_booking_id, true],
+                  [viewingRow._isPlatform ? 'Session ID (full)' : 'Wix Booking ID', viewingRow._isPlatform ? viewingRow.id : viewingRow.wix_booking_id, true],
                 ].map(([label, val, full]) => (
                   <div key={label} className={`rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm ${full ? 'sm:col-span-2' : ''}`}>
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.06em]">{label}</div>
