@@ -28,6 +28,25 @@ function fmtDateTime(iso) {
   }
 }
 
+// Format a plain IST wall-clock date ("YYYY-MM-DD") + time ("HH:MM:SS") pair —
+// these are stored as literal local values, not UTC, so no timezone conversion here.
+function fmtOrigDateTime(dateStr, timeStr) {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(`${dateStr}T00:00:00`);
+    const dateLabel = d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    if (!timeStr) return dateLabel;
+    const [hh, mm] = String(timeStr).split(':');
+    const h = parseInt(hh, 10);
+    if (Number.isNaN(h)) return dateLabel;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${dateLabel}, ${h12}:${mm} ${ampm}`;
+  } catch {
+    return null;
+  }
+}
+
 function deriveSessionType(row) {
   const type = row.session_type || null;
   const count = row.session_count;
@@ -1004,7 +1023,30 @@ export default function AdminWixDiscoverPage() {
       {openMenuId && <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />}
 
       {/* View Modal */}
-      {viewingRow && (
+      {viewingRow && (() => {
+        // Detect reschedule: compare original_scheduled_date/time (IST wall-clock, set once
+        // at first booking) against the current schedule to decide whether to show both.
+        const currentSched = viewingRow._isPlatform
+          ? { date: viewingRow.scheduled_date, time: viewingRow.scheduled_time }
+          : (() => {
+              if (!viewingRow.start_time) return { date: null, time: null };
+              const d = new Date(viewingRow.start_time);
+              const ist = new Date(d.getTime() + 5.5 * 60 * 60 * 1000);
+              return { date: ist.toISOString().slice(0, 10), time: ist.toISOString().slice(11, 19) };
+            })();
+        const wasRescheduled = !!(
+          viewingRow.original_scheduled_date &&
+          (viewingRow.original_scheduled_date !== currentSched.date ||
+            (viewingRow.original_scheduled_time && currentSched.time &&
+              String(viewingRow.original_scheduled_time).slice(0, 5) !== String(currentSched.time).slice(0, 5)))
+        );
+        const originalLabel = wasRescheduled
+          ? fmtOrigDateTime(viewingRow.original_scheduled_date, viewingRow.original_scheduled_time)
+          : null;
+        // Detect transfer: backend only sets original_therapist_name when the original
+        // therapist differs from the current one (i.e. an actual transfer happened).
+        const wasTransferred = !!(viewingRow.original_therapist_name);
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4" onClick={() => setViewingRow(null)}>
           <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-white/20" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
@@ -1037,8 +1079,10 @@ export default function AdminWixDiscoverPage() {
                   ['Booking ID', viewingRow.wix_order_number ? `#${viewingRow.wix_order_number}` : (viewingRow._isPlatform ? `ID: ${String(viewingRow.id || '').slice(-6).toUpperCase()}` : (viewingRow.wix_booking_id ? `ID: ${String(viewingRow.wix_booking_id).slice(-6).toUpperCase()}` : '—')), false],
                   ['Email', viewingRow.client_email, false],
                   ['Phone', viewingRow.client_phone, false],
-                  ['Therapist', viewingRow.therapist_name, false],
-                  ['Date / Time', fmtDateTime(viewingRow.start_time), false],
+                  ...(wasTransferred ? [['Transferred From', viewingRow.original_therapist_name, false]] : []),
+                  [wasTransferred ? 'Transferred To' : 'Therapist', viewingRow.therapist_name, false],
+                  ...(wasRescheduled ? [['Originally Scheduled', originalLabel, false]] : []),
+                  [wasRescheduled ? 'Rescheduled To' : 'Date / Time', fmtDateTime(viewingRow.start_time), false],
                   ['Session Type', deriveSessionType(viewingRow), false],
                   ['Price', viewingRow.price ? `${viewingRow.price} ${viewingRow.currency || ''}` : '—', false],
                   ['Payment Method', derivePaymentMethod(viewingRow) || '—', false],
@@ -1055,7 +1099,8 @@ export default function AdminWixDiscoverPage() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Edit Modal */}
       {editingRow && (
