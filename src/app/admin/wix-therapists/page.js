@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2, RefreshCw, UserCheck, Mail, Phone, Edit2, X, Check, AlertCircle, Calendar, User } from 'lucide-react';
+import { Loader2, RefreshCw, UserCheck, Mail, Phone, Edit2, X, Check, AlertCircle, User, Plus, Filter } from 'lucide-react';
 import { adminApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
-import AdminManualBookingModal from '@/components/AdminManualBookingModal';
+import DoctorModal from '@/components/DoctorModal';
+import DateRangePicker from '@/components/ui/date-range-picker';
+import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
+import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
 import { normalizeImageUrl } from '@/utils/urlNormalizer';
 
 const getTherapistImageUrl = (therapist) => {
@@ -251,13 +254,30 @@ export default function WixTherapistsPage() {
   const [statsMeta, setStatsMeta] = useState(null);
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
-  const [isManualBookingOpen, setIsManualBookingOpen] = useState(false);
-  const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
+  const [isDoctorModalOpen, setIsDoctorModalOpen] = useState(false);
+  const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
+
+  const handleDoctorModalSuccess = async (doctorData) => {
+    try {
+      await adminApi.createPsychologist(doctorData);
+      showSuccess('Doctor added successfully');
+      setIsDoctorModalOpen(false);
+      await load({ silent: true });
+    } catch (error) {
+      console.error('Error creating doctor:', error);
+      // Re-throw so DoctorModal shows the backend message inline.
+      throw error;
+    }
+  };
 
   const load = async ({ silent = true } = {}) => {
     try {
       setLoading(true);
-      const r = await adminApi.getWixTherapists();
+      const dateParams = hasDateRangeBounds(dateRange) ? {
+        dateFrom: formatIstCalendarYmd(dateRange.from),
+        dateTo: formatIstCalendarYmd(dateRange.to),
+      } : {};
+      const r = await adminApi.getWixTherapists(dateParams);
       if (!r?.success) throw new Error(r?.error || 'Failed to load Wix therapists');
       setRows(r?.data?.therapists || []);
       setStatsMeta(r?.data?.meta ?? null);
@@ -269,9 +289,11 @@ export default function WixTherapistsPage() {
     }
   };
 
+  // Reload whenever the date range changes (initial mount included).
   useEffect(() => {
     load({ silent: true });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -297,18 +319,11 @@ export default function WixTherapistsPage() {
         </div>
         <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
           <button
-            onClick={() => setIsManualBookingOpen(true)}
+            onClick={() => setIsDoctorModalOpen(true)}
             className="inline-flex items-center px-4 py-2 bg-[#025545] text-white text-sm font-medium rounded-lg hover:bg-[#012f23] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
           >
-            <Calendar className="h-4 w-4 mr-2" />
-            Create Manual Booking
-          </button>
-          <button
-            onClick={() => setIsAddRecordOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#025545] transition-colors"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Add record
+            <Plus className="h-4 w-4 mr-2" />
+            Add Doctor
           </button>
           <button
             type="button"
@@ -319,6 +334,23 @@ export default function WixTherapistsPage() {
             {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Refresh
           </button>
+        </div>
+      </div>
+
+      {/* Date Range Filter — same component/behavior as the Bookings page. */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap items-start md:items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-400" />
+            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+          </div>
+          <DateRangePicker
+            selectedRange={dateRange}
+            onSelect={setDateRange}
+          />
+          <span className="md:ml-auto text-xs text-gray-400">
+            {filtered.length} therapist{filtered.length === 1 ? '' : 's'}
+          </span>
         </div>
       </div>
 
@@ -342,7 +374,6 @@ export default function WixTherapistsPage() {
           )}
         </div>
       </div>
-
 
       <div className="flex flex-col gap-4">
         {filtered.map((row, idx) => {
@@ -450,26 +481,16 @@ export default function WixTherapistsPage() {
         />
       )}
 
-      {/* Admin Manual Booking Modal */}
-      <AdminManualBookingModal
-        isOpen={isManualBookingOpen}
-        onClose={() => setIsManualBookingOpen(false)}
-        onBookingSuccess={() => {
-          showSuccess('Manual booking created successfully!');
-          load({ silent: true });
-        }}
-      />
-
-      {/* Add record only modal */}
-      <AdminManualBookingModal
-        recordOnly
-        isOpen={isAddRecordOpen}
-        onClose={() => setIsAddRecordOpen(false)}
-        onBookingSuccess={() => {
-          showSuccess('Session record added successfully.');
-          load({ silent: true });
-        }}
-      />
+      {/* Add Doctor Modal (same as Doctors page) */}
+      {isDoctorModalOpen && (
+        <DoctorModal
+          isOpen={isDoctorModalOpen}
+          onClose={() => setIsDoctorModalOpen(false)}
+          onSave={handleDoctorModalSuccess}
+          doctor={null}
+          mode="add"
+        />
+      )}
     </div>
   );
 }
