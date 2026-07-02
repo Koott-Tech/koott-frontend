@@ -1434,7 +1434,9 @@ export default function AdminManualBookingModal({
                           calendarDate.getMonth() === today.getMonth() &&
                           calendarDate.getFullYear() === today.getFullYear();
                         const isSelected = selectedDateObj && selectedDateObj.getDate() === day && selectedDateObj.getMonth() === currentDate.getMonth() && selectedDateObj.getFullYear() === currentDate.getFullYear();
-                        const isSelectable = calendarDate >= todayStart;
+                        // "Add record" (recordOnly) logs sessions that already happened, so past
+                        // dates must be selectable. Normal manual bookings stay future-only.
+                        const isSelectable = recordOnly ? true : calendarDate >= todayStart;
                         
                         calendarDays.push(
                           <div

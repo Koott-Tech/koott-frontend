@@ -449,6 +449,10 @@ export default function AdminWixDiscoverPage() {
       const total = row.session_count ?? 0;
       const done = row.package_session_number ?? 1;
       if (total > 0 && done >= total) return false; // package already fully booked
+      // Only the LATEST session in the group shows "Book Next" (so it doesn't appear on
+      // every completed session of the package — just the most recent one).
+      const key = packageGroupKey(row);
+      if (groupMaxMap && groupMaxMap[key] != null && Number(done) < groupMaxMap[key]) return false;
       return true;
     }
 
@@ -842,6 +846,11 @@ export default function AdminWixDiscoverPage() {
                                 <button onClick={() => handleEdit(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                   <Edit className="h-3.5 w-3.5" /> Edit
                                 </button>
+                                {canBookNextFromRow(row, packageGroupMax) && (
+                                  <button onClick={() => openBookNext(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <Package className="h-3.5 w-3.5" /> Book Next Session
+                                  </button>
+                                )}
                                 {meetLink && !['completed', 'cancelled', 'no_show'].includes(row.status) && (
                                   <button onClick={() => { window.open(meetLink.startsWith('http') ? meetLink : `https://${meetLink}`, '_blank', 'noopener,noreferrer'); setOpenMenuId(null); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
