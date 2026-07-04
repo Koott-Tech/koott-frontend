@@ -69,7 +69,7 @@ export default function BlogNewsletterFooterCta() {
         return;
       }
       const text = encodeURIComponent(
-        `Hi! I'd like to subscribe to the Koott newsletter.\n\nEmail: ${trimmed}\n\nI agree to receive the newsletter. I understand Koott sends at most one email per month.`
+        `Hi! I'd like to subscribe to the MyKoott newsletter.\n\nEmail: ${trimmed}\n\nI agree to receive the newsletter. I understand MyKoott sends at most one email per month.`
       );
       window.open(`https://wa.me/${WA_NEWSLETTER}?text=${text}`, "_blank", "noopener,noreferrer");
       setStatus("sent");

@@ -328,11 +328,11 @@ export default function SuperAdminLayout({ children }) {
             <a 
               href="/superadmin"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to super admin dashboard"
+              aria-label="MyKoott - Go to super admin dashboard"
             >
               <img 
                 src="/logo.png"
-                alt="Koott"
+                alt="MyKoott"
                 width={120}
                 height={40}
                 className="object-contain"

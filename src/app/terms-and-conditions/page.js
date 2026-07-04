@@ -1,13 +1,13 @@
 import styles from "../privacy-policy/privacy-policy.module.css";
 
 export const metadata = {
-    title: "Terms and Conditions | Koott",
+    title: "Terms and Conditions | MyKoott",
     description:
-        "Review the Terms and Conditions governing the use of Koott by Koott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
+        "Review the Terms and Conditions governing the use of MyKoott by MyKoott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
     openGraph: {
-        title: "Terms and Conditions | Koott",
+        title: "Terms and Conditions | MyKoott",
         description:
-            "Review the Terms and Conditions governing the use of Koott by Koott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
+            "Review the Terms and Conditions governing the use of MyKoott by MyKoott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
         type: "website",
         url: "https://www.koott.in/terms-and-conditions",
         images: [
@@ -15,15 +15,15 @@ export const metadata = {
                 url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
-                alt: "Koott logo",
+                alt: "MyKoott logo",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Terms and Conditions | Koott",
+        title: "Terms and Conditions | MyKoott",
         description:
-            "Review the Terms and Conditions governing the use of Koott by Koott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
+            "Review the Terms and Conditions governing the use of MyKoott by MyKoott Care Pvt. Ltd., including definitions, user obligations, and legal notices.",
         images: ["https://www.koott.in/logo.png"],
     },
 };
@@ -66,10 +66,10 @@ export default function TermsAndConditionsPage() {
                         </li>
                         <li>
                             <strong>Website:</strong> <span className="font-mono">www.koott.in</span>, a proprietary service platform
-                            owned and operated by Koott by Koott Care Pvt. Ltd.
+                            owned and operated by MyKoott by MyKoott Care Pvt. Ltd.
                         </li>
                         <li>
-                            <strong>Koott / We / Us / Company:</strong> Koott by Koott Care Pvt. Ltd., registered at Office
+                            <strong>MyKoott / We / Us / Company:</strong> MyKoott by MyKoott Care Pvt. Ltd., registered at Office
                             101, Vp&rsquo;s Building, Mukkam, Calicut, Kerala, India, 673602, including its authorized employees and
                             affiliates.
                         </li>
@@ -90,8 +90,8 @@ export default function TermsAndConditionsPage() {
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>B. Interpretation</h4>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>This TOS, along with the Privacy Policy, Refund Policy, and any other Website policies, together form the Agreement.</li>
-                        <li>Accessing Koott via the mobile application is governed by this Agreement, plus any additional terms imposed by app stores.</li>
-                        <li>References to &ldquo;Website&rdquo; also include Koott&rsquo;s mobile application.</li>
+                        <li>Accessing MyKoott via the mobile application is governed by this Agreement, plus any additional terms imposed by app stores.</li>
+                        <li>References to &ldquo;Website&rdquo; also include MyKoott&rsquo;s mobile application.</li>
                         <li>Services under this Agreement are offered within India unless specified otherwise.</li>
                     </ul>
                 </section>
@@ -115,7 +115,7 @@ export default function TermsAndConditionsPage() {
                         <li>Schedule counseling sessions for children or family members.</li>
                         <li>Interact privately with Counselors via chat, phone, or video.</li>
                         <li>View past consultations and recommendations securely.</li>
-                        <li>Pay consultation fees (including Koott&rsquo;s handling fee).</li>
+                        <li>Pay consultation fees (including MyKoott&rsquo;s handling fee).</li>
                     </ul>
                     <p className="text-base leading-relaxed text-gray-700 font-semibold">For Non-Registered Users</p>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
@@ -127,7 +127,7 @@ export default function TermsAndConditionsPage() {
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>Publish professional profiles visible to Users.</li>
                         <li>Interact privately with Registered Users via Website features.</li>
-                        <li>Receive session fees facilitated through Koott.</li>
+                        <li>Receive session fees facilitated through MyKoott.</li>
                         <li>Contribute educational content on child and family mental wellness.</li>
                     </ul>
                     <h5 className="text-gray-900 font-semibold">1.3 Content Types</h5>
@@ -139,7 +139,7 @@ export default function TermsAndConditionsPage() {
                             <strong>Counselor Content:</strong> Responses, articles, and educational materials from Counselors.
                         </li>
                         <li>
-                            <strong>Koott Content:</strong> Proprietary content generated or procured by Koott.
+                            <strong>MyKoott Content:</strong> Proprietary content generated or procured by MyKoott.
                         </li>
                     </ul>
                 </section>
@@ -153,16 +153,16 @@ export default function TermsAndConditionsPage() {
                         <li>Do not upload or share content that could harm or exploit children.</li>
                         <li>Do not use automated tools, bots, or scrapers without written consent.</li>
                         <li>Do not copy, sell, or commercially exploit Website materials without authorization.</li>
-                        <li>Koott reserves the right to restrict access or terminate accounts if misuse or harm is suspected.</li>
+                        <li>MyKoott reserves the right to restrict access or terminate accounts if misuse or harm is suspected.</li>
                     </ul>
                     <h5 className="text-gray-900 font-semibold">2.2 Registered Users</h5>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>Only a parent, legal guardian, or adult caregiver may register and book sessions on behalf of a child below 18.</li>
                         <li>By registering, you confirm that you are legally authorized to provide consent for the child’s participation.</li>
-                        <li>Koott and its Counselors are not substitutes for emergency or psychiatric medical care.</li>
+                        <li>MyKoott and its Counselors are not substitutes for emergency or psychiatric medical care.</li>
                         <li>Verify any information received from Counselors independently before taking decisions related to diagnosis or medication.</li>
-                        <li>Koott facilitates appointments but does not endorse or guarantee the professional advice of Counselors.</li>
-                        <li>Fees are payable in advance to Koott and are non-transferable except under the Refund Policy.</li>
+                        <li>MyKoott facilitates appointments but does not endorse or guarantee the professional advice of Counselors.</li>
+                        <li>Fees are payable in advance to MyKoott and are non-transferable except under the Refund Policy.</li>
                     </ul>
                     <h5 className="text-gray-900 font-semibold">2.3 Non-Registered Users</h5>
                     <p className="text-base leading-relaxed text-gray-700">
@@ -171,34 +171,34 @@ export default function TermsAndConditionsPage() {
                 </section>
 
                 <section className="mt-10 space-y-4">
-                    <h4 className={`${styles.sectionHeading} text-gray-900`}>3. Role of Koott</h4>
+                    <h4 className={`${styles.sectionHeading} text-gray-900`}>3. Role of MyKoott</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott acts as a technology intermediary under the Information Technology Act, 2000. It provides a platform to connect Users with Counselors for child and family mental health support.
+                        MyKoott acts as a technology intermediary under the Information Technology Act, 2000. It provides a platform to connect Users with Counselors for child and family mental health support.
                     </p>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott is not liable for clinical outcomes, counsellor performance, or delays beyond its control.
+                        MyKoott is not liable for clinical outcomes, counsellor performance, or delays beyond its control.
                     </p>
                     <p className="text-base leading-relaxed text-gray-700">
-                        <strong>Child Protection Clause:</strong> If a Counsellor or Koott staff suspects child abuse, neglect, or risk of harm, Koott is legally obligated to report such concerns to appropriate authorities as per Indian child protection laws.
+                        <strong>Child Protection Clause:</strong> If a Counsellor or MyKoott staff suspects child abuse, neglect, or risk of harm, MyKoott is legally obligated to report such concerns to appropriate authorities as per Indian child protection laws.
                     </p>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>4. Third-Party Links</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        The Website may contain links to third-party websites. Koott does not endorse or control third-party sites. Users visit such sites at their own risk and are bound by third-party terms.
+                        The Website may contain links to third-party websites. MyKoott does not endorse or control third-party sites. Users visit such sites at their own risk and are bound by third-party terms.
                     </p>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>5. Proprietary Rights</h4>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li>All Website design, software, and content belong to Koott or its licensors.</li>
-                        <li>&ldquo;Koott&rdquo; is a registered trademark of Koott by Koott Care Pvt. Ltd.</li>
+                        <li>All Website design, software, and content belong to MyKoott or its licensors.</li>
+                        <li>&ldquo;MyKoott&rdquo; is a registered trademark of MyKoott by MyKoott Care Pvt. Ltd.</li>
                         <li>Users receive a limited, non-commercial, personal-use license.</li>
                         <li>Unauthorized reproduction or derivative works are prohibited.</li>
                         <li>
-                            Users retain ownership of their submitted content but grant Koott a worldwide, royalty-free, revocable license
+                            Users retain ownership of their submitted content but grant MyKoott a worldwide, royalty-free, revocable license
                             to use anonymized content for educational or awareness initiatives, respecting child privacy.
                         </li>
                     </ul>
@@ -207,7 +207,7 @@ export default function TermsAndConditionsPage() {
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>6. Personal Information</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott may collect personal and sensitive information about children and parents during registration and sessions.
+                        MyKoott may collect personal and sensitive information about children and parents during registration and sessions.
                         Use of data is governed by the Privacy Policy and Indian data protection laws. Sensitive child data will be handled with
                         strict confidentiality and used only for service delivery. By registering, You consent to such use and acknowledge the Privacy Policy.
                     </p>
@@ -216,18 +216,18 @@ export default function TermsAndConditionsPage() {
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>7. Disclaimers</h4>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li>Counselors are independent professionals; Koott does not control their methods or conclusions.</li>
-                        <li>Koott does not provide medical diagnosis or prescribe medication.</li>
+                        <li>Counselors are independent professionals; MyKoott does not control their methods or conclusions.</li>
+                        <li>MyKoott does not provide medical diagnosis or prescribe medication.</li>
                         <li>Counsellor qualifications and details are self-declared; Users should verify independently.</li>
                         <li>The Website is provided &ldquo;as is&rdquo; and &ldquo;as available.&rdquo;</li>
-                        <li>Koott disclaims liability for counsellor performance, technical errors, data loss, unauthorized access, or decisions made without medical verification.</li>
+                        <li>MyKoott disclaims liability for counsellor performance, technical errors, data loss, unauthorized access, or decisions made without medical verification.</li>
                     </ul>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>8. Limitation of Liability</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott&rsquo;s liability is limited to the amount paid by the User for Services. Koott shall not be liable for indirect, incidental, or consequential damages.
+                        MyKoott&rsquo;s liability is limited to the amount paid by the User for Services. MyKoott shall not be liable for indirect, incidental, or consequential damages.
                     </p>
                 </section>
 
@@ -242,14 +242,14 @@ export default function TermsAndConditionsPage() {
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>10. Indemnification</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        You agree to indemnify and hold harmless Koott, its affiliates, employees, Counselors, and service providers from any claims or damages arising from your use of the Website, breach of this Agreement, misrepresentation, negligence, or misconduct.
+                        You agree to indemnify and hold harmless MyKoott, its affiliates, employees, Counselors, and service providers from any claims or damages arising from your use of the Website, breach of this Agreement, misrepresentation, negligence, or misconduct.
                     </p>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>11. Termination</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott may suspend or terminate accounts for breach, misuse, or fraudulent activity. Upon termination, all access rights cease immediately. Koott may delete stored information in accordance with data retention laws.
+                        MyKoott may suspend or terminate accounts for breach, misuse, or fraudulent activity. Upon termination, all access rights cease immediately. MyKoott may delete stored information in accordance with data retention laws.
                     </p>
                 </section>
 
@@ -263,14 +263,14 @@ export default function TermsAndConditionsPage() {
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>13. Modifications</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott may update these Terms at any time without prior notice. Continued use of the Website constitutes acceptance of updated terms.
+                        MyKoott may update these Terms at any time without prior notice. Continued use of the Website constitutes acceptance of updated terms.
                     </p>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h4 className={`${styles.sectionHeading} text-gray-900`}>14. Arbitration</h4>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Disputes shall be resolved by binding arbitration under the Arbitration and Conciliation Act, 1996, in English, seated in Kerala. A sole arbitrator appointed by Koott will oversee proceedings. Either party may seek interim relief from courts.
+                        Disputes shall be resolved by binding arbitration under the Arbitration and Conciliation Act, 1996, in English, seated in Kerala. A sole arbitrator appointed by MyKoott will oversee proceedings. Either party may seek interim relief from courts.
                     </p>
                 </section>
 
@@ -279,13 +279,13 @@ export default function TermsAndConditionsPage() {
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li><strong>Severability:</strong> Invalid provisions will not affect remaining terms.</li>
                         <li>
-                            <strong>Notices:</strong> To Koott: Office 101, Vp&rsquo;s Building, Mukkam, Calicut, Kerala, 673602. To Users: Registered email.
+                            <strong>Notices:</strong> To MyKoott: Office 101, Vp&rsquo;s Building, Mukkam, Calicut, Kerala, 673602. To Users: Registered email.
                         </li>
                         <li><strong>Waiver:</strong> Must be written; none implied.</li>
                         <li><strong>Entire Agreement:</strong> This TOS, along with Privacy and Refund Policies, forms the full understanding.</li>
-                        <li><strong>Force Majeure:</strong> Koott is not liable for delays due to events beyond control.</li>
-                        <li><strong>Advertisement:</strong> Koott may display advertisements on its platform.</li>
-                        <li><strong>Assignment:</strong> Users may not assign rights without Koott’s consent.</li>
+                        <li><strong>Force Majeure:</strong> MyKoott is not liable for delays due to events beyond control.</li>
+                        <li><strong>Advertisement:</strong> MyKoott may display advertisements on its platform.</li>
+                        <li><strong>Assignment:</strong> Users may not assign rights without MyKoott’s consent.</li>
                         <li><strong>Conflict of Terms:</strong> Precedence — Privacy Policy → TOS → Refund Policy → Other Policies.</li>
                         <li><strong>Complaints:</strong> <a href="mailto:hey@koott.com" className="text-indigo-600 underline hover:text-indigo-700">hey@koott.com</a> or call +91 9539007766.</li>
                     </ul>

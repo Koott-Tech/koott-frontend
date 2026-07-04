@@ -316,7 +316,7 @@ const PsychologistCalendarView = ({ psychologistId, psychologistName, onClose })
                               ? 'bg-green-200 text-green-900' 
                               : 'bg-blue-200 text-blue-900'
                           }`}>
-                            {event.source === 'koott' ? 'Koott' : 'External'}
+                            {event.source === 'koott' ? 'MyKoott' : 'External'}
                           </span>
                         </div>
                       </div>

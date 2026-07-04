@@ -36,8 +36,8 @@ export async function generateMetadata({ params, searchParams }) {
         data.seo_title ||
         data.hero_title ||
         (slug
-          ? `${slug.replace(/[-_]/g, ' ')} - Better Parenting | Koott`
-          : 'Better Parenting - Koott');
+          ? `${slug.replace(/[-_]/g, ' ')} - Better Parenting | MyKoott`
+          : 'Better Parenting - MyKoott');
       const description =
         data.seo_description ||
         data.hero_subtext ||
@@ -52,14 +52,14 @@ export async function generateMetadata({ params, searchParams }) {
           title,
           description,
           type: 'website',
-          siteName: 'Koott',
+          siteName: 'MyKoott',
           url: `https://www.koott.in/better-parenting/${slug}`,
           images: [
             {
               url: ogImage,
               width: 1200,
               height: 630,
-              alt: 'Koott logo',
+              alt: 'MyKoott logo',
             },
           ],
         },
@@ -83,8 +83,8 @@ export async function generateMetadata({ params, searchParams }) {
       `${slug.replace(
         /[-_]/g,
         ' ',
-      )} - Better Parenting | Koott`) ||
-    'Better Parenting - Koott';
+      )} - Better Parenting | MyKoott`) ||
+    'Better Parenting - MyKoott';
 
   return {
     title: fallbackTitle,

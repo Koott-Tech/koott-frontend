@@ -64,13 +64,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     
     if (psychologist) {
       const name = psychologist.name || `${psychologist.first_name || ''} ${psychologist.last_name || ''}`.trim();
-      const title = `${name} | Child Psychologist | Koott`;
+      const title = `${name} | Child Psychologist | MyKoott`;
       
       // Get description from psychologist data or use default
       const description = psychologist.bio || 
                          psychologist.description || 
                          psychologist.short_bio ||
-                         `Book an online session with ${name}, an experienced child psychologist at Koott. Professional counseling and therapy for children.`;
+                         `Book an online session with ${name}, an experienced child psychologist at MyKoott. Professional counseling and therapy for children.`;
       
       // Same image as page: profile_picture_url || cover_image_url, then normalizeImageUrl → absolute for OG
       const rawImageUrl = psychologist.profile_picture_url || psychologist.cover_image_url;
@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
           title,
           description,
           type: 'profile',
-          siteName: 'Koott',
+          siteName: 'MyKoott',
           url,
           images: [
             {
@@ -113,31 +113,31 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   
   // Fallback metadata
   const fallbackTitle = slug 
-    ? `${slug.replace(/[-_]/g, ' ')} - Child Psychologist | Koott`
-    : 'Child Psychologist | Koott';
+    ? `${slug.replace(/[-_]/g, ' ')} - Child Psychologist | MyKoott`
+    : 'Child Psychologist | MyKoott';
   
   return {
     title: fallbackTitle,
-    description: 'Book an online session with an experienced child psychologist at Koott. Professional counseling and therapy for children.',
+    description: 'Book an online session with an experienced child psychologist at MyKoott. Professional counseling and therapy for children.',
     openGraph: {
       title: fallbackTitle,
-      description: 'Book an online session with an experienced child psychologist at Koott. Professional counseling and therapy for children.',
+      description: 'Book an online session with an experienced child psychologist at MyKoott. Professional counseling and therapy for children.',
       type: 'profile',
-      siteName: 'Koott',
+      siteName: 'MyKoott',
       url: `https://www.koott.in/online-child-psychologist/${slug}`,
       images: [
         {
           url: 'https://www.koott.in/logo.png',
           width: 1200,
           height: 630,
-          alt: 'Koott',
+          alt: 'MyKoott',
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
       title: fallbackTitle,
-      description: 'Book an online session with an experienced child psychologist at Koott. Professional counseling and therapy for children.',
+      description: 'Book an online session with an experienced child psychologist at MyKoott. Professional counseling and therapy for children.',
       images: ['https://www.koott.in/logo.png'],
     },
     alternates: {

@@ -19,6 +19,20 @@ const getTherapistImageUrl = (therapist) => {
   return raw ? normalizeImageUrl(raw) : null;
 };
 
+// Mirrors the backend's name-matching key (wixPsychologistResolverService.nameMatchKey):
+// strips leading titles, lowercases, and removes ALL whitespace. Two rows sharing this key
+// are the same person as far as Wix-booking sync is concerned — if they point to DIFFERENT
+// psychologist profiles, that's a duplicate that needs manual merging.
+function nameMatchKey(value) {
+  let s = String(value || '').trim().replace(/\s+/g, ' ');
+  while (true) {
+    const next = s.replace(/^(dr|mr|mrs|ms|miss|prof|doctor)\.?\s+/i, '');
+    if (next === s) break;
+    s = next;
+  }
+  return s.toLowerCase().replace(/\s+/g, '');
+}
+
 function EditTherapistModal({ therapist, onClose, onSaved }) {
   const { showError, showSuccess } = useNotification();
   const [loading, setLoading] = useState(false);
@@ -219,7 +233,7 @@ function EditTherapistModal({ therapist, onClose, onSaved }) {
               </div>
             ) : (
               <div className="px-3 py-2 border border-blue-100 rounded-lg bg-blue-50/50 text-xs text-blue-800">
-                Password will be automatically set to <span className="font-semibold">Koott@#2026</span> upon creation.
+                Password will be automatically set to <span className="font-semibold">MyKoott@#2026</span> upon creation.
               </div>
             )}
           </div>
@@ -305,13 +319,36 @@ export default function WixTherapistsPage() {
     );
   }, [rows, search]);
 
+  // Duplicate-profile detector: group all therapist rows (regardless of the active
+  // search/date filters) by the same name-matching key the backend uses to link Wix
+  // bookings to a psychologist. If a group has rows pointing at more than one DISTINCT
+  // psychologist id (or an unlinked row alongside a linked one), that's a duplicate that
+  // needs manual merging — flag it so ops can catch it without needing dev access.
+  const duplicateKeys = useMemo(() => {
+    const byKey = new Map();
+    rows.forEach((r) => {
+      const key = nameMatchKey(r.name);
+      if (!key) return;
+      if (!byKey.has(key)) byKey.set(key, []);
+      byKey.get(key).push(r);
+    });
+    const flagged = new Map(); // key -> array of rows
+    byKey.forEach((group, key) => {
+      const distinctPsychIds = new Set(group.map((r) => r.psychologist?.id || `__unlinked_${r.email || r.name}`));
+      if (distinctPsychIds.size > 1) flagged.set(key, group);
+    });
+    return flagged;
+  }, [rows]);
+
+  const duplicateGroupList = useMemo(() => Array.from(duplicateKeys.values()), [duplicateKeys]);
+
   return (
     <div className="p-4 md:p-8 max-w-[1280px] mx-auto space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <UserCheck className="h-5 w-5 text-[#025545]" />
           <div>
-            <div className="text-xl font-semibold text-gray-900">Koott Therapists</div>
+            <div className="text-xl font-semibold text-gray-900">MyKoott Therapists</div>
             <p className="text-xs text-slate-500 mt-0.5 max-w-xl">
               Unique therapists inferred from synced Wix bookings.
             </p>
@@ -336,6 +373,44 @@ export default function WixTherapistsPage() {
           </button>
         </div>
       </div>
+
+      {/* Duplicate-profile warning — catches the same "Rajina RS" vs "Rajina R S" style
+          split-profile bug without needing a developer to check the database. */}
+      {duplicateGroupList.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-amber-800">
+                Possible duplicate therapist profile{duplicateGroupList.length > 1 ? 's' : ''} found
+              </div>
+              <p className="text-xs text-amber-700 mt-0.5">
+                These names look like the same person but are linked to different (or no) doctor profiles.
+                Wix bookings could be splitting across them — one may be missing calendar sync, email, or phone.
+                Ask a developer to merge these, or make sure any new booking uses the exact spelling of the correct one.
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {duplicateGroupList.map((group, gi) => (
+                  <div key={gi} className="text-xs text-amber-800 bg-white/60 rounded px-2 py-1.5 border border-amber-100">
+                    {group.map((r, ri) => (
+                      <span key={ri}>
+                        {ri > 0 && <span className="text-amber-400 mx-1">vs</span>}
+                        <span className="font-semibold">&ldquo;{r.name}&rdquo;</span>
+                        {' '}
+                        {r.psychologist?.id ? (
+                          <span className="text-emerald-700">(linked{r.psychologist?.google_calendar_connected ? ', calendar synced' : ', NO calendar'})</span>
+                        ) : (
+                          <span className="text-red-600">(not linked to any doctor profile)</span>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Date Range Filter — same component/behavior as the Bookings page. */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
@@ -379,10 +454,11 @@ export default function WixTherapistsPage() {
         {filtered.map((row, idx) => {
           const isLinked = !!row.psychologist?.id;
           const imageUrl = getTherapistImageUrl(row);
+          const isDuplicateRow = duplicateKeys.has(nameMatchKey(row.name));
           return (
             <div
               key={`${row.name || 'n'}-${row.email || 'e'}-${idx}`}
-              className="bg-white border-2 border-gray-200 shadow-sm hover:shadow-md transition-all p-6 w-full rounded-lg"
+              className={`bg-white border-2 shadow-sm hover:shadow-md transition-all p-6 w-full rounded-lg ${isDuplicateRow ? 'border-amber-300' : 'border-gray-200'}`}
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1">
@@ -395,7 +471,14 @@ export default function WixTherapistsPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-gray-900 truncate">{row.name || '—'}</div>
+                    <div className="text-sm font-semibold text-gray-900 truncate flex items-center gap-2">
+                      {row.name || '—'}
+                      {isDuplicateRow && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-bold border border-amber-200 shrink-0">
+                          <AlertCircle className="h-2.5 w-2.5" /> POSSIBLE DUPLICATE
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
                       <Mail className="h-3 w-3 text-gray-400" />
                       {row.psychologist?.email || row.email || '—'}

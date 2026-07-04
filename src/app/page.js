@@ -129,7 +129,7 @@ export default function Home() {
                   className="hover:text-gray-900 cursor-pointer font-semibold"
                   style={{ cursor: 'pointer' }}
                 >
-                  Koott
+                  MyKoott
                 </a>
                 <div className="tooltip-container">
                   <span className="hover:text-gray-900 cursor-pointer font-semibold" style={{ cursor: 'pointer' }}>Hopelly</span>

@@ -3,8 +3,7 @@ export default function robots() {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/admin/", "/api/", "/profile/", "/superadmin/"],
+        disallow: "/",
       },
     ],
     sitemap: "https://www.koott.in/sitemap.xml",

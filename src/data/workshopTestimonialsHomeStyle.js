@@ -44,7 +44,7 @@ export const WORKSHOP_TESTIMONIALS_PHOTOS = [
 export const WORKSHOP_TESTIMONIALS_DESKTOP_GRID = {
   col1: {
     src: "/testimonial2.PNG",
-    alt: "Parents and children at Koott workshops",
+    alt: "Parents and children at MyKoott workshops",
   },
   col2: [
     {
@@ -82,7 +82,7 @@ export const WORKSHOP_TESTIMONIALS_DESKTOP_GRID = {
   col5: {
     topImage: {
       src: "/testimonial5.PNG",
-      alt: "Family after a Koott workshop",
+      alt: "Family after a MyKoott workshop",
     },
     textCard: {
       quote:

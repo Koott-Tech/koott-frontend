@@ -368,7 +368,7 @@ const LatestBlogsSection = ({ blogs, currentSlug }) => {
                 
                 {/* Meta Info */}
                 <div className={`related-blog-meta mt-4 md:mt-6 lg:mt-4 px-2 md:px-0 text-gray-600 text-xs md:text-sm text-center md:text-left leading-[20px] ${BLOG_LETTER_SPACING_CLASS}`}>
-                  <span>{blog.author_name || "Koott Team"}</span>
+                  <span>{blog.author_name || "MyKoott Team"}</span>
                   <span className="px-1 md:px-2">•</span>
                   <span>{formatDate(blog.published_at || blog.created_at)}</span>
                 </div>

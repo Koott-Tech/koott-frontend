@@ -22,14 +22,14 @@ export default function WhyWereHere() {
             
             <div className="space-y-6 text-[1.125rem] md:text-base text-gray-700 leading-[150%] md:leading-relaxed tracking-[-0.03375rem] md:tracking-tight">
               <p>
-                Koott was born from a simple truth — children deserve a space where their emotions
-                are heard, understood, and cared for. As part of the Koott family, we saw how many
+                MyKoott was born from a simple truth — children deserve a space where their emotions
+                are heard, understood, and cared for. As part of the MyKoott family, we saw how many
                 families struggled to find the right kind of mental health support for their children.
                 That’s when we decided to build something just for them.
               </p>
 
               <p>
-                We started Koott to make mental health care for children warm, accessible, and backed
+                We started MyKoott to make mental health care for children warm, accessible, and backed
                 by science. From early assessments to child counseling and parenting guidance, every step we
                 take is rooted in compassion and evidence-based care.
               </p>
@@ -39,7 +39,7 @@ export default function WhyWereHere() {
               </p>
 
               <p>
-                A promise to help every child grow with calm minds, kind hearts, and a Koott.
+                A promise to help every child grow with calm minds, kind hearts, and a MyKoott.
               </p>
 
               <p>
@@ -54,7 +54,7 @@ export default function WhyWereHere() {
               <div className="absolute inset-8 rounded-xl overflow-hidden">
                 <Image
                   src="/About Us Card 1.webp"
-                  alt="Koott team illustration - caring deeper for children's mental health and emotional wellbeing"
+                  alt="MyKoott team illustration - caring deeper for children's mental health and emotional wellbeing"
                   fill
                   className="object-contain"
                   sizes="(min-width: 768px) 50vw, 100vw"

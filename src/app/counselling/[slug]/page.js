@@ -31,11 +31,11 @@ const EXCLUDED = new Set([
 // Fallback metadata for when API fails
 const FALLBACK_META = {
   'depression': {
-    title: 'Depression Counseling - Koott',
+    title: 'Depression Counseling - MyKoott',
     description: 'Compassionate, evidence-based counseling to support children experiencing depression.'
   },
   'anxiety-sadness': {
-    title: 'Anxiety, Sadness or Low mood - Koott',
+    title: 'Anxiety, Sadness or Low mood - MyKoott',
     description: 'Professional support for children experiencing anxiety, sadness, or low mood.'
   },
 };
@@ -61,7 +61,7 @@ export async function generateMetadata({ params, searchParams }) {
           const title =
             service.seo_title ||
             service.hero_title ||
-            `${slug?.replace(/[-_]/g, ' ')} - Koott`;
+            `${slug?.replace(/[-_]/g, ' ')} - MyKoott`;
           const description =
             service.seo_description ||
             service.hero_subtext ||
@@ -76,14 +76,14 @@ export async function generateMetadata({ params, searchParams }) {
               title,
               description,
               type: 'website',
-              siteName: 'Koott',
+              siteName: 'MyKoott',
               url: `https://www.koott.in/counselling/${slug}`,
               images: [
                 {
                   url: ogImage,
                   width: 1200,
                   height: 630,
-                  alt: 'Koott logo',
+                  alt: 'MyKoott logo',
                 },
               ],
             },
@@ -107,7 +107,7 @@ export async function generateMetadata({ params, searchParams }) {
   
   // Fallback to static metadata if API fails
   const meta = FALLBACK_META[slug] || {
-    title: `${slug?.replace(/[-_]/g, ' ') || 'Counseling'} - Koott`,
+    title: `${slug?.replace(/[-_]/g, ' ') || 'Counseling'} - MyKoott`,
     description: 'Specialized counseling services for children and families.'
   };
   return meta;

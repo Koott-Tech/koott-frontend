@@ -1122,7 +1122,7 @@ export default function BookingsPage() {
 
   const showWixView = listSource === 'wix';
   // Packages tab now uses the normal session table (filtered by session_type=package server-side)
-  // so it matches Koott Discovery's Package filter behavior. The old aggregated packages view is retired.
+  // so it matches MyKoott Discovery's Package filter behavior. The old aggregated packages view is retired.
   const showPackagesView = false;
   const isLoadingView = showWixView ? wixLoading : isLoading;
 
@@ -1153,7 +1153,7 @@ export default function BookingsPage() {
             </span>
           </div>
           <p className="text-xs text-gray-500 mt-1 max-w-xl">
-            Koott sessions and packages. Manage your internal therapy sessions here.
+            MyKoott sessions and packages. Manage your internal therapy sessions here.
           </p>
         </div>
         <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
@@ -1948,7 +1948,7 @@ export default function BookingsPage() {
         </div>
       )}
 
-      {/* Pagination (Koott + Wix Supabase lists) */}
+      {/* Pagination (MyKoott + Wix Supabase lists) */}
       {!showPackagesView && totalPages > 1 && (
         <div className="flex items-center justify-center mt-8 pt-6 border-t border-gray-200">
           <WheelPagination

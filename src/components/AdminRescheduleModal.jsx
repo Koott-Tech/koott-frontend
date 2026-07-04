@@ -28,6 +28,44 @@ export default function AdminRescheduleModal({
   const [psychologistAvailability, setPsychologistAvailability] = useState({});
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  // No-show reschedule fee: when a session was a no-show (client's mistake), rescheduling
+  // requires an additional (usually half) payment. Only shown for no-show sessions.
+  const isNoShow = ['no_show', 'noshow'].includes(
+    String(session?.status || session?.session_status || '').toLowerCase()
+  );
+  const [feeAmount, setFeeAmount] = useState('');
+  const [feeMethod, setFeeMethod] = useState('cash');
+  const [feeReceiptUrl, setFeeReceiptUrl] = useState('');
+  const [feeReceiptName, setFeeReceiptName] = useState('');
+  const [isUploadingFee, setIsUploadingFee] = useState(false);
+
+  const handleFeeScreenshotUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      setError('Payment screenshot must be 15MB or smaller');
+      e.target.value = '';
+      return;
+    }
+    setError(null);
+    setIsUploadingFee(true);
+    try {
+      const response = await adminApi.uploadImage(file, { bucket: 'manual-bookings' });
+      if (!response?.success || !response?.url) {
+        throw new Error(response?.message || response?.error || 'Failed to upload payment screenshot');
+      }
+      setFeeReceiptUrl(response.url);
+      setFeeReceiptName(file.name);
+    } catch (uploadError) {
+      setFeeReceiptUrl('');
+      setFeeReceiptName('');
+      setError(uploadError.message || 'Failed to upload payment screenshot');
+      e.target.value = '';
+    } finally {
+      setIsUploadingFee(false);
+    }
+  };
+
   // Calendar helpers (match client dashboard style)
   const getMonthName = (date) => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -49,6 +87,10 @@ export default function AdminRescheduleModal({
       setSelectedDate('');
       setSelectedTime('');
       setError(null);
+      setFeeAmount('');
+      setFeeMethod('cash');
+      setFeeReceiptUrl('');
+      setFeeReceiptName('');
       // Reset calendar to current month
       setCurrentDate(new Date());
       fetchPsychologistAvailability();
@@ -105,6 +147,22 @@ export default function AdminRescheduleModal({
       return;
     }
 
+    // No-show reschedules require the additional payment details (proof + amount + type).
+    if (isNoShow) {
+      if (!feeAmount || parseFloat(feeAmount) <= 0) {
+        setError('Enter the additional payment amount for this no-show reschedule.');
+        return;
+      }
+      if (!feeMethod) {
+        setError('Select the payment type for the no-show fee.');
+        return;
+      }
+      if (!feeReceiptUrl) {
+        setError('Upload the payment screenshot for the no-show fee.');
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -112,14 +170,22 @@ export default function AdminRescheduleModal({
       const new_date = selectedDate;
       const new_time = convertTo24Hour(selectedTime);
 
+      // Only attach the no-show fee when this is actually a no-show reschedule.
+      const noShowFee = isNoShow ? {
+        noshow_fee_amount: parseFloat(feeAmount),
+        noshow_fee_method: feeMethod,
+        noshow_fee_receipt_url: feeReceiptUrl,
+      } : {};
+
       let response;
       if (session._isWixBooking && session._wixBookingId) {
-        response = await adminApi.rescheduleWixBooking(session._wixBookingId, { new_date, new_time });
+        response = await adminApi.rescheduleWixBooking(session._wixBookingId, { new_date, new_time, ...noShowFee });
       } else {
         response = await adminApi.rescheduleSession(session.id, {
           new_date,
           new_time,
           reason: 'Admin rescheduled',
+          ...noShowFee,
         });
       }
 
@@ -438,6 +504,55 @@ export default function AdminRescheduleModal({
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* No-show reschedule fee — only for sessions marked as no-show. */}
+          {isNoShow && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-800">No-show reschedule fee (required)</span>
+              </div>
+              <p className="text-xs text-amber-700 -mt-1">
+                This session was a no-show. Collect the additional payment before rescheduling and record the details below.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Amount (₹)</label>
+                  <input type="number" min="0" step="0.01" value={feeAmount}
+                    onChange={(e) => setFeeAmount(e.target.value)}
+                    placeholder="e.g. 500"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Payment type</label>
+                  <select value={feeMethod} onChange={(e) => setFeeMethod(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 bg-white focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15 cursor-pointer">
+                    <option value="cash">Cash</option>
+                    <option value="upi">UPI</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="razorpay">Razorpay</option>
+                    <option value="card">Card</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Payment screenshot</label>
+                <input type="file" accept="image/*" onChange={handleFeeScreenshotUpload} disabled={isUploadingFee}
+                  className="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#025545] file:text-white hover:file:bg-[#012f23] disabled:opacity-50" />
+                {isUploadingFee && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Uploading…
+                  </div>
+                )}
+                {!isUploadingFee && feeReceiptUrl && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700">
+                    <CheckCircle className="h-3 w-3" /> {feeReceiptName || 'Screenshot uploaded'}
+                  </div>
+                )}
               </div>
             </div>
           )}

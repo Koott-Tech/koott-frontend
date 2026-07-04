@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }) {
       const title =
         data.seo_title ||
         data.hero_title ||
-        (slug ? `${slug.replace(/[-_]/g, ' ')} - Koott` : 'Assessment');
+        (slug ? `${slug.replace(/[-_]/g, ' ')} - MyKoott` : 'Assessment');
       const description =
         data.seo_description ||
         data.hero_subtext ||
@@ -45,14 +45,14 @@ export async function generateMetadata({ params, searchParams }) {
           title,
           description,
           type: 'website',
-          siteName: 'Koott',
+          siteName: 'MyKoott',
           url: `https://www.koott.in/assessments/${slug}`,
           images: [
             {
               url: ogImage,
               width: 1200,
               height: 630,
-              alt: 'Koott logo',
+              alt: 'MyKoott logo',
             },
           ],
         },
@@ -72,8 +72,8 @@ export async function generateMetadata({ params, searchParams }) {
   }
 
   const fallbackTitle =
-    (slug && `${slug.replace(/[-_]/g, ' ')} - Koott`) ||
-    'Assessment - Koott';
+    (slug && `${slug.replace(/[-_]/g, ' ')} - MyKoott`) ||
+    'Assessment - MyKoott';
 
   return {
     title: fallbackTitle,

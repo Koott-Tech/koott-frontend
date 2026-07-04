@@ -114,7 +114,7 @@ export default function PsychologistLayout({ children }) {
             <a 
               href="/psychologist"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to psychologist dashboard"
+              aria-label="MyKoott - Go to psychologist dashboard"
               onClick={() => {
                 if (typeof window !== 'undefined' && window.innerWidth < 1024) {
                   setIsSidebarOpen(false);
@@ -123,7 +123,7 @@ export default function PsychologistLayout({ children }) {
             >
               <img 
                 src="/logo.png"
-                alt="Koott"
+                alt="MyKoott"
                 width={120}
                 height={40}
                 className="object-contain"
@@ -181,11 +181,11 @@ export default function PsychologistLayout({ children }) {
             <a 
               href="/psychologist"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to psychologist dashboard"
+              aria-label="MyKoott - Go to psychologist dashboard"
             >
               <img 
                 src="/logo.png"
-                alt="Koott"
+                alt="MyKoott"
                 width={120}
                 height={40}
                 className="object-contain"

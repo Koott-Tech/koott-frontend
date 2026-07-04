@@ -9,7 +9,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
   // Content configuration for different therapy types
   const content = {
     individual: {
-      title: "How individual therapy works at LittleMinds",
+      title: "How individual therapy works at MyKoott",
       subtitle: "From beginning to end, we'll tailor your online therapy experience to you.",
       step1: {
         title: "1. Tell us what's important",
@@ -30,7 +30,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       }
     },
     couples: {
-      title: "How couples therapy works at LittleMinds",
+      title: "How couples therapy works at MyKoott",
       subtitle: "From beginning to end, we'll tailor your couples therapy experience to strengthen your relationship.",
       step1: {
         title: "1. Share your relationship goals",
@@ -51,7 +51,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       }
     },
     family: {
-      title: "How family therapy works at LittleMinds",
+      title: "How family therapy works at MyKoott",
       subtitle: "From beginning to end, we'll help your family build stronger bonds and better communication.",
       step1: {
         title: "1. Identify family dynamics",
@@ -72,7 +72,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       }
     },
     child: {
-      title: "How child therapy works at LittleMinds",
+      title: "How child therapy works at MyKoott",
       subtitle: "From beginning to end, we'll create a safe, supportive environment for your child's growth.",
       step1: {
         title: "1. Understand your child's needs",
@@ -93,7 +93,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       }
     },
     teen: {
-      title: "How teen therapy works at LittleMinds",
+      title: "How teen therapy works at MyKoott",
       subtitle: "From beginning to end, we'll provide a safe space for your teenager to explore and grow.",
       step1: {
         title: "1. Address teen-specific concerns",
@@ -114,7 +114,7 @@ export default function ProcessSteps({ therapyType = "individual" }) {
       }
     },
     psychiatry: {
-      title: "How psychiatry works at LittleMinds",
+      title: "How psychiatry works at MyKoott",
       subtitle: "From beginning to end, we'll provide comprehensive psychiatric care for your mental health needs.",
       step1: {
         title: "1. Share your symptoms",

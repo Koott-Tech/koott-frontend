@@ -566,11 +566,11 @@ export default function Header() {
                   handleHomeClick();
                 }}
                 className="hover:opacity-80 transition-opacity cursor-pointer"
-                aria-label="Koott - Go to homepage"
+                aria-label="MyKoott - Go to homepage"
               >
                 <img 
                   src="/logo.png"
-                  alt="Koott"
+                  alt="MyKoott"
                   width={120}
                   height={40}
                   className="object-contain"
@@ -1318,11 +1318,11 @@ export default function Header() {
                     setIsMobileMenuOpen(false);
                   }}
                   className="hover:opacity-80 transition-opacity cursor-pointer"
-                  aria-label="Koott - Go to homepage"
+                  aria-label="MyKoott - Go to homepage"
                 >
                   <img 
                     src="/logo.png"
-                    alt="Koott"
+                    alt="MyKoott"
                     width={120}
                     height={40}
                     className="object-contain"

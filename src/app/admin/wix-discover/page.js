@@ -183,6 +183,7 @@ export default function AdminWixDiscoverPage() {
   const [cancelRefundRow, setCancelRefundRow] = useState(null);
   const [cancelOnlyRow, setCancelOnlyRow] = useState(null);
   const [completeConfirmRow, setCompleteConfirmRow] = useState(null);
+  const [psychologists, setPsychologists] = useState([]);
 
   // Close action menu when user scrolls (menu is fixed-position so it won't follow the row)
   useEffect(() => {
@@ -288,6 +289,15 @@ export default function AdminWixDiscoverPage() {
     load(1).finally(() => setInitialSyncDone(true));
   }, [load]);
 
+  // Load the therapist list for the Edit modal's Therapist dropdown. Runs when the modal
+  // opens (and only if not already loaded) so the dropdown is always populated.
+  useEffect(() => {
+    if (!editingRow || psychologists.length > 0) return;
+    adminApi.getPsychologists()
+      .then((r) => { if (r?.success && Array.isArray(r.data)) setPsychologists(r.data); })
+      .catch(() => {});
+  }, [editingRow, psychologists.length]);
+
   // Debounce the search box → debouncedSearchTerm (used by load()). 350ms after the user
   // stops typing. Empty search applies immediately so clearing the box is instant.
   useEffect(() => {
@@ -331,23 +341,66 @@ export default function AdminWixDiscoverPage() {
   const handleView = (row) => { setViewingRow(normalizeRowForModal(row)); setOpenMenuId(null); };
   const handleEdit = (row) => {
     setEditingRow(normalizeRowForModal(row));
-    setEditForm({ status: row.status || '', title: row.title || '', price: row.price ?? '', therapist_name: row.therapist_name || '', notes: row.notes || row.session_notes || '' });
+    setEditForm({
+      status: row.status || '',
+      title: row.title || '',
+      price: row.price ?? '',
+      notes: row.notes || row.session_notes || '',
+      psychologist_id: row.psychologist_id || row.psychologist?.id || '',
+      // Client fields are a per-booking snapshot on Wix rows — safe to edit directly.
+      // Platform rows share the client record across all their sessions, so identity
+      // edits belong on the Users page instead (shown read-only here).
+      client_full_name: row.client_full_name || '',
+      client_email: row.client_email || '',
+      client_phone: row.client_phone || '',
+    });
     setOpenMenuId(null);
+    // Fetch the therapist list lazily, right when it's actually needed, instead of
+    // relying on a page-load-only effect (which wouldn't re-run for a tab that was
+    // already open before this list existed).
+    if (psychologists.length === 0) {
+      adminApi.getPsychologists().then((r) => {
+        if (r?.success) setPsychologists(r.data || []);
+      }).catch(() => {});
+    }
   };
   const handleEditSave = async () => {
     if (!editingRow) return;
     setActionLoading(true);
     try {
+      const originalPsychId = editingRow.psychologist_id || editingRow.psychologist?.id || '';
+      const psychChanged = editForm.psychologist_id && editForm.psychologist_id !== originalPsychId;
+
+      // Therapist reassignment goes through the same endpoint as the Transfer action —
+      // it moves the Google Calendar event + Meet link. A plain field update would leave
+      // the calendar pointing at the old therapist, silently out of sync.
+      if (psychChanged) {
+        const transferRes = editingRow._isPlatform
+          ? await adminApi.transferSession(editingRow.id, { new_psychologist_id: editForm.psychologist_id })
+          : await adminApi.transferWixBooking(editingRow.id, { new_psychologist_id: editForm.psychologist_id });
+        if (!transferRes?.success) throw new Error(transferRes?.error || transferRes?.message || 'Failed to reassign therapist');
+      }
+
       let res;
       if (editingRow._isPlatform) {
         // Platform session — update via the session endpoint (status / price / notes).
+        // Date/time changes are intentionally NOT sent here — use the dedicated
+        // Reschedule action, which moves the Google Calendar event too.
         res = await adminApi.updateSession(editingRow.id, {
           status: editForm.status || undefined,
           price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
           session_notes: editForm.notes || undefined,
         });
       } else {
-        res = await adminApi.editWixBooking(editingRow.id, editForm);
+        res = await adminApi.editWixBooking(editingRow.id, {
+          status: editForm.status || undefined,
+          title: editForm.title || undefined,
+          price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
+          notes: editForm.notes || undefined,
+          client_full_name: editForm.client_full_name || undefined,
+          client_email: editForm.client_email || undefined,
+          client_phone: editForm.client_phone || undefined,
+        });
       }
       if (!res?.success) throw new Error(res?.error || res?.message || 'Update failed');
       showSuccess('Booking updated', editingRow._isPlatform ? 'Session' : 'Wix');
@@ -378,11 +431,15 @@ export default function AdminWixDiscoverPage() {
     setOpenMenuId(null);
     setActionLoading(true);
     try {
-      const res = await adminApi.noShowWixBooking(row.id);
+      // Platform rows update the session status directly; Wix rows use the Wix endpoint
+      // (which also mirrors the status back onto the wix_bookings row).
+      const res = row._isPlatform
+        ? await adminApi.updateSession(row.id, { status: 'no_show' })
+        : await adminApi.noShowWixBooking(row.id);
       if (!res?.success) throw new Error(res?.error || 'Failed');
-      showSuccess('Booking marked as no-show', 'Wix');
+      showSuccess('Booking marked as no-show', row._isPlatform ? 'Session' : 'Wix');
       await load(page);
-    } catch (e) { showError(e?.message || 'Failed', 'Wix'); }
+    } catch (e) { showError(e?.message || 'Failed', 'Error'); }
     finally { setActionLoading(false); }
   };
   const handleCancelRefundConfirm = async () => {
@@ -804,7 +861,9 @@ export default function AdminWixDiscoverPage() {
                               <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${typeColour}`}>
                                 {typeLabelRaw}{(Number(row.session_count) > 1 && row.package_session_number) ? ` (${row.package_session_number}/${row.session_count})` : ''}
                               </span>
-                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Manual</span>
+                              {/* Manual booking only ever happens through our own admin platform, so use
+                                  the same "Admin booked" label everywhere instead of a separate "Manual" tag. */}
+                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -857,7 +916,7 @@ export default function AdminWixDiscoverPage() {
                                     <Video className="h-3.5 w-3.5" /> Open Meet
                                   </button>
                                 )}
-                                {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold'].includes(row.status) && (
+                                {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold', 'no_show', 'noshow'].includes(row.status) && (
                                   <button onClick={() => { handleReschedule(row); setOpenMenuId(null); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                     <RefreshCw className="h-3.5 w-3.5" /> Reschedule
@@ -873,6 +932,12 @@ export default function AdminWixDiscoverPage() {
                                   <button onClick={() => { handleComplete(row); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
                                     <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
+                                  </button>
+                                )}
+                                {['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested'].includes(row.status) && (
+                                  <button onClick={() => { handleNoShow(row); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
+                                    <AlertCircle className="h-3.5 w-3.5" /> Mark No Show
                                   </button>
                                 )}
                                 {!['cancelled', 'refunded', 'completed'].includes(row.status) && (
@@ -970,7 +1035,7 @@ export default function AdminWixDiscoverPage() {
                                   <Package className="h-3.5 w-3.5" /> Book Next Session
                                 </button>
                               )}
-                              {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold'].includes(effectiveCompletionStatus(row)) && (
+                              {['booked', 'rescheduled', 'confirmed', 'scheduled', 'reschedule_requested', 'on_hold', 'no_show', 'noshow'].includes(effectiveCompletionStatus(row)) && (
                                 <button onClick={() => handleReschedule(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                   <RefreshCw className="h-3.5 w-3.5" /> Reschedule
                                 </button>
@@ -985,10 +1050,15 @@ export default function AdminWixDiscoverPage() {
                                   <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
                                 </button>
                               )}
+                              {['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
+                                <button onClick={() => handleNoShow(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
+                                  <AlertCircle className="h-3.5 w-3.5" /> Mark No Show
+                                </button>
+                              )}
                               {!['cancelled', 'refunded', 'completed', 'on_hold'].includes(effectiveCompletionStatus(row)) && (
                                 <button onClick={() => { setOpenMenuId(null); setCancelOnlyRow(row); }}
                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
-                                  <PauseCircle className="h-3.5 w-3.5" /> Cancel (No Refund)
+                                  <PauseCircle className="h-3.5 w-3.5" /> On Hold
                                 </button>
                               )}
                               {!['cancelled', 'refunded', 'completed'].includes(effectiveCompletionStatus(row)) && (
@@ -1120,18 +1190,25 @@ export default function AdminWixDiscoverPage() {
                 <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md text-white shadow-inner"><Edit className="h-5 w-5" /></div>
                 <div>
                   <div className="text-lg font-bold text-white tracking-tight leading-tight">Edit Booking</div>
-                  <p className="text-xs text-white/70 mt-0.5 font-medium">Update status, therapist, price &amp; notes</p>
+                  <p className="text-xs text-white/70 mt-0.5 font-medium">Every detail of this session, in one place</p>
                 </div>
               </div>
               <button onClick={() => setEditingRow(null)} className="p-2 rounded-xl text-white/60 hover:bg-white/10 hover:text-white transition-all"><X className="h-5 w-5" /></button>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50/40">
+            <div className="flex-1 overflow-y-auto px-6 py-5 bg-slate-50/40 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { key: 'status', label: 'Status', type: 'select', options: ['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested', 'on_hold', 'completed', 'no_show', 'cancelled', 'refunded'] },
+                  { key: 'psychologist_id', label: 'Therapist', type: 'psychologist', full: true },
                   { key: 'price', label: 'Price', type: 'number' },
-                  { key: 'therapist_name', label: 'Therapist', full: true },
-                  { key: 'title', label: 'Title', full: true },
+                  // Client identity fields: real per-booking columns on Wix rows, safe to
+                  // edit directly. Platform rows share the client record across every
+                  // session, so identity edits belong on the Users page instead.
+                  ...(editingRow._isPlatform ? [] : [
+                    { key: 'client_full_name', label: 'Client Name', full: true },
+                    { key: 'client_email', label: 'Client Email' },
+                    { key: 'client_phone', label: 'Client Phone' },
+                  ]),
                   { key: 'notes', label: 'Notes', type: 'textarea', full: true },
                 ].map((field) => (
                   <div key={field.key} className={`space-y-1.5 ${field.full ? 'sm:col-span-2' : ''}`}>
@@ -1140,6 +1217,20 @@ export default function AdminWixDiscoverPage() {
                       <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
                         className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm capitalize focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
                         {field.options.map(o => <option key={o} value={o} className="capitalize">{o}</option>)}
+                      </select>
+                    ) : field.type === 'psychologist' ? (
+                      <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
+                        <option value="">— Select therapist —</option>
+                        {/* Fallback: if the current therapist isn't in the loaded list (or the
+                            list is still loading), still show them as the selected option so
+                            the field never appears blank. */}
+                        {editForm.psychologist_id && !psychologists.some((p) => p.id === editForm.psychologist_id) && (
+                          <option value={editForm.psychologist_id}>{editingRow.therapist_name || 'Current therapist'}</option>
+                        )}
+                        {psychologists.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim()}</option>
+                        ))}
                       </select>
                     ) : field.type === 'textarea' ? (
                       <textarea value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
@@ -1151,6 +1242,11 @@ export default function AdminWixDiscoverPage() {
                   </div>
                 ))}
               </div>
+              {editingRow._isPlatform && (
+                <p className="text-xs text-slate-400 px-1">
+                  Client name, email &amp; phone are shared across this client&apos;s other sessions — edit them from the Users page.
+                </p>
+              )}
             </div>
             <div className="flex justify-end gap-3 px-7 py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
               <button onClick={() => setEditingRow(null)} disabled={actionLoading} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-40">Cancel</button>
@@ -1226,7 +1322,7 @@ export default function AdminWixDiscoverPage() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-2">
               <PauseCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
-              <h3 className="text-base font-semibold text-gray-900">Cancel without refund?</h3>
+              <h3 className="text-base font-semibold text-gray-900">Put booking on hold?</h3>
             </div>
             <p className="text-sm text-gray-600 mb-1">For a client who can't attend but doesn't want a refund and will reschedule later. This will:</p>
             <ul className="text-sm text-gray-500 list-disc ml-4 mb-4 space-y-1">

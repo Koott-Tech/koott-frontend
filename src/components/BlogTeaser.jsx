@@ -294,7 +294,7 @@ export default function BlogTeaser() {
           <div ref={carouselRef} className="blog-grid md:grid md:grid-cols-3 md:gap-8 lg:gap-10" id="blog-carousel" suppressHydrationWarning>
            {posts.map((post, index) => {
             const imageSrc = normalizeImageUrl(post.featured_image_url || post.src);
-            const author = post.author_name || post.author || "Koott Team";
+            const author = post.author_name || post.author || "MyKoott Team";
             const date = post.published_at || post.created_at || post.date || '';
             const altText = post.alt || post.title || "Blog cover image";
             // Add priority to first blog image (LCP element)

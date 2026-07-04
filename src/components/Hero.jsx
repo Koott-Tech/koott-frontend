@@ -110,7 +110,7 @@ export default function Hero() {
               <div className="hero-image-box absolute inset-0 flex items-end justify-center" style={{ border: 'none', outline: 'none', boxShadow: 'none' }}>
                 <Image
                   src="/hee.webp"
-                  alt="Hero illustration showing Koott’s child counseling and parent support"
+                  alt="Hero illustration showing MyKoott’s child counseling and parent support"
                   fill
                   className="object-contain object-bottom"
                   sizes="55vw"

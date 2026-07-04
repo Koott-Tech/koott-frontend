@@ -10,15 +10,15 @@ export default function TestimonialsAbout() {
 
     const baseTestimonials = [
         {
-            quote: "Koott feels like home — warm, genuine, and full of heart. I love that we get to work closely with families and really see the difference small changes can make in a child's life.",
+            quote: "MyKoott feels like home — warm, genuine, and full of heart. I love that we get to work closely with families and really see the difference small changes can make in a child's life.",
             author: "Fathima Liana - Consultant Psychologist"
         },
         {
-            quote: "What I really love about Koott is the space it gives us to connect deeply with every child's journey. The team spirit here is amazing — we learn from each other every day.",
+            quote: "What I really love about MyKoott is the space it gives us to connect deeply with every child's journey. The team spirit here is amazing — we learn from each other every day.",
             author: "Anusmitha Praveen - Consultant Psychologist"
         },
         {
-            quote: "Koott blends science with softness in such a beautiful way. We use solid clinical methods, but there's always warmth and creativity behind every session.",
+            quote: "MyKoott blends science with softness in such a beautiful way. We use solid clinical methods, but there's always warmth and creativity behind every session.",
             author: "Irene Marium - Consultant Psychologist"
         },
         {
@@ -30,15 +30,15 @@ export default function TestimonialsAbout() {
             author: "Bhavith - Brand Designer"
         },
         {
-            quote: "Working with Koott has been truly meaningful. It's not just about building a platform — it's about creating something that genuinely helps children and parents connect with care. Knowing our tech makes therapy easier and more accessible makes it all worth it.",
+            quote: "Working with MyKoott has been truly meaningful. It's not just about building a platform — it's about creating something that genuinely helps children and parents connect with care. Knowing our tech makes therapy easier and more accessible makes it all worth it.",
             author: "Abhishek - Software Developer"
         },
         {
-            quote: "At Koott, digital marketing never feels like marketing. We're not pushing content — we're sharing stories that matter. Every campaign shows how powerful it is when empathy meets purpose, and seeing parents connect because of something we created is what keeps me inspired.",
+            quote: "At MyKoott, digital marketing never feels like marketing. We're not pushing content — we're sharing stories that matter. Every campaign shows how powerful it is when empathy meets purpose, and seeing parents connect because of something we created is what keeps me inspired.",
             author: "Jishnu - Digital Marketer"
         },
         {
-            quote: "Working with Koott has changed how I see storytelling. Every frame we capture holds real emotion — a child's progress, a parent's relief, a therapist's quiet pride. It's more than videos; it's documenting hope in its simplest form. I'm proud to be part of something so honest and meaningful.",
+            quote: "Working with MyKoott has changed how I see storytelling. Every frame we capture holds real emotion — a child's progress, a parent's relief, a therapist's quiet pride. It's more than videos; it's documenting hope in its simplest form. I'm proud to be part of something so honest and meaningful.",
             author: "Shinas - Videographer"
         }
     ];

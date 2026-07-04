@@ -1373,7 +1373,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
             key: paymentData.keyId,
             amount: paymentData.amountInPaise,
             currency: paymentData.currency || 'INR',
-            name: paymentData.name || 'Koott',
+            name: paymentData.name || 'MyKoott',
             description: paymentData.description,
             order_id: paymentData.orderId,
             prefill: paymentData.prefill || {},
@@ -1458,7 +1458,7 @@ const TherapistProfileContent = ({ slug, packageId }) => {
             console.error('❌ Razorpay payment failed:', response);
             let errorMessage =
               response.error?.reason === 'payment_risk_check_failed'
-                ? 'Payment was declined by the bank or payment security checks. This is not a booking error—try another card, UPI, or contact your bank. You can also reach Koott for help.'
+                ? 'Payment was declined by the bank or payment security checks. This is not a booking error—try another card, UPI, or contact your bank. You can also reach MyKoott for help.'
                 : response.error?.description || 'Payment failed. Please try again.';
             showError(errorMessage, 'Payment Failed');
             setIsBooking(false);

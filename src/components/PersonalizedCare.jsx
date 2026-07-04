@@ -166,7 +166,7 @@ export default function PersonalizedCare() {
             The care your child needs,<br className="hidden md:inline" /> whenever you need it
           </h2>
           <p className="p1 text-sm md:text-base lg:text-lg max-w-3xl mx-auto personalized-care-description" style={{ marginTop: '12px', marginBottom: 0, paddingBottom: 0, paddingTop: 0 }}>
-            Wherever you are, Koott offers a safe space with trusted child psychologists and gentle child counseling whenever you need it.
+            Wherever you are, MyKoott offers a safe space with trusted child psychologists and gentle child counseling whenever you need it.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ export default function PersonalizedCare() {
           <div className="hidden md:block w-full max-w-[550px] lg:max-w-[800px] xl:max-w-[1000px] rounded-2xl overflow-hidden mx-auto personalized-care-image-container" style={{ marginTop: '96px', marginBottom: '96px', paddingTop: 0, paddingBottom: 0 }}>
             <Image
               src="/Little Hope lap.webp"
-              alt="Desktop illustration of Koott’s child counseling and parent support"
+              alt="Desktop illustration of MyKoott’s child counseling and parent support"
               width={1000}
               height={667}
               className="w-full h-auto object-contain"

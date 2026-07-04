@@ -194,7 +194,7 @@ export default function AuthModal({
       // Check if it's a "user not found" type error - suggest signup
       const errorMsgLower = msg.toLowerCase();
       if (errorMsgLower.includes('user not found') ||
-          errorMsgLower.includes('new to Koott') ||
+          errorMsgLower.includes('new to MyKoott') ||
           errorMsgLower.includes('no account found') ||
           errorMsgLower.includes('account does not exist') ||
           errorMsgLower.includes('invalid credentials') ||

@@ -130,7 +130,7 @@ export default function MissionHero() {
           <div className="mission-hero-image-container relative w-full aspect-video">
             <Image
               src="/aboutushero.webp"
-              alt="Koott mission illustration - making mental health care closer, calmer, and real for children"
+              alt="MyKoott mission illustration - making mental health care closer, calmer, and real for children"
               fill
               className="object-contain"
               priority

@@ -22,7 +22,7 @@ export const metadata = {
   metadataBase: new URL(`${siteUrl}/`),
   title: {
     default: "India's Trusted Child Psychologist | Online Child Counseling",
-    template: "%s | Koott"
+    template: "%s | MyKoott"
   },
   description:
     "Connect with experienced child psychologists for safe, supportive online child counseling. Help your child manage anxiety, behavior, or school stress from the comfort of home.",
@@ -35,14 +35,14 @@ export const metadata = {
     description:
       "Connect with experienced child psychologists for safe, supportive online child counseling. Help your child manage anxiety, behavior, or school stress from the comfort of home.",
     type: "website",
-    siteName: "Koott",
+    siteName: "MyKoott",
     url: "/",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "Koott",
+        alt: "MyKoott",
       },
     ],
   },
@@ -297,7 +297,7 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "MedicalBusiness",
-              name: "Koott",
+              name: "MyKoott",
               description:
                 "Connect with experienced child psychologists for safe, supportive online child counseling. Help your child manage anxiety, behavior, or school stress from the comfort of home.",
               url: siteUrl,

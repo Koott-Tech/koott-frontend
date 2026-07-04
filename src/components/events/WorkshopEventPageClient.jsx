@@ -298,7 +298,7 @@ export default function WorkshopEventPageClient({
             email,
             countryCode: dialFromPhoneCountryValue(phoneCountryValue),
             phone,
-            eventSlug: cms.registerEventSlug || "Koott-summer-workshops-2026",
+            eventSlug: cms.registerEventSlug || "MyKoott-summer-workshops-2026",
           }),
         });
         const data = await res.json().catch(() => ({}));

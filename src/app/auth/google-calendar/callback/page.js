@@ -91,7 +91,7 @@ function GoogleCalendarCallbackContent() {
               </svg>
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Successfully Connected!</h2>
-            <p className="text-sm text-gray-600">Your Google Calendar is now synced with Koott</p>
+            <p className="text-sm text-gray-600">Your Google Calendar is now synced with MyKoott</p>
             <p className="text-xs text-gray-500 mt-2">Redirecting to settings...</p>
           </div>
         )}

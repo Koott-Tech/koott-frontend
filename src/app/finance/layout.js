@@ -183,7 +183,7 @@ export default function FinanceLayout({ children }) {
             <a 
               href="/finance"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to finance dashboard"
+              aria-label="MyKoott - Go to finance dashboard"
               onClick={() => {
                 if (typeof window !== 'undefined' && window.innerWidth < 1024) {
                   setIsSidebarOpen(false);
@@ -192,7 +192,7 @@ export default function FinanceLayout({ children }) {
             >
               <img 
                 src="/logo.png"
-                alt="Koott - Finance Dashboard"
+                alt="MyKoott - Finance Dashboard"
                 width={120}
                 height={40}
                 className="object-contain"
@@ -252,11 +252,11 @@ export default function FinanceLayout({ children }) {
             <a 
               href="/finance"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to finance dashboard"
+              aria-label="MyKoott - Go to finance dashboard"
             >
               <img 
                 src="/logo.png"
-                alt="Koott - Finance Dashboard"
+                alt="MyKoott - Finance Dashboard"
                 width={120}
                 height={40}
                 className="object-contain"

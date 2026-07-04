@@ -95,7 +95,7 @@ export default function AboutStats() {
             <div className="relative order-2 md:order-2 h-[60vh] md:h-full">
               <Image
                 src="/Aboutus 2.webp"
-                alt="Child and family receiving mental health care and support from Koott"
+                alt="Child and family receiving mental health care and support from MyKoott"
                 fill
                 className="object-cover"
                 sizes="(min-width: 768px) 50vw, 100vw"

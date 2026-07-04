@@ -141,7 +141,7 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
             <TextInput
               value={cms.registerEventSlug}
               onChange={(v) => patch((p) => ({ ...p, registerEventSlug: v }))}
-              placeholder="Koott-summer-workshops-2026"
+              placeholder="MyKoott-summer-workshops-2026"
             />
           </Field>
           <Field label="Session join link (Google Meet, Zoom, etc.) — required when published">

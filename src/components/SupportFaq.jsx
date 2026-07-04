@@ -230,14 +230,14 @@ export default function SupportFaq() {
               {prevSrc && (
               <img
                   src={prevSrc}
-                  alt="Previous illustration of Koott's child counseling promise"
+                  alt="Previous illustration of MyKoott's child counseling promise"
                   className={`absolute inset-0 w-full h-full object-contain rounded-[10px] transition-opacity duration-[1200ms] ease-in-out z-10 ${isImageTransitioning ? 'opacity-0' : 'opacity-100'}`}
                   style={{ width: '100%', height: '500px', objectFit: 'contain', borderRadius: '10px' }}
                 />
               )}
               <img
                 src={currentSrc}
-                alt="Illustration highlighting Koott's child counseling promise"
+                alt="Illustration highlighting MyKoott's child counseling promise"
                 className={`relative w-full h-full object-contain rounded-[10px] transition-opacity duration-[1200ms] ease-in-out z-20 ${isImageTransitioning ? 'opacity-100' : 'opacity-100'}`}
                 style={{ width: '100%', height: '500px', objectFit: 'contain', borderRadius: '10px' }}
               />

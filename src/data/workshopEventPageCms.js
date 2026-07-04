@@ -19,30 +19,30 @@ function deepMerge(base, over) {
 
 export function getWorkshopEventPageDefaults() {
   return {
-    registerEventSlug: "Koott-summer-workshops-2026",
+    registerEventSlug: "MyKoott-summer-workshops-2026",
     /** Single join link for this event (e.g. Google Meet). Sent in registration email + WhatsApp; set in admin CMS. */
     sessionJoinUrl: "",
     heroImageUrl: SUMMER_WORKSHOP_2026_HERO_IMAGE,
     heroImageAlt:
-      "Children and family learning together at home — Koott Summer Workshops",
+      "Children and family learning together at home — MyKoott Summer Workshops",
     hero: {
-      eyebrow: "Koott Summer Workshops 2026",
+      eyebrow: "MyKoott Summer Workshops 2026",
       title: "Not just workshops — spaces where children and parents learn, feel, and grow together.",
       body: "Join our first interactive session on expressing emotions at home. Free for this edition; register to save your spot.",
     },
     /** Controls card content on /events listing page. */
     eventListCard: {
       category: "Family Workshop",
-      title: "Koott Summer Workshop 2026",
+      title: "MyKoott Summer Workshop 2026",
       description:
         "Interactive parent-child session focused on expressing emotions at home, communication tools, and practical weekly habits.",
-      organizer: "Koott",
+      organizer: "MyKoott",
       scheduleText: "Sat, 18 April 2026 at 11:00 AM IST",
       imageUrl: SUMMER_WORKSHOP_2026_HERO_IMAGE,
     },
     ticketCard: {
       admitLabel: "ADMIT ONE",
-      seriesLine: "Koott · Summer 2026",
+      seriesLine: "MyKoott · Summer 2026",
       sessionTitle: "Expressing Big Emotions at Home",
       datetimeLine: "Sat, 18 April 2026 · 11:00 AM IST · Online",
       sessionPassLabel: "Session pass",

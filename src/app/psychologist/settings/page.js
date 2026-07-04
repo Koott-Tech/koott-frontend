@@ -154,7 +154,7 @@ export default function PsychologistSettings() {
         console.error('Error fetching Google events:', error);
       }
       
-      // 2. Fetch Koott sessions (your platform bookings)
+      // 2. Fetch MyKoott sessions (your platform bookings)
       let koottEvents = [];
       try {
         const sessionsData = await psychologistApi.getSessions();
@@ -173,7 +173,7 @@ export default function PsychologistSettings() {
             endDateTime.setHours(endDateTime.getHours() + 1);
             
             return {
-              summary: `Koott - ${session.client_name || 'Client'}`,
+              summary: `MyKoott - ${session.client_name || 'Client'}`,
               start: {
                 dateTime: `${session.scheduled_date}T${session.scheduled_time}`
               },
@@ -189,7 +189,7 @@ export default function PsychologistSettings() {
             };
           });
       } catch (error) {
-        console.error('Error fetching Koott sessions:', error);
+        console.error('Error fetching MyKoott sessions:', error);
       }
       
       // Combine both sources
@@ -344,7 +344,7 @@ export default function PsychologistSettings() {
   };
   
   const getEventColor = (summary, source) => {
-    // Koott events are always green
+    // MyKoott events are always green
     if (source === 'koott') {
       return 'bg-green-100 border-green-400 text-green-900';
     }
@@ -710,7 +710,7 @@ export default function PsychologistSettings() {
               <div className="flex items-start">
                 <div className="flex-1">
                   <p className="text-sm text-gray-700 mb-4">
-                    Connect your Google Calendar to automatically prevent double bookings. When you have sessions booked on other platforms (BetterHelp, Talkspace, etc.), those time slots will be automatically blocked on Koott.
+                    Connect your Google Calendar to automatically prevent double bookings. When you have sessions booked on other platforms (BetterHelp, Talkspace, etc.), those time slots will be automatically blocked on MyKoott.
                   </p>
                   
                   {isCalendarConnected ? (
@@ -928,7 +928,7 @@ export default function PsychologistSettings() {
                                       ? 'bg-green-200 text-green-900' 
                                       : 'bg-white/50'
                                   }`}>
-                                    {event.source === 'koott' ? 'Koott' : 'External'}
+                                    {event.source === 'koott' ? 'MyKoott' : 'External'}
                                   </span>
                                 </div>
                               </div>

@@ -88,7 +88,7 @@ const DEFAULT_PHOTOS = [
   },
   { src: "/TESTIMONIALS 4.webp", alt: "Family moment", type: "image" },
   {
-    text: "Koott has been such a gentle support for our family. My daughter used to struggle with focus and big emotions, but after a few sessions, I can see how much more confident she feels. The therapists truly understand children.",
+    text: "MyKoott has been such a gentle support for our family. My daughter used to struggle with focus and big emotions, but after a few sessions, I can see how much more confident she feels. The therapists truly understand children.",
     author: "Parent of a 9-year-old",
     bgImage: "/Our promise bg4.webp",
     gradient: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 50%, #D1E9FF 100%)",
@@ -144,7 +144,7 @@ const DEFAULT_DESKTOP_GRID = {
     },
     textCard: {
       quote:
-        "Koott has been such a gentle support for our family. My daughter used to struggle with focus and big emotions, but after a few sessions, I can see how much more confident she feels. The therapists truly understand children.",
+        "MyKoott has been such a gentle support for our family. My daughter used to struggle with focus and big emotions, but after a few sessions, I can see how much more confident she feels. The therapists truly understand children.",
       author: "Parent of a 9-year-old",
       bg: "/Our promise bg4.webp",
     },

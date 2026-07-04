@@ -324,7 +324,7 @@ export default function ProfileLayout({ children }) {
           <div className="flex items-center shrink-0" style={{ maxHeight: '24px' }}>
             <img 
               src="/logo.png" 
-              alt="Koott Logo" 
+              alt="MyKoott Logo" 
               className="w-auto hover:opacity-80 transition-opacity object-contain"
               style={{ height: '24px', maxHeight: '24px' }}
             />

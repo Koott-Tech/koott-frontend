@@ -16,7 +16,7 @@ import { TrendingUp } from 'lucide-react';
 
 // Metadata configuration
 const pageMetadata = {
-  title: 'Child Psychology Services & Online Counseling | Koott',
+  title: 'Child Psychology Services & Online Counseling | MyKoott',
   description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support. Book a session today.',
   keywords: [
     'child psychologist',
@@ -39,21 +39,21 @@ const pageMetadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://www.koott.in/ads',
-    siteName: 'Koott',
-    title: 'Child Psychology Services & Online Counseling | Koott',
+    siteName: 'MyKoott',
+    title: 'Child Psychology Services & Online Counseling | MyKoott',
     description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support.',
     images: [
       {
         url: 'https://www.koott.in/logo.png',
         width: 1200,
         height: 630,
-        alt: 'Koott logo',
+        alt: 'MyKoott logo',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Child Psychology Services & Online Counseling | Koott',
+    title: 'Child Psychology Services & Online Counseling | MyKoott',
     description: 'Discover professional child psychology services and online counseling for children and families. Expert child psychologists help with anxiety, behavior, ADHD, and emotional support.',
     images: ['https://www.koott.in/logo.png'],
     creator: '@koott',
@@ -67,7 +67,7 @@ const pageMetadata = {
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'MedicalBusiness',
-  name: 'Koott - Child Psychology Services',
+  name: 'MyKoott - Child Psychology Services',
   description: 'Professional child psychology services and online counseling for children and families. Expert child psychologists providing therapy for anxiety, behavior, ADHD, and emotional support.',
   url: 'https://www.koott.in',
   logo: 'https://www.koott.in/logo.png',
@@ -105,7 +105,7 @@ const serviceStructuredData = {
   serviceType: 'Child Psychology Services',
   provider: {
     '@type': 'Organization',
-    name: 'Koott',
+    name: 'MyKoott',
     url: 'https://www.koott.in',
   },
   areaServed: {
@@ -142,11 +142,11 @@ const breadcrumbStructuredData = {
 // FAQ Data
 const FAQ_DATA = [
   {
-    question: 'What is Koott?',
-    answer: 'Koott is an online child counseling platform that supports children and parents through therapy, assessments, and emotional wellness sessions — all from the comfort of your home.'
+    question: 'What is MyKoott?',
+    answer: 'MyKoott is an online child counseling platform that supports children and parents through therapy, assessments, and emotional wellness sessions — all from the comfort of your home.'
   },
   {
-    question: 'Who are the therapists at Koott?',
+    question: 'Who are the therapists at MyKoott?',
     answer: 'Our team includes consultant psychologists, clinical psychologists, and child therapists with experience in child behaviour, emotional regulation, and developmental support.'
   },
   {
@@ -1228,7 +1228,7 @@ export default function AdsLandingPage() {
                     Trusted by 840+ parents becoming family again.
                   </h1>
                   <p className="hero-description p1 mt-3 md:mt-3 text-base md:text-lg">
-                     Koott is led by Koott, helping parents who love deeply but struggle to connect, express and feel understood.
+                     MyKoott is led by MyKoott, helping parents who love deeply but struggle to connect, express and feel understood.
                   </p>
                   <div className="hero-buttons mt-6 md:mt-8 flex flex-col items-center gap-4 sm:flex-row sm:gap-6 sm:justify-start">
                     <style dangerouslySetInnerHTML={{__html: `
@@ -1299,7 +1299,7 @@ export default function AdsLandingPage() {
                   <div className="hero-image-box absolute inset-0 flex items-end justify-center" style={{ border: 'none', outline: 'none', boxShadow: 'none' }}>
                     <Image
                       src="/hee.webp"
-                      alt="Hero illustration showing Koott's child counseling and parent support"
+                      alt="Hero illustration showing MyKoott's child counseling and parent support"
                       fill
                       className="object-contain object-bottom"
                       sizes="55vw"
@@ -2129,11 +2129,11 @@ export default function AdsLandingPage() {
               <div className="reviews-marquee">
                 {(() => {
                   const reviews = [
-                    { name: "Priya Menon", rating: 5, text: "Koott has been a lifesaver for our family. The online sessions are convenient and our child feels comfortable talking to the psychologist. Highly recommend!" },
-                    { name: "Rajesh Nair", rating: 4.5, text: "The free assessment helped us understand our child's needs better. The psychologist was patient, understanding, and provided excellent guidance. Thank you Koott!" },
+                    { name: "Priya Menon", rating: 5, text: "MyKoott has been a lifesaver for our family. The online sessions are convenient and our child feels comfortable talking to the psychologist. Highly recommend!" },
+                    { name: "Rajesh Nair", rating: 4.5, text: "The free assessment helped us understand our child's needs better. The psychologist was patient, understanding, and provided excellent guidance. Thank you MyKoott!" },
                     { name: "Anitha Pillai", rating: 4, text: "Professional service, easy booking, and great results. Our child's anxiety has improved significantly since starting sessions. The online format works perfectly for us." },
                     { name: "Suresh Kumar", rating: 5, text: "Excellent support for our child. The therapists are compassionate and understanding. We've seen remarkable progress in just a few sessions." },
-                    { name: "Lakshmi Nair", rating: 4.5, text: "Koott made it so easy to get help for our daughter. The booking process is simple and the sessions are very effective. Highly satisfied!" },
+                    { name: "Lakshmi Nair", rating: 4.5, text: "MyKoott made it so easy to get help for our daughter. The booking process is simple and the sessions are very effective. Highly satisfied!" },
                     { name: "Vijay Menon", rating: 5, text: "The best decision we made for our child's mental health. The psychologists are professional and our child looks forward to the sessions." }
                   ];
                   const loopReviews = [...reviews, ...reviews, ...reviews];

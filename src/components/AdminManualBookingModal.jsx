@@ -211,6 +211,7 @@ export default function AdminManualBookingModal({
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [searchClient, setSearchClient] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [isSearchingClients, setIsSearchingClients] = useState(false);
   const [showPsychologistDropdown, setShowPsychologistDropdown] = useState(false);
   const [searchPsychologist, setSearchPsychologist] = useState('');
   const [meetLink, setMeetLink] = useState(''); // For recordOnly: optional Meet link if created elsewhere
@@ -273,15 +274,21 @@ export default function AdminManualBookingModal({
     }
   }, [psychologistId]);
 
-  // Update amount when package changes
+  // Prefill the amount from the therapist's individual session price — but ONLY once, when
+  // the admin actually picks a (new) therapist. Previously this fired on every change of the
+  // `psychologists` array reference too, so any background re-render would clobber a value
+  // the admin had just typed (e.g. typing 100 → snapping back to the stored 99.99 price).
+  const prefilledPsychRef = useRef(null);
   useEffect(() => {
-    if (psychologistId) {
-      // Individual session by default: set amount to psychologist's individual session price
-      const psych = psychologists.find(p => p.id === psychologistId);
-      const individualPrice = psych?.individual_session_price ?? psych?.price;
-      if (individualPrice != null && individualPrice !== '') {
-        setAmount(String(individualPrice));
-      }
+    if (!psychologistId) { prefilledPsychRef.current = null; return; }
+    if (prefilledPsychRef.current === psychologistId) return; // already prefilled for this therapist
+    const psych = psychologists.find(p => p.id === psychologistId);
+    if (!psych) return; // list not loaded yet — wait; don't mark as prefilled
+    prefilledPsychRef.current = psychologistId;
+    const individualPrice = psych.individual_session_price ?? psych.price;
+    if (individualPrice != null && individualPrice !== '') {
+      // Round to whole rupees so decimal-stored prices (paise artifacts) don't show as 99.99.
+      setAmount(String(Math.round(parseFloat(individualPrice))));
     }
   }, [psychologistId, psychologists]);
 
@@ -413,7 +420,9 @@ export default function AdminManualBookingModal({
 
   const fetchClients = async (search = '') => {
     try {
-      const params = { role: 'client', limit: 100 };
+      setIsSearchingClients(true);
+      // light=1 skips the expensive exact-count on the backend (~7x faster search).
+      const params = { role: 'client', limit: 100, light: 1 };
       if (search) params.search = search;
 
       const clientsRes = await adminApi.getUsers(params);
@@ -424,6 +433,8 @@ export default function AdminManualBookingModal({
       setClients(filteredClients);
     } catch (fetchError) {
       console.error('Error fetching clients for manual booking:', fetchError);
+    } finally {
+      setIsSearchingClients(false);
     }
   };
 
@@ -1171,16 +1182,23 @@ export default function AdminManualBookingModal({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search client by name or email..."
+                    placeholder={isSearchingClients ? 'Searching clients…' : 'Type a name or email to search clients…'}
                     value={searchClient}
                     onChange={(e) => { setSearchClient(e.target.value); setShowClientDropdown(true); if (clientId) setClientId(''); }}
                     onFocus={() => setShowClientDropdown(true)}
                     onBlur={() => setTimeout(() => setShowClientDropdown(false), 150)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                    className="w-full px-3 py-2 pr-9 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                   />
+                  {isSearchingClients && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#025545]" />
+                  )}
                   {showClientDropdown && searchClient.trim() && (
                     <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
-                      {filteredClients.length === 0 ? (
+                      {isSearchingClients ? (
+                        <div className="px-3 py-2.5 text-sm text-slate-500 flex items-center gap-2">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#025545]" /> Searching…
+                        </div>
+                      ) : filteredClients.length === 0 ? (
                         <div className="px-3 py-2.5 text-sm text-slate-400">No matching clients</div>
                       ) : (
                         filteredClients.map((client) => {

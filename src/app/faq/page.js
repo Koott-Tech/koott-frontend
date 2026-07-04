@@ -4,11 +4,11 @@ import { useState } from "react";
 
 const FAQ_DATA = [
   {
-    q: "What is Koott?",
-    a: "Koott is an online child counseling platform that supports children and parents through therapy, assessments, and emotional wellness sessions — all from the comfort of your home.",
+    q: "What is MyKoott?",
+    a: "MyKoott is an online child counseling platform that supports children and parents through therapy, assessments, and emotional wellness sessions — all from the comfort of your home.",
   },
   {
-    q: "Who are the therapists at Koott?",
+    q: "Who are the therapists at MyKoott?",
     a: "Our team includes consultant psychologists, clinical psychologists, and child therapists with experience in child behaviour, emotional regulation, and developmental support.",
   },
   {
@@ -64,7 +64,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h1>
           <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
-            Find answers to common questions about Koott and our services.
+            Find answers to common questions about MyKoott and our services.
           </p>
         </div>
       </section>

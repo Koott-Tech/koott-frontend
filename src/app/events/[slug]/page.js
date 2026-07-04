@@ -19,12 +19,12 @@ async function fetchEventPageRow(slug) {
 export async function generateMetadata({ params }) {
   const row = await fetchEventPageRow(params.slug);
   if (!row) {
-    return { title: "Event | Koott" };
+    return { title: "Event | MyKoott" };
   }
   const merged = mergeWorkshopEventCms(row.cms_data);
-  const title = row.seo_title || merged.hero?.title?.slice(0, 70) || "Event | Koott";
+  const title = row.seo_title || merged.hero?.title?.slice(0, 70) || "Event | MyKoott";
   const description =
-    row.seo_description || merged.hero?.body?.slice(0, 160) || "Koott events and workshops.";
+    row.seo_description || merged.hero?.body?.slice(0, 160) || "MyKoott events and workshops.";
   const canonical =
     row.canonical_url || `https://www.koott.in/events/${params.slug}`;
   const image = merged.eventListCard?.imageUrl || merged.heroImageUrl || undefined;
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }) {
       description,
       type: "website",
       url: canonical,
-      siteName: "Koott",
+      siteName: "MyKoott",
       ...(image ? { images: [{ url: image, alt: title }] } : {}),
     },
     twitter: {

@@ -21,7 +21,7 @@ export default function ResultsSplit() {
                 style={{ borderColor: "#1c331d" }}
               >
                 <p>
-                  With LittleMinds, you're not just finding care — you're finding the
+                  With MyKoott, you're not just finding care — you're finding the
                   right care for your needs.
                 </p>
               </div>
@@ -30,7 +30,7 @@ export default function ResultsSplit() {
                  <StatBlock value="15,000+" label="licensed providers with diverse backgrounds and specialties" />
                  <StatBlock value="170+" label="clinical specialties and modalities offered" />
                  <StatBlock value="98%" label="find a provider that meets their unique preferences" />
-                 <StatBlock value="93%" label="report feeling better about their symptoms after receiving care through LittleMinds" />
+                 <StatBlock value="93%" label="report feeling better about their symptoms after receiving care through MyKoott" />
                </div>
                
                                                {/* Get Started Button */}

@@ -4,7 +4,7 @@
 export const DEFAULT_CHILD_SPEC_FU_TIER = '3';
 
 /**
- * Themed session-count select for child specialist follow-up rows (Koott purple palette).
+ * Themed session-count select for child specialist follow-up rows (MyKoott purple palette).
  * @param {boolean} [compact] — tighter padding/height for dense follow-up rows
  */
 export default function ChildSpecSessionSelect({ value, onChange, ariaLabel, options, compact = false }) {

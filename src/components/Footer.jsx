@@ -256,14 +256,14 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                             Ready to join?
                         </h4>
                         <p className="footer-description text-sm md:text-base text-gray-700 mb-8">
-                            Explore upcoming sessions, reserve your seat, and start your family learning journey with Koott.
+                            Explore upcoming sessions, reserve your seat, and start your family learning journey with MyKoott.
                         </p>
                         <button
                             className="text-white px-5 py-2 md:px-7 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200 shadow-sm"
                             style={{ backgroundColor: '#025545' }}
                             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#012f23')}
                             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#025545')}
-                            onClick={() => router.push('/events/Koott-summer-workshops-2026#register')}
+                            onClick={() => router.push('/events/MyKoott-summer-workshops-2026#register')}
                         >
                             Register now
                         </button>
@@ -289,7 +289,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                         </p>
                         <div className="flex items-center justify-center gap-3">
                             <a
-                                href={pathname === '/about' ? "/#choose-your-guide" : "https://wa.me/919539007766?text=Hi%20Koott%2C%20I%27d%20like%20to%20know%20more%20about%20your%20services."}
+                                href={pathname === '/about' ? "/#choose-your-guide" : "https://wa.me/919539007766?text=Hi%20MyKoott%2C%20I%27d%20like%20to%20know%20more%20about%20your%20services."}
                                 className="px-4 py-2 md:px-6 md:py-2.5 rounded-3xl text-sm md:text-base font-semibold transition-all duration-200"
                                 style={{ backgroundColor: 'transparent', color: '#025545', boxShadow: 'inset 0 0 0 2px #025545' }}
                                 onClick={(e) => {
@@ -567,7 +567,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                 <div className="w-full flex flex-col justify-center px-8 md:px-16 lg:px-24 mt-4">
                     <div className="w-full h-px my-8 bg-white/40"></div>
                     <div className="mt-0 text-white">
-                        <h5 className="mb-4 text-left md:text-left "><span className="italic text-[20px] md:text-[28px]" style={{ color: '#eae5ff' }}>We're</span> <span className="text-[22px] md:text-[28px]">Koott</span></h5>
+                        <h5 className="mb-4 text-left md:text-left "><span className="italic text-[20px] md:text-[28px]" style={{ color: '#eae5ff' }}>We're</span> <span className="text-[22px] md:text-[28px]">MyKoott</span></h5>
                         <div className="space-y-3 text-left md:text-left">
                             
                             <div className="text-base md:text-lg text-white/70 leading-[1] p2">
@@ -583,7 +583,7 @@ export default function Footer({ isHomePage = false, isCmsPage = false, isTherap
                         </div>
                         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 text-white/90 text-sm mt-6">
                             <p className="p2 text-center xl:text-left">
-                                <span style={{ color: '#025545', display: 'inline-block', marginRight: '2px' }}>©</span> Koott by Koott Care Pvt. Ltd. All rights reserved
+                                <span style={{ color: '#025545', display: 'inline-block', marginRight: '2px' }}>©</span> MyKoott by MyKoott Care Pvt. Ltd. All rights reserved
                             </p>
                             <div className="flex flex-wrap items-center justify-center xl:justify-end gap-x-6 gap-y-3">
                                 <a href="/terms-and-conditions" className="hover:text-white transition-colors">TERMS AND CONDITIONS</a>

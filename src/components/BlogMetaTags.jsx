@@ -40,11 +40,11 @@ const BlogMetaTags = ({ blog, siteUrl = 'https://koott.com' }) => {
     "image": featured_image_url ? `${siteUrl}${featured_image_url}` : `${siteUrl}/logo.png`,
     "author": {
       "@type": "Person",
-      "name": author_name || "Koott Team"
+      "name": author_name || "MyKoott Team"
     },
     "publisher": {
       "@type": "Organization",
-      "name": "Koott",
+      "name": "MyKoott",
       "logo": {
         "@type": "ImageObject",
         "url": `${siteUrl}/logo.png`
@@ -68,7 +68,7 @@ const BlogMetaTags = ({ blog, siteUrl = 'https://koott.com' }) => {
       <meta name="title" content={metaTitle} />
       <meta name="description" content={metaDescription} />
       <meta name="keywords" content={keywords} />
-      <meta name="author" content={author_name || "Koott Team"} />
+      <meta name="author" content={author_name || "MyKoott Team"} />
       
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="article" />
@@ -76,9 +76,9 @@ const BlogMetaTags = ({ blog, siteUrl = 'https://koott.com' }) => {
       <meta property="og:title" content={metaTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={featured_image_url ? `${siteUrl}${featured_image_url}` : `${siteUrl}/logo.png`} />
-      <meta property="og:site_name" content="Koott" />
+      <meta property="og:site_name" content="MyKoott" />
       <meta property="og:locale" content="en_US" />
-      <meta property="article:author" content={author_name || "Koott Team"} />
+      <meta property="article:author" content={author_name || "MyKoott Team"} />
       <meta property="article:published_time" content={published_at} />
       <meta property="article:modified_time" content={published_at} />
       {categories?.map((category, index) => (

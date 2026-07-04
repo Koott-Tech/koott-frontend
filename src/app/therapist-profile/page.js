@@ -1320,7 +1320,7 @@ const TherapistProfileContent = () => {
             key: paymentData.keyId,
             amount: paymentData.amountInPaise,
             currency: paymentData.currency || 'INR',
-            name: paymentData.name || 'Koott',
+            name: paymentData.name || 'MyKoott',
             description: paymentData.description,
             order_id: paymentData.orderId,
             prefill: paymentData.prefill || {},
@@ -1788,7 +1788,7 @@ const TherapistProfileContent = () => {
     if (!selectedDoctor) return;
 
     const name = selectedDoctor.name || `${selectedDoctor.first_name || ''} ${selectedDoctor.last_name || ''}`.trim();
-    const title = `${name} | Child Psychologist | Koott`;
+    const title = `${name} | Child Psychologist | MyKoott`;
     
     // Build description from psychologist details
     const parts = [];
@@ -1831,7 +1831,7 @@ const TherapistProfileContent = () => {
       parts.push(shortDesc);
     }
     
-    const description = parts.join(' • ') || `Book an online session with ${name}, an experienced child psychologist at Koott.`;
+    const description = parts.join(' • ') || `Book an online session with ${name}, an experienced child psychologist at MyKoott.`;
     
     // Normalize image URL for Open Graph
     const normalizeImageUrl = (url) => {

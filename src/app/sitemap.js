@@ -16,7 +16,7 @@ export default async function sitemap() {
     "/faq",
     "/career",
     "/events",
-    "/events/Koott-summer-workshops-2026",
+    "/events/MyKoott-summer-workshops-2026",
     "/therapy-agreement", 
     "/privacy-policy", 
     "/terms-and-conditions", 

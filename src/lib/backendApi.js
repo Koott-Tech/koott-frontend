@@ -1011,10 +1011,14 @@ export const adminApi = {
     });
   },
 
-  async rescheduleWixBooking(wixBookingId, { new_date, new_time }) {
+  async rescheduleWixBooking(wixBookingId, { new_date, new_time, noshow_fee_amount, noshow_fee_method, noshow_fee_receipt_url } = {}) {
     return apiRequest(`/admin/wix/bookings/${wixBookingId}/reschedule`, {
       method: 'POST',
-      body: JSON.stringify({ new_date, new_time }),
+      body: JSON.stringify({
+        new_date, new_time,
+        // No-show reschedule fee (only present when rescheduling a no-show session).
+        ...(noshow_fee_amount !== undefined ? { noshow_fee_amount, noshow_fee_method, noshow_fee_receipt_url } : {}),
+      }),
     });
   },
 
@@ -1033,7 +1037,13 @@ export const adminApi = {
       scheduled_time: rescheduleData?.new_time || rescheduleData?.scheduled_time,
       // Keep status aligned with admin reschedule action
       status: rescheduleData?.status || 'rescheduled',
-      ...(rescheduleData?.reason ? { reason: rescheduleData.reason } : {})
+      ...(rescheduleData?.reason ? { reason: rescheduleData.reason } : {}),
+      // No-show reschedule fee (only present when rescheduling a no-show session).
+      ...(rescheduleData?.noshow_fee_amount !== undefined ? {
+        noshow_fee_amount: rescheduleData.noshow_fee_amount,
+        noshow_fee_method: rescheduleData.noshow_fee_method,
+        noshow_fee_receipt_url: rescheduleData.noshow_fee_receipt_url,
+      } : {}),
     };
 
     return apiRequest(`/admin/sessions/${sessionId}`, {

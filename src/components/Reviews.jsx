@@ -10,7 +10,7 @@ export default function Reviews({ cmsData = null }) {
       handle: "@emmaai",
       avatar: "/testimonialgirl.png",
       text:
-        "Using Koott has transformed how we support our child. The therapists are warm and the progress is visible.",
+        "Using MyKoott has transformed how we support our child. The therapists are warm and the progress is visible.",
     },
     {
       name: "David Park",

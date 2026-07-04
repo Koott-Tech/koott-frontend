@@ -89,7 +89,7 @@ export default function CreateEventPageCmsPage() {
               if (!seoDescriptionEdited) {
                 setSeoDescription(
                   nextTitle
-                    ? `Join ${nextTitle} on Koott. Workshop details, schedule, and registration.`
+                    ? `Join ${nextTitle} on MyKoott. Workshop details, schedule, and registration.`
                     : ""
                 );
               }

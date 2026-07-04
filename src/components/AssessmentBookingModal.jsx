@@ -445,7 +445,7 @@ export default function AssessmentBookingModal({ open, onClose, assessment, doct
             key: paymentData.keyId,
             amount: paymentData.amountInPaise,
             currency: paymentData.currency || 'INR',
-            name: paymentData.name || 'Koott',
+            name: paymentData.name || 'MyKoott',
             description: paymentData.description,
             order_id: paymentData.orderId,
             prefill: paymentData.prefill || {},

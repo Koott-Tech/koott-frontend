@@ -80,7 +80,7 @@ export default function AdminLayout({ children }) {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Legacy', href: '/admin/bookings', icon: Calendar },
     { name: 'Bookings', href: '/admin/wix-discover', icon: Globe },
-    { name: 'Koott Therapists', href: '/admin/wix-therapists', icon: UserCheck },
+    { name: 'MyKoott Therapists', href: '/admin/wix-therapists', icon: UserCheck },
     // { name: 'Events', href: '/admin/events', icon: Ticket },
     // { name: 'Assessment Sessions', href: '/admin/assessment-sessions', icon: Package },
     // { name: 'Rescheduling', href: '/admin/rescheduling', icon: RefreshCw },
@@ -267,11 +267,11 @@ export default function AdminLayout({ children }) {
             <a 
               href="/admin"
               className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="Koott - Go to admin dashboard"
+              aria-label="MyKoott - Go to admin dashboard"
             >
               <img 
                 src="/logo.png"
-                alt="Koott"
+                alt="MyKoott"
                 width={120}
                 height={40}
                 className="object-contain"
@@ -379,7 +379,7 @@ export default function AdminLayout({ children }) {
               >
                 {isSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
               </button>
-            <h6>Koott Admin Panel</h6>
+            <h6>MyKoott Admin Panel</h6>
             </div>
             <div className="flex items-center space-x-4">
               {user && (

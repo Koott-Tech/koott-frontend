@@ -177,7 +177,7 @@ export default function WhatsAppWidget() {
   }, [isDragging, dragOffset, position]);
 
   // WhatsApp link with pre-filled message
-  const whatsappUrl = "https://wa.me/919539007766?text=Hi%20Koott%2C%20I%27d%20like%20to%20know%20more%20about%20your%20services.";
+  const whatsappUrl = "https://wa.me/919539007766?text=Hi%20MyKoott%2C%20I%27d%20like%20to%20know%20more%20about%20your%20services.";
 
   // Use right/bottom if not positioned yet, otherwise use left/top for dragging
   const positionStyle = position.x !== null && position.y !== null

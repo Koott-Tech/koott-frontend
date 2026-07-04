@@ -52,8 +52,8 @@ async function getPublishedEventCards() {
         id: row?.id || slug,
         category: listCard?.category || cms?.whatIsThis?.eyebrow || "Family Workshop",
         title: listCard?.title || cms?.sessionBanner?.title || cms?.hero?.title || row?.seo_title || "Event",
-        description: listCard?.description || cms?.hero?.body || row?.seo_description || "Join this event with Koott.",
-        organizer: listCard?.organizer || "Koott",
+        description: listCard?.description || cms?.hero?.body || row?.seo_description || "Join this event with MyKoott.",
+        organizer: listCard?.organizer || "MyKoott",
         schedule: schedule || "Schedule to be announced",
         image: listCard?.imageUrl || cms?.heroImageUrl || SUMMER_WORKSHOP_2026_HERO_IMAGE,
         detailsHref: `/events/${slug}`,
@@ -68,14 +68,14 @@ async function getPublishedEventCards() {
 export const metadata = {
   title: "Events",
   description:
-    "Koott workshops and family events — parent–child sessions on emotions, communication, and growing together.",
+    "MyKoott workshops and family events — parent–child sessions on emotions, communication, and growing together.",
   openGraph: {
-    title: "Events | Koott",
+    title: "Events | MyKoott",
     description:
-      "Join Koott workshops for parents and children — safe spaces to learn, feel, and grow together.",
+      "Join MyKoott workshops for parents and children — safe spaces to learn, feel, and grow together.",
     type: "website",
     url: "https://www.koott.in/events",
-    siteName: "Koott",
+    siteName: "MyKoott",
   },
   alternates: {
     canonical: "https://www.koott.in/events",
@@ -264,7 +264,7 @@ export default async function EventsPage() {
               Building emotionally safer homes for every family
           </h3>
             <p className={`mx-auto mt-2 max-w-2xl text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
-              At Koott, we design practical workshops where parents and children learn together, understand
+              At MyKoott, we design practical workshops where parents and children learn together, understand
               emotions better, and build stronger day-to-day communication with confidence.
             </p>
           </section>
@@ -413,7 +413,7 @@ export default async function EventsPage() {
                 <p className={`px-1 pb-5 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
                   Visit{" "}
                   <Link href="/blog" className="font-medium text-[#025545] underline underline-offset-2 hover:text-[#012f23]">
-                    The Koott Blog
+                    The MyKoott Blog
                   </Link>{" "}
                   for expert-written guides, family stories, and practical tips that complement what we cover in live events.
                 </p>

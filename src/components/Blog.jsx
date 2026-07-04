@@ -137,7 +137,7 @@ export default function Blog() {
       className={`text-gray-900 mb-4 ${HERO_DISPLAY_HEADING_CLASS}`}
       style={HERO_DISPLAY_HEADING_STYLE}
     >
-      The Koott Blog
+      The MyKoott Blog
     </div>
   );
 
@@ -403,7 +403,7 @@ export default function Blog() {
                   {/* Meta Info */}
                   <div className="mt-4">
                     <div className={`text-gray-600 text-xs md:text-sm text-left ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
-                      <span>{post.author_name || "Koott Team"}</span>
+                      <span>{post.author_name || "MyKoott Team"}</span>
                       <span className="px-1 md:px-2">•</span>
                       <span>{formatDate(post.published_at || post.created_at)}</span>
                     </div>

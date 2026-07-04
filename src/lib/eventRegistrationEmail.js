@@ -1,6 +1,6 @@
 /**
  * Optional confirmation email via Resend (no extra npm dependency).
- * Set RESEND_API_KEY and RESEND_FROM (e.g. "Koott <hello@yourdomain.com>").
+ * Set RESEND_API_KEY and RESEND_FROM (e.g. "MyKoott <hello@yourdomain.com>").
  */
 
 function escapeHtml(s) {
@@ -27,7 +27,7 @@ export async function sendEventRegistrationConfirmationEmail({ to, fullName, eve
   const from =
     process.env.RESEND_FROM ||
     process.env.RESEND_FROM_EMAIL ||
-    "Koott <onboarding@resend.dev>";
+    "MyKoott <onboarding@resend.dev>";
 
   if (!key) {
     console.warn("[eventRegistrationEmail] RESEND_API_KEY not set; skipping confirmation email.");
@@ -51,7 +51,7 @@ export async function sendEventRegistrationConfirmationEmail({ to, fullName, eve
   <p>Thank you for registering for <strong>${safeTitle}</strong>.</p>
   <p>Your spot is reserved.</p>
   ${linkBlock}
-  <p style="margin-top: 1.5rem; color: #666; font-size: 14px;">— Koott</p>
+  <p style="margin-top: 1.5rem; color: #666; font-size: 14px;">— MyKoott</p>
 </body>
 </html>`;
 

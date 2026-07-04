@@ -1,13 +1,13 @@
 import styles from "./therapy-agreement.module.css";
 
 export const metadata = {
-    title: "Therapy Agreement | Koott",
+    title: "Therapy Agreement | MyKoott",
     description:
-        "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of Koott by Koott Care Pvt. Ltd.",
+        "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of MyKoott by MyKoott Care Pvt. Ltd.",
     openGraph: {
-        title: "Therapy Agreement | Koott",
+        title: "Therapy Agreement | MyKoott",
         description:
-            "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of Koott by Koott Care Pvt. Ltd.",
+            "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of MyKoott by MyKoott Care Pvt. Ltd.",
         type: "website",
         url: "https://www.koott.in/therapy-agreement",
         images: [
@@ -15,15 +15,15 @@ export const metadata = {
                 url: "https://www.koott.in/logo.png",
                 width: 1200,
                 height: 630,
-                alt: "Koott logo",
+                alt: "MyKoott logo",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Therapy Agreement | Koott",
+        title: "Therapy Agreement | MyKoott",
         description:
-            "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of Koott by Koott Care Pvt. Ltd.",
+            "Therapy agreement outlining services, expectations, confidentiality, payment, and legal terms for clients of MyKoott by MyKoott Care Pvt. Ltd.",
         images: ["https://www.koott.in/logo.png"],
     },
 };
@@ -35,18 +35,18 @@ export default function TherapyAgreementPage() {
         <div className={`bg-white text-gray-900 ${styles.page}`}>
             <div className="max-w-5xl mx-auto px-6 py-16 lg:px-8 lg:py-24">
                 <h3 className={`${styles.title} mt-2 text-gray-900`}>
-                    Koott Therapy Agreement
+                    MyKoott Therapy Agreement
                 </h3>
                 <p className="mt-6 text-base leading-relaxed text-gray-700">
                     This Therapy Agreement outlines expectations, responsibilities, and consent terms for clients engaging
-                    with Koott by Koott Care Pvt. Ltd. Please review it carefully before booking or participating in
+                    with MyKoott by MyKoott Care Pvt. Ltd. Please review it carefully before booking or participating in
                     services.
                 </p>
 
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Company &amp; Services</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li><strong>Company:</strong> Koott by Koott Care Pvt. Ltd.</li>
+                        <li><strong>Company:</strong> MyKoott by MyKoott Care Pvt. Ltd.</li>
                         <li>
                             <strong>Services Covered:</strong> Child Counseling, Child Assessment, Better Parenting — delivered
                             exclusively through online/tele-therapy platforms.
@@ -87,7 +87,7 @@ export default function TherapyAgreementPage() {
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Clinical Records &amp; Reports</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li>Koott maintains professional clinical records in line with legal and ethical standards.</li>
+                        <li>MyKoott maintains professional clinical records in line with legal and ethical standards.</li>
                         <li>Clients are not automatically entitled to full therapy records.</li>
                         <li>Reports or summaries for educational, medical, or organizational purposes must be formally requested and discussed with the therapist.</li>
                         <li>Additional charges may apply for reports or psychological assessments.</li>
@@ -120,7 +120,7 @@ export default function TherapyAgreementPage() {
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Suicidality &amp; Crisis</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li>Koott does not provide 24-hour emergency or crisis intervention.</li>
+                        <li>MyKoott does not provide 24-hour emergency or crisis intervention.</li>
                         <li>If you are in crisis or experiencing suicidal thoughts, contact local emergency services or visit the nearest hospital immediately.</li>
                         <li>You agree to inform your therapist if experiencing suicidal thoughts or intent.</li>
                         <li>You agree to use emergency or crisis resources when necessary and understand online therapy is not a substitute for emergency care.</li>
@@ -131,7 +131,7 @@ export default function TherapyAgreementPage() {
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Tele-Therapy Considerations</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>Ensure sessions take place in a private, quiet setting.</li>
-                        <li>Online sessions may face connectivity or security risks, despite Koott&rsquo;s secure technology.</li>
+                        <li>Online sessions may face connectivity or security risks, despite MyKoott&rsquo;s secure technology.</li>
                         <li>Technical disruptions may lead to rescheduling or extension of remaining time.</li>
                         <li>Online therapy may not suit severe psychiatric conditions; referrals for in-person care may be recommended.</li>
                     </ul>
@@ -142,14 +142,14 @@ export default function TherapyAgreementPage() {
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>The therapist acts as a neutral facilitator and does not guarantee continuation of any relationship.</li>
                         <li>All parties must provide separate informed consent.</li>
-                        <li>Disputes regarding therapy should be submitted to Koott in writing.</li>
+                        <li>Disputes regarding therapy should be submitted to MyKoott in writing.</li>
                     </ul>
                 </section>
 
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Court Involvement &amp; Legal Proceedings</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
-                        <li>Koott and its therapists do not participate in legal disputes.</li>
+                        <li>MyKoott and its therapists do not participate in legal disputes.</li>
                         <li>If compelled by subpoena or court order, clients are responsible for all related professional fees, including preparation and travel.</li>
                         <li>A subpoena alone does not permit release of records; valid consent or court order is required.</li>
                     </ul>
@@ -169,7 +169,7 @@ export default function TherapyAgreementPage() {
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>Participation in therapy is voluntary.</li>
                         <li>You understand the nature, risks, and benefits of therapy.</li>
-                        <li>You may discontinue therapy at any time without penalty; discontinuation does not create liability for Koott or its therapists.</li>
+                        <li>You may discontinue therapy at any time without penalty; discontinuation does not create liability for MyKoott or its therapists.</li>
                     </ul>
                 </section>
 
@@ -177,9 +177,9 @@ export default function TherapyAgreementPage() {
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Data Protection, Privacy &amp; Session Recordings</h3>
                     <ul className="space-y-2 text-base leading-relaxed text-gray-700 list-disc list-inside">
                         <li>Personal data and clinical records are stored securely with restricted access.</li>
-                        <li>Koott complies with Indian privacy laws and applicable international standards.</li>
+                        <li>MyKoott complies with Indian privacy laws and applicable international standards.</li>
                         <li>Sessions are not recorded unless explicit written consent is provided.</li>
-                        <li>Clients may not record sessions without written permission from Koott.</li>
+                        <li>Clients may not record sessions without written permission from MyKoott.</li>
                     </ul>
                 </section>
 
@@ -204,7 +204,7 @@ export default function TherapyAgreementPage() {
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Non-Discrimination &amp; Respect</h3>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott provides inclusive, professional mental health services without discrimination based on
+                        MyKoott provides inclusive, professional mental health services without discrimination based on
                         religion, caste, gender, marital status, sexual orientation, disability, or background. Mutual respect
                         and cooperation are expected from both client and therapist.
                     </p>
@@ -214,7 +214,7 @@ export default function TherapyAgreementPage() {
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Intellectual Property &amp; Resources</h3>
                     <p className="text-base leading-relaxed text-gray-700">
                         All materials shared during therapy, including worksheets, tools, assessments, and guides, remain the
-                        intellectual property of Koott and are for personal use only. They may not be copied, shared, or
+                        intellectual property of MyKoott and are for personal use only. They may not be copied, shared, or
                         distributed without written consent.
                     </p>
                 </section>
@@ -222,7 +222,7 @@ export default function TherapyAgreementPage() {
                 <section className="mt-10 space-y-4">
                     <h3 className={`${styles.sectionHeading} text-gray-900`}>Insurance Disclaimer</h3>
                     <p className="text-base leading-relaxed text-gray-700">
-                        Koott by Koott Care Pvt. Ltd. does not accept or process insurance claims. Clients are solely
+                        MyKoott by MyKoott Care Pvt. Ltd. does not accept or process insurance claims. Clients are solely
                         responsible for payment of all fees.
                     </p>
                 </section>
@@ -253,7 +253,7 @@ export default function TherapyAgreementPage() {
                         <li>Have read and understood this agreement.</li>
                         <li>Enter therapy voluntarily and with informed consent.</li>
                         <li>Acknowledge the risks, benefits, and limitations of therapy.</li>
-                        <li>Consent to participate in services provided by Koott by Koott Care Pvt. Ltd.</li>
+                        <li>Consent to participate in services provided by MyKoott by MyKoott Care Pvt. Ltd.</li>
                     </ul>
                     <div className="mt-8 space-y-4 text-base leading-relaxed text-gray-700">
                         <p>Client(s) Email for Records: ________________________</p>

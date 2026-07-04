@@ -262,7 +262,7 @@ export default function MeetTheTeam() {
               <div className="h-80 w-full overflow-hidden rounded-[10px] team-image-container" suppressHydrationWarning>
                 <Image
                     src={normalizeImageUrl(member.image)}
-                    alt={`${member.name} - ${member.title} at Koott`}
+                    alt={`${member.name} - ${member.title} at MyKoott`}
                   width={320}
                   height={320}
                   className="w-full h-full object-contain"
@@ -304,7 +304,7 @@ export default function MeetTheTeam() {
                                 <div className="h-80 w-full overflow-hidden rounded-[10px] team-image-container" suppressHydrationWarning>
                                     <Image
                                         src={normalizeImageUrl(member.image)}
-                                        alt={`${member.name} - ${member.title} at Koott`}
+                                        alt={`${member.name} - ${member.title} at MyKoott`}
                                         width={320}
                                         height={320}
                                         className="w-full h-full object-contain rounded-[10px]"
