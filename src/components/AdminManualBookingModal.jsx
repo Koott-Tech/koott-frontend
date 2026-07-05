@@ -225,6 +225,15 @@ export default function AdminManualBookingModal({
   const [scheduleAllUpfront, setScheduleAllUpfront] = useState(false);
   const packageCount = getPackageSessionCount(sessionType);
 
+  // ── Record-only PACKAGE state ──────────────────────────────────────────────
+  // When adding records for a package (e.g. 3 of a 6-session package that happened offline):
+  //  - recordTotal: full package size (free number, prefilled from the type but editable)
+  //  - recordRows: one row PER session being recorded now (date, time, status)
+  // The rest (recordTotal − recordRows.length) stays bookable later via "Book Next Session".
+  const isRecordPackage = recordOnly && packageCount > 0;
+  const [recordTotal, setRecordTotal] = useState('');
+  const [recordRows, setRecordRows] = useState([{ date: '', time: '', status: 'completed' }]);
+
   // Resize the per-session schedule rows whenever the package type changes.
   useEffect(() => {
     setPackageSchedules((prev) => {
@@ -232,6 +241,8 @@ export default function AdminManualBookingModal({
       return Array.from({ length: packageCount }, (_, i) => prev[i] || { date: '', hour: '', minute: '00' });
     });
     if (packageCount <= 0) setScheduleAllUpfront(false);
+    // Prefill the record-package total from the selected package type (still editable).
+    if (packageCount > 0) setRecordTotal(String(packageCount));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionType]);
 
@@ -319,6 +330,8 @@ export default function AdminManualBookingModal({
     setSelectedHour('');
     setSelectedMinute('00');
     setAmount('');
+    setRecordTotal('');
+    setRecordRows([{ date: '', time: '', status: 'completed' }]);
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -695,6 +708,58 @@ export default function AdminManualBookingModal({
     if (recordOnly && !clientId) {
       setError('Please select a client');
       isSubmittingRef.current = false;
+      return;
+    }
+
+    // ── Record-only PACKAGE: record N already-happened package sessions ─────────
+    if (isRecordPackage) {
+      const total = parseInt(recordTotal, 10);
+      if (!Number.isFinite(total) || total < 1) {
+        setError('Enter a valid total number of sessions for the package.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (recordRows.length > total) {
+        setError(`You're recording ${recordRows.length} sessions but the package total is only ${total}.`);
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (recordRows.some((r) => !r.date || !r.time)) {
+        setError('Fill in a date and time for every session record.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (isNaN(parseFloat(amount)) || parseFloat(amount) < 0) {
+        setError('Enter the total package amount.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const response = await adminApi.createRecordOnlyPackage({
+          client_id: clientId,
+          psychologist_id: psychologistId,
+          session_type: sessionType,
+          total_sessions: total,
+          total_amount: parseFloat(amount) || 0,
+          payment_method: paymentMethod,
+          receipt_url: paymentScreenshotUrl || null,
+          payment_received_date: paymentReceivedDate,
+          notes: notes || null,
+          records: recordRows.map((r) => ({ scheduled_date: r.date, scheduled_time: r.time, status: r.status })),
+        });
+        if (response?.success) {
+          setShowSuccessModal(true);
+          onBookingSuccess?.(response.data);
+        } else {
+          setError(response?.message || response?.error || 'Failed to record package sessions');
+        }
+      } catch (err) {
+        setError(err?.message || 'Failed to record package sessions');
+      } finally {
+        setIsLoading(false);
+        isSubmittingRef.current = false;
+      }
       return;
     }
 
@@ -1326,8 +1391,9 @@ export default function AdminManualBookingModal({
               </div>
             )}
 
-            {/* Package: choose how to schedule (sequential vs all upfront) */}
-            {psychologistId && packageCount > 0 && (
+            {/* Package: choose how to schedule (sequential vs all upfront) — booking flow only,
+                not for record-only (which uses the multi-record section below). */}
+            {psychologistId && packageCount > 0 && !recordOnly && (
               <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                   <CalendarDays className="h-4 w-4 inline mr-1" />
@@ -1355,7 +1421,7 @@ export default function AdminManualBookingModal({
             )}
 
             {/* Package + "all upfront": one date/time per session */}
-            {psychologistId && packageCount > 0 && scheduleAllUpfront && (
+            {psychologistId && packageCount > 0 && scheduleAllUpfront && !recordOnly && (
               <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                   <CalendarDays className="h-4 w-4 inline mr-1" />
@@ -1393,8 +1459,80 @@ export default function AdminManualBookingModal({
               </div>
             )}
 
+            {/* Record-only PACKAGE: record N already-happened sessions of the package. */}
+            {isRecordPackage && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+                <label className="block text-xs font-semibold text-amber-700 uppercase tracking-wider">
+                  <CalendarDays className="h-4 w-4 inline mr-1" />
+                  Record package sessions
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Total sessions in package</label>
+                    <input type="number" min="1" value={recordTotal}
+                      onChange={(e) => setRecordTotal(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
+                  </div>
+                  <div className="flex items-end">
+                    <p className="text-xs text-slate-500">
+                      Recording <strong>{recordRows.length}</strong> now ·{' '}
+                      <strong>{Math.max((parseInt(recordTotal, 10) || 0) - recordRows.length, 0)}</strong> remaining to book later
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {recordRows.map((r, idx) => (
+                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end rounded-lg border border-slate-200 bg-white p-2.5">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Session {idx + 1} date</label>
+                        <input type="date" value={r.date}
+                          onChange={(e) => setRecordRows((rows) => rows.map((x, i) => i === idx ? { ...x, date: e.target.value } : x))}
+                          className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:border-[#025545] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Time</label>
+                        <input type="time" value={r.time}
+                          onChange={(e) => setRecordRows((rows) => rows.map((x, i) => i === idx ? { ...x, time: e.target.value } : x))}
+                          className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:border-[#025545] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 uppercase mb-1">Status</label>
+                        <select value={r.status}
+                          onChange={(e) => setRecordRows((rows) => rows.map((x, i) => i === idx ? { ...x, status: e.target.value } : x))}
+                          className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:border-[#025545] focus:outline-none cursor-pointer">
+                          <option value="completed">Completed</option>
+                          <option value="no_show">No Show</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="booked">Booked</option>
+                        </select>
+                      </div>
+                      {recordRows.length > 1 && (
+                        <button type="button" onClick={() => setRecordRows((rows) => rows.filter((_, i) => i !== idx))}
+                          className="p-2 text-slate-400 hover:text-rose-600" title="Remove">
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button type="button"
+                  onClick={() => setRecordRows((rows) => {
+                    if (rows.length >= (parseInt(recordTotal, 10) || rows.length + 1)) return rows;
+                    return [...rows, { date: '', time: '', status: 'completed' }];
+                  })}
+                  disabled={recordRows.length >= (parseInt(recordTotal, 10) || 0)}
+                  className="text-xs font-semibold text-[#025545] hover:underline disabled:opacity-40 disabled:no-underline">
+                  + Add another session record
+                </button>
+                <p className="text-[11px] text-slate-400">
+                  These are logged as records only — no calendar events, no emails or WhatsApp. The whole package
+                  amount (entered below) is recorded on the first session; the rest are ₹0.
+                </p>
+              </div>
+            )}
+
             {/* Date Selection - Calendar (single session: individual / couple, OR package's first session in sequential mode) */}
-            {psychologistId && !(packageCount > 0 && scheduleAllUpfront) && (
+            {psychologistId && !(packageCount > 0 && scheduleAllUpfront) && !isRecordPackage && (
               <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                   <CalendarDays className="h-4 w-4 inline mr-1" />

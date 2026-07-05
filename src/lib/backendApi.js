@@ -1262,6 +1262,14 @@ export const adminApi = {
     });
   },
 
+  // Record-only PACKAGE: record N already-happened package sessions, rest bookable later.
+  async createRecordOnlyPackage(data) {
+    return apiRequest('/admin/bookings/record-only-package', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Book next package session (admin only) - for clients who prefer admin to book remaining sessions
   async bookPackageNextSession({ client_id, package_id, scheduled_date, scheduled_time }) {
     return apiRequest('/admin/bookings/book-package-next-session', {

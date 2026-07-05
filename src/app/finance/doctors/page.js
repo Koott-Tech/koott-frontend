@@ -101,8 +101,8 @@ export default function FinanceDoctors() {
         params.dateTo = formatIstCalendarYmd(dateRange.to);
       }
 
-      /** Filter by client booking instant (Wix createdDate via booking_created_at), not therapy scheduled_date */
-      params.dateBasis = 'booked';
+      /** Filter by scheduled_date — shows all sessions scheduled within the selected month */
+      params.dateBasis = 'scheduled';
 
       const response = await financeApi.getCommissions(params);
       
@@ -386,7 +386,7 @@ export default function FinanceDoctors() {
       const params = {
         limit: 100,
         page: 1,
-        dateBasis: 'booked',
+        dateBasis: 'scheduled',
       };
       if (hasDateRangeBounds(dateRange)) {
         params.dateFrom = formatIstCalendarYmd(dateRange.from);

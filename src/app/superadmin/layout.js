@@ -124,13 +124,11 @@ export default function SuperAdminLayout({ children }) {
       hasSubmenu: true,
       submenu: [
         { name: 'Dashboard', href: '/superadmin/finance', icon: BarChart3 },
-        { name: 'Revenue', href: '/superadmin/finance/revenue', icon: TrendingUp },
         { name: 'Sessions', href: '/superadmin/finance/sessions', icon: Calendar },
         { name: 'Payouts', href: '/superadmin/finance/payouts', icon: Wallet },
         { name: 'Doctors', href: '/superadmin/finance/doctors', icon: UserCheck },
         { name: 'Expenses', href: '/superadmin/finance/expenses', icon: Receipt },
         { name: 'Income', href: '/superadmin/finance/income', icon: TrendingUp },
-        { name: 'Settings', href: '/superadmin/finance/settings', icon: Settings },
       ]
     },
     {

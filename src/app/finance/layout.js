@@ -9,7 +9,6 @@ import {
   DollarSign,
   Receipt,
   TrendingUp,
-  Settings, 
   LogOut,
   Menu,
   X,
@@ -108,13 +107,12 @@ export default function FinanceLayout({ children }) {
   const navigation = [
     { name: 'Dashboard', href: '/finance', icon: BarChart3 },
     { name: 'Sessions', href: '/finance/sessions', icon: Calendar },
-{ name: 'Revenue', href: '/finance/revenue', icon: TrendingUp },
     { name: 'Doctors', href: '/finance/doctors', icon: Users },
     { name: 'Users', href: '/finance/users', icon: Users },
     { name: 'Expenses', href: '/finance/expenses', icon: Receipt },
     { name: 'Income', href: '/finance/income', icon: DollarSign },
     { name: 'Payouts', href: '/finance/payouts', icon: CreditCard },
-    { name: 'Settings', href: '/finance/settings', icon: Settings },
+    { name: 'Receipts', href: '/finance/receipts', icon: FileText },
   ];
 
   if (authLoading) {

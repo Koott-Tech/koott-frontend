@@ -115,22 +115,21 @@ export default function PsychologistDashboard() {
   useEffect(() => {
     if (allSessions.length === 0) return;
 
-    // Upcoming / Completed / Rescheduled — by scheduled_date in range.
-    // Cancelled — by booking_created_at in range (cancellation is a booking-level event).
+    // All metrics (Total, Completed, Pending/Upcoming, Cancelled, Rescheduled)
+    // are now strictly calculated based on scheduled_date in the selected month range.
     const upcomingSessions = scheduledInRange.filter((session) => {
       return session.status === 'booked' || session.status === 'rescheduled';
     });
 
     const completedSessions = scheduledInRange.filter(session => session.status === 'completed');
     const rescheduledSessions = scheduledInRange.filter(session => session.status === 'rescheduled');
-    const cancelledSessions = createdInRange.filter(session => session.status === 'cancelled');
+    const cancelledSessions = scheduledInRange.filter(session => session.status === 'cancelled');
 
     // Calculate payout stats
     let incomeEarned = 0; // Commission from completed sessions
     let pendingPayout = 0; // Commission from upcoming sessions
 
     // Process completed sessions for earned commission
-    // doctor_wallet is computed by backend using commission_history → therapist_commission → doctor_commissions rates
     completedSessions.forEach(session => {
       const wallet = parseFloat(session.doctor_wallet);
       if (!isNaN(wallet) && wallet > 0) {
@@ -147,9 +146,8 @@ export default function PsychologistDashboard() {
     });
 
     setStats({
-      // Total Sessions = sessions BOOKED in this date range (by booking_created_at)
-      totalSessions: createdInRange.length,
-      // Upcoming = all non-completed sessions relevant to this month (created here OR scheduled here)
+      // Total Sessions = all sessions scheduled in this date range
+      totalSessions: scheduledInRange.length,
       upcomingSessions: upcomingSessions.length,
       completedSessions: completedSessions.length,
       cancelledSessions: cancelledSessions.length,
@@ -160,7 +158,7 @@ export default function PsychologistDashboard() {
       incomeEarned: incomeEarned,
       pendingPayout: pendingPayout
     });
-  }, [createdInRange, scheduledInRange, allSessions.length]);
+  }, [scheduledInRange, allSessions.length]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
