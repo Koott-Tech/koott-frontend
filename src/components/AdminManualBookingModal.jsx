@@ -1247,7 +1247,7 @@ export default function AdminManualBookingModal({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder={isSearchingClients ? 'Searching clients…' : 'Type a name or email to search clients…'}
+                    placeholder={isSearchingClients ? 'Searching...' : 'Type a name or email to search clients…'}
                     value={searchClient}
                     onChange={(e) => { setSearchClient(e.target.value); setShowClientDropdown(true); if (clientId) setClientId(''); }}
                     onFocus={() => setShowClientDropdown(true)}
@@ -1311,7 +1311,7 @@ export default function AdminManualBookingModal({
                   onBlur={() => setTimeout(() => setShowPsychologistDropdown(false), 150)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 />
-                {showPsychologistDropdown && searchPsychologist.trim() && (
+                {showPsychologistDropdown && (
                   <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
                     {filteredPsychologists.length === 0 ? (
                       <div className="px-3 py-2.5 text-sm text-slate-400">No matching psychologists</div>

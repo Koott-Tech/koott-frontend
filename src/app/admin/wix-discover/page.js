@@ -73,7 +73,9 @@ function deriveSessionType(row) {
   const hasPlan = !!(pkgNum || (rawCredits.available != null)) && !!(p.creditsAvailable || rawCredits.available);
   const pkgSuffix = pkgNum && pkgTotal ? ` (${pkgNum}/${pkgTotal})` : pkgNum ? ` (${pkgNum})` : pkgTotal && pkgTotal > 1 ? ` (1/${pkgTotal})` : '';
 
-  if (isCouple && (hasPlan || isPkg)) return `Couple Package${pkgSuffix}`;
+  // A couple session with series evidence (count > 1, a session number, etc.) is a couple
+  // PACKAGE — even for admin-booked ones that lack a Wix pricing-plan payload.
+  if (isCouple && (hasPlan || isPkg || hasSeriesEvidence)) return `Couple Package${pkgSuffix}`;
   if (isCouple) return 'Couple';
   if (hasPlan || (isPkg && pkgNum)) return `Package${pkgSuffix}`;
   if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
