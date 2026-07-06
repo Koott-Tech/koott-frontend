@@ -44,6 +44,8 @@ const MANUAL_BOOKING_HOURS = Array.from({ length: 24 }, (_, hour) => ({
   }),
 }));
 
+const HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+
 const MANUAL_BOOKING_MINUTES = ['00', '15', '30', '45'];
 // Selectable session durations (minutes). '' = auto (derive from session type).
 const MANUAL_DURATION_OPTIONS = [
@@ -209,6 +211,7 @@ export default function AdminManualBookingModal({
   const [selectedDateObj, setSelectedDateObj] = useState(null); // Store as Date object
   const [selectedHour, setSelectedHour] = useState('');
   const [selectedMinute, setSelectedMinute] = useState('00');
+  const [selectedAmPm, setSelectedAmPm] = useState('AM');
   const [searchClient, setSearchClient] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [isSearchingClients, setIsSearchingClients] = useState(false);
@@ -238,7 +241,7 @@ export default function AdminManualBookingModal({
   useEffect(() => {
     setPackageSchedules((prev) => {
       if (packageCount <= 0) return prev.length ? [] : prev;
-      return Array.from({ length: packageCount }, (_, i) => prev[i] || { date: '', hour: '', minute: '00' });
+      return Array.from({ length: packageCount }, (_, i) => prev[i] || { date: '', hour: '', minute: '00', ampm: 'AM' });
     });
     if (packageCount <= 0) setScheduleAllUpfront(false);
     // Prefill the record-package total from the selected package type (still editable).
@@ -555,25 +558,37 @@ export default function AdminManualBookingModal({
     setSelectedTime('');
     setSelectedHour('');
     setSelectedMinute('00');
+    setSelectedAmPm('AM');
   };
 
   const handleTimeSelect = (time) => {
     setSelectedTime(time);
   };
 
-  const handleManualHourChange = (hourValue) => {
-    setSelectedHour(hourValue);
-    if (!hourValue) {
+  const updateSelectedTime = (hr12, min, ampm) => {
+    if (!hr12 || hr12 === '') {
       setSelectedTime('');
       return;
     }
-    setSelectedTime(`${hourValue}:${selectedMinute || '00'}`);
+    let h24 = parseInt(hr12, 10);
+    if (ampm === 'PM' && h24 !== 12) h24 += 12;
+    if (ampm === 'AM' && h24 === 12) h24 = 0;
+    setSelectedTime(`${String(h24).padStart(2, '0')}:${min || '00'}`);
+  };
+
+  const handleManualHourChange = (hourValue) => {
+    setSelectedHour(hourValue);
+    updateSelectedTime(hourValue, selectedMinute, selectedAmPm);
   };
 
   const handleManualMinuteChange = (minuteValue) => {
     setSelectedMinute(minuteValue);
-    if (!selectedHour) return;
-    setSelectedTime(`${selectedHour}:${minuteValue}`);
+    updateSelectedTime(selectedHour, minuteValue, selectedAmPm);
+  };
+
+  const handleManualAmPmChange = (ampmValue) => {
+    setSelectedAmPm(ampmValue);
+    updateSelectedTime(selectedHour, selectedMinute, ampmValue);
   };
 
   const handlePaymentScreenshotChange = async (e) => {
@@ -884,7 +899,17 @@ export default function AdminManualBookingModal({
         setError('Please enter a valid amount');
         setIsLoading(false); isSubmittingRef.current = false; return;
       }
-      const schedules = packageSchedules.map((r) => ({ date: r.date, time: r.hour ? `${r.hour}:${r.minute || '00'}:00` : '' }));
+      const schedules = packageSchedules.map((r) => {
+        let h24 = parseInt(r.hour, 10);
+        if (!isNaN(h24)) {
+          if (r.ampm === 'PM' && h24 !== 12) h24 += 12;
+          if (r.ampm === 'AM' && h24 === 12) h24 = 0;
+        }
+        return { 
+          date: r.date, 
+          time: r.hour ? `${String(h24).padStart(2, '0')}:${r.minute || '00'}:00` : '' 
+        };
+      });
       if (schedules.length !== packageCount || schedules.some((s) => !s.date || !s.time)) {
         setError(`Please pick a date & time for all ${packageCount} sessions`);
         setIsLoading(false); isSubmittingRef.current = false; return;
@@ -1257,7 +1282,7 @@ export default function AdminManualBookingModal({
                   {isSearchingClients && (
                     <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#025545]" />
                   )}
-                  {showClientDropdown && searchClient.trim() && (
+                  {showClientDropdown && (
                     <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
                       {isSearchingClients ? (
                         <div className="px-3 py-2.5 text-sm text-slate-500 flex items-center gap-2">
@@ -1311,7 +1336,7 @@ export default function AdminManualBookingModal({
                   onBlur={() => setTimeout(() => setShowPsychologistDropdown(false), 150)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 />
-                {showPsychologistDropdown && searchPsychologist.trim() && (
+                {showPsychologistDropdown && (
                   <div className="absolute z-30 mt-1 w-full max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
                     {filteredPsychologists.length === 0 ? (
                       <div className="px-3 py-2.5 text-sm text-slate-400">No matching psychologists</div>
@@ -1432,7 +1457,7 @@ export default function AdminManualBookingModal({
                   {packageSchedules.map((row, idx) => (
                     <div key={idx} className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="text-[11px] font-bold text-[#025545] uppercase tracking-wide mb-2">Session {idx + 1}</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <CompactDatePicker
                           value={row.date || ''}
                           onChange={(d) => setPackageSchedules((p) => p.map((r, i) => i === idx ? { ...r, date: d } : r))}
@@ -1443,7 +1468,7 @@ export default function AdminManualBookingModal({
                           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                         >
                           <option value="">Hour</option>
-                          {MANUAL_BOOKING_HOURS.map((h) => <option key={h.value} value={h.value}>{hourLabel12(h.value)}</option>)}
+                          {HOURS_12.map((h) => <option key={h} value={h}>{h}</option>)}
                         </select>
                         <select
                           value={row.minute || '00'}
@@ -1451,6 +1476,14 @@ export default function AdminManualBookingModal({
                           className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                         >
                           {MANUAL_BOOKING_MINUTES.map((m) => <option key={m} value={m}>{m} min</option>)}
+                        </select>
+                        <select
+                          value={row.ampm || 'AM'}
+                          onChange={(e) => setPackageSchedules((p) => p.map((r, i) => i === idx ? { ...r, ampm: e.target.value } : r))}
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
                         </select>
                       </div>
                     </div>
@@ -1627,7 +1660,7 @@ export default function AdminManualBookingModal({
                 {selectedDateObj && (
                   <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
                     <div className="text-sm font-semibold text-gray-900 mb-4">Time</div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Hour</label>
                         <select
@@ -1636,9 +1669,9 @@ export default function AdminManualBookingModal({
                           className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                         >
                           <option value="">HH</option>
-                          {MANUAL_BOOKING_HOURS.map((hour) => (
-                            <option key={hour.value} value={hour.value}>
-                              {hour.value}
+                          {HOURS_12.map((hour) => (
+                            <option key={hour} value={hour}>
+                              {hour}
                             </option>
                           ))}
                         </select>
@@ -1656,6 +1689,17 @@ export default function AdminManualBookingModal({
                               {minute}
                             </option>
                           ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">AM / PM</label>
+                        <select
+                          value={selectedAmPm}
+                          onChange={(e) => handleManualAmPmChange(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
                         </select>
                       </div>
                     </div>
@@ -1702,9 +1746,9 @@ export default function AdminManualBookingModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 min="0"
-                step="0.01"
+                step="1"
                 required
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="Enter amount"
               />
               </div>
@@ -1717,9 +1761,9 @@ export default function AdminManualBookingModal({
                   value={therapistCommission}
                   onChange={(e) => setTherapistCommission(e.target.value)}
                   min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
-                  placeholder="0.00"
+                  step="1"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  placeholder="0"
                 />
               </div>
               <div>

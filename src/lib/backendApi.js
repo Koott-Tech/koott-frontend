@@ -1013,18 +1013,18 @@ export const adminApi = {
   },
 
   // Transfer a platform session to a different therapist (optionally with a new date/time)
-  async transferSession(sessionId, { new_psychologist_id, new_date, new_time }) {
+  async transferSession(sessionId, { new_psychologist_id, new_date, new_time, new_duration }) {
     return apiRequest(`/admin/sessions/${sessionId}/transfer`, {
       method: 'POST',
-      body: JSON.stringify({ new_psychologist_id, new_date, new_time }),
+      body: JSON.stringify({ new_psychologist_id, new_date, new_time, new_duration }),
     });
   },
 
   // Transfer a Wix booking to a different therapist (optionally with a new date/time)
-  async transferWixBooking(wixBookingId, { new_psychologist_id, new_date, new_time }) {
+  async transferWixBooking(wixBookingId, { new_psychologist_id, new_date, new_time, new_duration }) {
     return apiRequest(`/admin/wix/bookings/${wixBookingId}/transfer`, {
       method: 'POST',
-      body: JSON.stringify({ new_psychologist_id, new_date, new_time }),
+      body: JSON.stringify({ new_psychologist_id, new_date, new_time, new_duration }),
     });
   },
 

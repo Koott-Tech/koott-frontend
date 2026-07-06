@@ -277,27 +277,24 @@ export default function AdminRescheduleModal({
 
   if (!isOpen || !session) return null;
 
-  const selectedHour = selectedTime ? selectedTime.slice(0, 2) : '';
-  const selectedMinute = selectedTime ? selectedTime.slice(3, 5) : '';
-  const setHourMinute = (hour, minute) => {
-    if (!hour || !minute) {
+  const selectedHour24 = selectedTime ? parseInt(selectedTime.slice(0, 2), 10) : null;
+  const selectedHour12 = selectedHour24 !== null ? String(selectedHour24 % 12 || 12).padStart(2, '0') : '';
+  const selectedAmPm = selectedHour24 !== null ? (selectedHour24 >= 12 ? 'PM' : 'AM') : 'AM';
+  const selectedMinute = selectedTime ? selectedTime.slice(3, 5) : '00';
+
+  const setHourMinuteAmPm = (hr12, min, ampm) => {
+    if (!hr12) {
       setSelectedTime('');
       return;
     }
-    setSelectedTime(`${hour}:${minute}`);
+    let h24 = parseInt(hr12, 10);
+    if (ampm === 'PM' && h24 !== 12) h24 += 12;
+    if (ampm === 'AM' && h24 === 12) h24 = 0;
+    setSelectedTime(`${String(h24).padStart(2, '0')}:${min || '00'}`);
   };
 
-  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+  const hours12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
-
-  // 24-hour value → 12-hour label with AM/PM for the dropdown (value stays "HH" 24-hour)
-  const to12HourLabel = (hh) => {
-    const h = parseInt(hh, 10);
-    if (Number.isNaN(h)) return hh;
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const dh = h % 12 === 0 ? 12 : h % 12;
-    return `${dh} ${ampm}`;
-  };
 
   // Session length: prefer the booking's own start/end window, else couple→80, default 50.
   const getDurationMinutes = () => {
@@ -462,17 +459,17 @@ export default function AdminRescheduleModal({
                     <div className="text-sm text-gray-400 py-8">Select a date first.</div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Hour</label>
                           <select
-                            value={selectedHour}
-                            onChange={(e) => setHourMinute(e.target.value, selectedMinute || '00')}
+                            value={selectedHour12}
+                            onChange={(e) => setHourMinuteAmPm(e.target.value, selectedMinute, selectedAmPm)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                           >
                             <option value="">HH</option>
-                            {hours.map((hour) => (
-                              <option key={hour} value={hour}>{to12HourLabel(hour)}</option>
+                            {hours12.map((hour) => (
+                              <option key={hour} value={hour}>{hour}</option>
                             ))}
                           </select>
                         </div>
@@ -480,13 +477,24 @@ export default function AdminRescheduleModal({
                           <label className="block text-xs font-medium text-gray-600 mb-1">Minute</label>
                           <select
                             value={selectedMinute}
-                            onChange={(e) => setHourMinute(selectedHour || '00', e.target.value)}
+                            onChange={(e) => setHourMinuteAmPm(selectedHour12 || '12', e.target.value, selectedAmPm)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                           >
                             <option value="">MM</option>
                             {minutes.map((minute) => (
                               <option key={minute} value={minute}>{minute}</option>
                             ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">AM / PM</label>
+                          <select
+                            value={selectedAmPm}
+                            onChange={(e) => setHourMinuteAmPm(selectedHour12 || '12', selectedMinute, e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                          >
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
                           </select>
                         </div>
                       </div>
@@ -521,10 +529,10 @@ export default function AdminRescheduleModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Amount (₹)</label>
-                  <input type="number" min="0" step="0.01" value={feeAmount}
+                  <input type="number" min="0" step="1" value={feeAmount}
                     onChange={(e) => setFeeAmount(e.target.value)}
                     placeholder="e.g. 500"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15" />
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">Payment type</label>

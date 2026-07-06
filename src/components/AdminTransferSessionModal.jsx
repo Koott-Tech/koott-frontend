@@ -39,6 +39,17 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
   const [changeDateTime, setChangeDateTime] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  
+  const computedInitialDuration = (() => {
+    if (!session) return 50;
+    if (session.start_time && session.end_time) {
+      return Math.round((new Date(session.end_time) - new Date(session.start_time)) / 60000) || 50;
+    }
+    if (session.session_type === 'couple') return 80;
+    if (session.session_type === 'assessment' || session.session_type === 'discovery') return 30;
+    return 50;
+  })();
+  const [durationMinutes, setDurationMinutes] = useState(computedInitialDuration);
 
   // Calendar nav
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -117,6 +128,7 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
     try {
       const payload = {
         new_psychologist_id: selectedPsychId,
+        new_duration: parseInt(durationMinutes, 10),
         ...(changeDateTime && selectedDate ? { new_date: selectedDate } : {}),
         ...(changeDateTime && selectedTime ? { new_time: selectedTime } : {}),
       };
@@ -244,6 +256,23 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
                 ))}
               </select>
             )}
+          </div>
+
+          {/* Duration picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-800 mb-2">
+              <Clock className="inline h-4 w-4 mr-1 text-[#025545]" />
+              Duration (minutes)
+            </label>
+            <input
+              type="number"
+              min="15"
+              max="180"
+              step="5"
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+            />
           </div>
 
           {/* Date/time toggle */}
