@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, FileText, Calendar, Loader2, User, AlertCircle, Lock, Unlock, Eye, EyeOff } from "lucide-react";
+import { X, FileText, Calendar, Loader2, User, AlertCircle, Lock, Unlock, Eye, EyeOff, Paperclip, Trash2 } from "lucide-react";
 import { psychologistApi } from "../lib/backendApi";
 
 export default function SessionCompletionModal({
@@ -17,7 +17,52 @@ export default function SessionCompletionModal({
     report: "",
     summary_notes: "",
     completion_date: "",
+    message_to_operations: "",
+    client_opening_statement: "",
+    attachments: [],
   });
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError("");
+
+    try {
+      let uploadRes;
+      if (fieldsOptional) {
+        const { adminApi } = await import("../lib/backendApi");
+        uploadRes = await adminApi.uploadImage(file, { bucket: 'session-attachments' });
+      } else {
+        uploadRes = await psychologistApi.uploadAttachment(file);
+      }
+
+      if (uploadRes?.success) {
+        setFormData(prev => ({
+          ...prev,
+          attachments: [...(prev.attachments || []), { url: uploadRes.url, filename: uploadRes.filename || file.name }]
+        }));
+      } else {
+        setUploadError(uploadRes?.error || uploadRes?.message || "Failed to upload file");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setUploadError(err.message || "Failed to upload file");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveAttachment = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, idx) => idx !== indexToRemove)
+    }));
+  };
 
   // Private note password lock state
   const [hasPassword, setHasPassword] = useState(null); // null = loading, true/false after check
@@ -75,8 +120,7 @@ export default function SessionCompletionModal({
       setErrors(newErrors);
       return true;
     }
-    // Only the "Message to Team" (report) is required — it's what's sent to operations.
-    // Client summary and Therapist Notes are optional.
+    // "Message to other therapist" (report) is required
     if (!formData.report.trim()) newErrors.report = "Required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -87,12 +131,28 @@ export default function SessionCompletionModal({
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      // Build final formatted report text
+      const finalReportText = [
+        formData.report.trim(),
+        formData.message_to_operations?.trim() ? `\n\n--- Message to Operations ---\n${formData.message_to_operations.trim()}` : '',
+        formData.client_opening_statement?.trim() ? `\n\n--- Client Opening Statement ---\n${formData.client_opening_statement.trim()}` : '',
+        formData.attachments && formData.attachments.length > 0
+          ? `\n\n--- Operation Attachments ---\n${formData.attachments.map(att => `- [${att.filename}]: ${att.url}`).join('\n')}`
+          : ''
+      ].filter(Boolean).join('');
+
+      await onSubmit({
+        ...formData,
+        report: finalReportText
+      });
       setFormData({
         summary: "",
         report: "",
         summary_notes: "",
         completion_date: session?.scheduled_date ? new Date(session.scheduled_date).toISOString().split("T")[0] : "",
+        message_to_operations: "",
+        client_opening_statement: "",
+        attachments: [],
       });
       setPrivateUnlocked(false);
       onClose();
@@ -109,6 +169,9 @@ export default function SessionCompletionModal({
       report: "",
       summary_notes: "",
       completion_date: session?.scheduled_date ? new Date(session.scheduled_date).toISOString().split("T")[0] : "",
+      message_to_operations: "",
+      client_opening_statement: "",
+      attachments: [],
     });
     setErrors({});
     setPrivateUnlocked(false);
@@ -214,18 +277,18 @@ export default function SessionCompletionModal({
                 {errors.summary && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.summary}</p>}
               </div>
 
-              {/* Internal Report */}
+              {/* Message to other therapist */}
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                    Message to Team {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                    Message to other therapist {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                   </label>
                   <span className="text-[10px] px-2 py-0.5 border border-transparent self-start opacity-0 pointer-events-none select-none">Spacer</span>
                 </div>
                 <textarea
                   value={formData.report}
                   onChange={(e) => handleInputChange("report", e.target.value)}
-                  placeholder="Observations and recommendations…"
+                  placeholder="Observations and clinical notes for other therapists..."
                   className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                     errors.report
                       ? "border-rose-500 ring-4 ring-rose-500/10"
@@ -234,6 +297,78 @@ export default function SessionCompletionModal({
                   disabled={isSubmitting}
                 />
                 {errors.report && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.report}</p>}
+              </div>
+            </div>
+
+            {/* Client Opening Statement + Message to Operation side-by-side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Client Opening Statement */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                  Client Opening Statement <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
+                </label>
+                <textarea
+                  value={formData.client_opening_statement}
+                  onChange={(e) => handleInputChange("client_opening_statement", e.target.value)}
+                  placeholder="Client's opening statement or description of issue..."
+                  className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {/* Message to operation */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                  Message to operation <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
+                </label>
+                <textarea
+                  value={formData.message_to_operations}
+                  onChange={(e) => handleInputChange("message_to_operations", e.target.value)}
+                  placeholder="Message regarding booking, payments, or scheduling issues..."
+                  className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
+                  disabled={isSubmitting}
+                />
+
+                {/* File Upload Attachment */}
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-3">
+                    <label className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors shadow-sm">
+                      <Paperclip className="h-3.5 w-3.5 text-slate-500" />
+                      Attach file
+                      <input
+                        type="file"
+                        onChange={handleFileUpload}
+                        disabled={isUploading || isSubmitting}
+                        className="hidden"
+                      />
+                    </label>
+                    {isUploading && (
+                      <span className="text-xs text-slate-500 flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin text-[#025545]" />
+                        Uploading...
+                      </span>
+                    )}
+                  </div>
+                  {uploadError && <p className="text-xs text-rose-500">{uploadError}</p>}
+
+                  {/* List of Attachments */}
+                  {formData.attachments && formData.attachments.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      {formData.attachments.map((att, idx) => (
+                        <div key={idx} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                          <span className="font-medium text-slate-700 truncate max-w-[200px]" title={att.filename}>{att.filename}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveAttachment(idx)}
+                            className="p-1 text-slate-400 hover:text-rose-500 rounded-md transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

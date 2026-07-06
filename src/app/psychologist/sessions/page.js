@@ -48,9 +48,31 @@ import { sessionBookedAtIso, sessionBookingCreatedIstYmd } from "@/lib/sessionBo
 const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
 const valueBoxClass = "bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800";
 
+function parseTherapistReport(text) {
+  if (!text) return { main: '', operations: '', clientStatement: '', attachments: [] };
+  const opsMatch = text.match(/---\s*Message to Operations\s*---([\s\S]*?)(?:---|$)/);
+  const clientMatch = text.match(/---\s*Client Opening Statement\s*---([\s\S]*?)(?:---|$)/);
+  const attachMatch = text.match(/---\s*Operation Attachments\s*---([\s\S]*?)(?:---|$)/);
+  const reportMatch = text.match(/---\s*Report\s*---([\s\S]*?)(?:---|$)/);
+  let main = text.split(/---/)[0].trim();
+  if (!main && reportMatch) main = reportMatch[1].trim();
+  const attachLines = attachMatch ? attachMatch[1].trim().split('\n').filter(Boolean) : [];
+  const attachments = attachLines.map(line => {
+    const m = line.match(/^-\s*\[([^\]]+)\]:\s*(.+)$/);
+    return m ? { name: m[1], url: m[2].trim() } : { name: line.replace(/^-\s*/, ''), url: null };
+  });
+  return {
+    main,
+    operations: opsMatch ? opsMatch[1].trim() : '',
+    clientStatement: clientMatch ? clientMatch[1].trim() : '',
+    attachments
+  };
+}
+
 function SessionHistoryDetailView({ session, currentPsychologistId, formatTime, formatDate, privateUnlocked, hasPassword, onUnlockClick }) {
   const isOwnSession = session.psychologist_id === currentPsychologistId;
   const hasPrivateNotes = isOwnSession && !!session.summary_notes;
+  const parsedReport = parseTherapistReport(session.report || session.session_notes);
 
   return (
     <div className="space-y-5">
@@ -66,33 +88,50 @@ function SessionHistoryDetailView({ session, currentPsychologistId, formatTime, 
             <div className={valueBoxClass}>{session.scheduled_time ? formatTime(session.scheduled_time) : "—"}</div>
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass}>Booked at (IST)</label>
-            <div className={valueBoxClass}>
-              {sessionBookedAtIso(session)
-                ? new Date(sessionBookedAtIso(session)).toLocaleString("en-IN", {
-                    timeZone: "Asia/Kolkata",
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  })
-                : "—"}
-            </div>
-          </div>
-          <div className="sm:col-span-2">
             <label className={labelClass}>Therapist</label>
             <div className={valueBoxClass}>{session.psychologist_name || "—"}</div>
           </div>
         </div>
       </div>
-      {session.summary && (
+      {isOwnSession && session.summary && (
         <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Session summary</div>
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Visible to Client</div>
           <div className={`${valueBoxClass} whitespace-pre-wrap`}>{session.summary}</div>
         </div>
       )}
-      {session.report && (
+      {parsedReport.main && (
         <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Session report</div>
-          <div className={`${valueBoxClass} whitespace-pre-wrap`}>{session.report}</div>
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Message to other therapist</div>
+          <div className={`${valueBoxClass} whitespace-pre-wrap`}>{parsedReport.main}</div>
+        </div>
+      )}
+      {isOwnSession && parsedReport.clientStatement && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-4">
+          <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Client Opening Statement</div>
+          <div className={`${valueBoxClass} whitespace-pre-wrap border-blue-200`}>{parsedReport.clientStatement}</div>
+        </div>
+      )}
+      {isOwnSession && parsedReport.operations && (
+        <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-4">
+          <div className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Message to Operations</div>
+          <div className={`${valueBoxClass} whitespace-pre-wrap border-amber-200`}>{parsedReport.operations}</div>
+        </div>
+      )}
+      {isOwnSession && parsedReport.attachments && parsedReport.attachments.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+          <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>Attachments</div>
+          <div className="flex flex-wrap gap-2">
+            {parsedReport.attachments.map((att, idx) => {
+              const targetUrl = att.url.startsWith('/') ? `${window.location.origin}${att.url}` : att.url;
+              return (
+                <a key={idx} href={targetUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-purple-300 hover:bg-purple-50 text-xs font-medium text-slate-600 hover:text-purple-700 transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  View Attachment {parsedReport.attachments.length > 1 ? idx + 1 : ''}
+                </a>
+              );
+            })}
+          </div>
         </div>
       )}
       {hasPrivateNotes && (

@@ -167,6 +167,7 @@ export default function BookingsPage() {
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
   const [isEditSessionOpen, setIsEditSessionOpen] = useState(false);
   const [feedbackToView, setFeedbackToView] = useState(null);
+  const [messageToView, setMessageToView] = useState(null);
   const [showNoShowConfirm, setShowNoShowConfirm] = useState(false);
   const [sessionToMarkNoShow, setSessionToMarkNoShow] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -977,6 +978,56 @@ export default function BookingsPage() {
   // Normalize status for comparison (backend may return 'noshow' or 'no_show')
   const normalizeStatus = (s) => (s === 'noshow' ? 'no_show' : (s || ''));
 
+  const parseTherapistReport = (reportText) => {
+    if (!reportText) return { therapistMessage: '', operationsMessage: '', openingStatement: '', attachments: [] };
+
+    let therapistMessage = reportText;
+    let operationsMessage = '';
+    let openingStatement = '';
+    let attachments = [];
+
+    // Parse "Message to Operations"
+    const opsMatch = reportText.match(/--- Message to Operations ---\n([\s\S]*?)(?=\n\n---|$)/);
+    if (opsMatch) {
+      operationsMessage = opsMatch[1].trim();
+    }
+
+    // Parse "Client Opening Statement"
+    const statementMatch = reportText.match(/--- Client Opening Statement ---\n([\s\S]*?)(?=\n\n---|$)/);
+    if (statementMatch) {
+      openingStatement = statementMatch[1].trim();
+    }
+
+    // Parse "Operation Attachments"
+    const attsMatch = reportText.match(/--- Operation Attachments ---\n([\s\S]*?)(?=\n\n---|$)/);
+    if (attsMatch) {
+      const lines = attsMatch[1].trim().split('\n');
+      lines.forEach(line => {
+        const match = line.match(/^-\s*\[(.*?)\]:\s*(.*)$/);
+        if (match) {
+          attachments.push({ filename: match[1], url: match[2] });
+        }
+      });
+    }
+
+    // Extract main therapist message (everything before the first header)
+    const headers = [
+      '--- Message to Operations ---',
+      '--- Client Opening Statement ---',
+      '--- Operation Attachments ---'
+    ];
+    let firstHeaderIndex = reportText.length;
+    headers.forEach(h => {
+      const idx = reportText.indexOf(h);
+      if (idx !== -1 && idx < firstHeaderIndex) {
+        firstHeaderIndex = idx;
+      }
+    });
+    therapistMessage = reportText.slice(0, firstHeaderIndex).trim();
+
+    return { therapistMessage, operationsMessage, openingStatement, attachments };
+  };
+
   // Robust overdue check for booked sessions (supports varied backend time formats)
   const isBookingPastDue = (booking) => {
     const status = normalizeStatus(booking?.status);
@@ -1630,6 +1681,16 @@ export default function BookingsPage() {
                                       Reschedule
                                     </DropdownMenuItem>
                                   )}
+                                  {wixStatus === 'completed' && (
+                                    <DropdownMenuItem onClick={() => setMessageToView({
+                                      ...bookingProxy,
+                                      report: row.report || row.session_notes || row.sessions?.[0]?.report || row.sessions?.[0]?.session_notes || bookingProxy?.report || bookingProxy?.session_notes,
+                                      psychologist: bookingProxy.psychologist || { first_name: row.therapist_name || '' }
+                                    })} className="cursor-pointer text-purple-600">
+                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                      View Message
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuSeparator />
                                   {wixStatus !== 'completed' && (
                                     <DropdownMenuItem onClick={() => setWixCompleteConfirmRow(row)} className="cursor-pointer text-green-600">
@@ -1826,6 +1887,12 @@ export default function BookingsPage() {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          {booking.status === 'completed' && (
+                            <DropdownMenuItem onClick={() => setMessageToView(booking)} className="cursor-pointer text-purple-600">
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              View Message
+                            </DropdownMenuItem>
+                          )}
                           {canBookNextFromSession(booking) && (
                             <DropdownMenuItem onClick={() => openBookNextFromSession(booking)} className="cursor-pointer">
                               <Package className="h-4 w-4 mr-2" />
@@ -1947,6 +2014,82 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Therapist Message Modal */}
+      {messageToView && (() => {
+        const parsed = parseTherapistReport(messageToView.report || messageToView.session_notes);
+        const therapistName = `${messageToView.psychologist?.first_name || ''} ${messageToView.psychologist?.last_name || ''}`.trim() || 'Therapist';
+        const clientName = `${messageToView.client?.first_name || ''} ${messageToView.client?.last_name || ''}`.trim() || 'Client';
+
+        return (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Message to Operations</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{therapistName} · {clientName}</p>
+                </div>
+                <button onClick={() => setMessageToView(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 px-5 py-4 space-y-3">
+
+                {/* Client Opening Statement */}
+                {parsed.openingStatement && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-widest mb-1.5">Client Opening Statement</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{parsed.openingStatement}</p>
+                  </div>
+                )}
+
+                {/* Operations Message */}
+                {parsed.operationsMessage ? (
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-1.5">Operations Note</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{parsed.operationsMessage}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-8 text-center">
+                    <p className="text-sm text-gray-400">No message to operations submitted.</p>
+                  </div>
+                )}
+
+                {/* Attachments */}
+                {parsed.attachments && parsed.attachments.length > 0 && (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Attachments</p>
+                    <div className="flex flex-wrap gap-2">
+                      {parsed.attachments.map((att, idx) => {
+                        const targetUrl = att.url.startsWith('/') ? `${window.location.origin}${att.url}` : att.url;
+                        return (
+                          <a key={idx} href={targetUrl} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-xs font-medium text-gray-600 hover:text-purple-700 transition-all">
+                            <FileText className="h-3 w-3 shrink-0" />
+                            View Attachment {parsed.attachments.length > 1 ? idx + 1 : ''}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-gray-100">
+                <button onClick={() => setMessageToView(null)}
+                  className="w-full py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Pagination (MyKoott + Wix Supabase lists) */}
       {!showPackagesView && totalPages > 1 && (

@@ -693,6 +693,23 @@ export const psychologistApi = {
     });
   },
 
+  // Upload session completion attachment (psychologist)
+  async uploadAttachment(file) {
+    const url = `${BACKEND_BASE_URL}/psychologists/upload/file`;
+    const token = typeof window !== 'undefined' ? getStoredToken() : null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    const result = await handleResponse(response);
+    return result;
+  },
+
   // Mark session as no-show
   async markSessionAsNoShow(sessionId, reason = '') {
     return apiRequest(`/psychologists/sessions/${sessionId}/no-show`, {

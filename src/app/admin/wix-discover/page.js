@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft, PauseCircle } from 'lucide-react';
+import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft, PauseCircle, MessageSquare, Paperclip } from 'lucide-react';
 import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { wixBookingBookedAtIso } from '@/lib/sessionBookedAt';
@@ -185,6 +185,28 @@ export default function AdminWixDiscoverPage() {
   const [cancelRefundRow, setCancelRefundRow] = useState(null);
   const [cancelOnlyRow, setCancelOnlyRow] = useState(null);
   const [completeConfirmRow, setCompleteConfirmRow] = useState(null);
+  const [messageToView, setMessageToView] = useState(null);
+
+  function parseTherapistReport(text) {
+    if (!text) return { main: '', operations: '', clientStatement: '', attachments: [] };
+    const opsMatch = text.match(/---\s*Message to Operations\s*---([\s\S]*?)(?:---|$)/);
+    const clientMatch = text.match(/---\s*Client Opening Statement\s*---([\s\S]*?)(?:---|$)/);
+    const attachMatch = text.match(/---\s*Operation Attachments\s*---([\s\S]*?)(?:---|$)/);
+    const reportMatch = text.match(/---\s*Report\s*---([\s\S]*?)(?:---|$)/);
+    let main = text.split(/---/)[0].trim();
+    if (!main && reportMatch) main = reportMatch[1].trim();
+    const attachLines = attachMatch ? attachMatch[1].trim().split('\n').filter(Boolean) : [];
+    const attachments = attachLines.map(line => {
+      const m = line.match(/^-\s*\[([^\]]+)\]:\s*(.+)$/);
+      return m ? { name: m[1], url: m[2].trim() } : { name: line.replace(/^-\s*/, ''), url: null };
+    });
+    return {
+      main,
+      operations: opsMatch ? opsMatch[1].trim() : '',
+      clientStatement: clientMatch ? clientMatch[1].trim() : '',
+      attachments
+    };
+  }
   const [psychologists, setPsychologists] = useState([]);
 
   // Close action menu when user scrolls (menu is fixed-position so it won't follow the row)
@@ -972,6 +994,12 @@ export default function AdminWixDiscoverPage() {
                                     <ArrowRightLeft className="h-3.5 w-3.5" /> Transfer
                                   </button>
                                 )}
+                                {row.status === 'completed' && (
+                                  <button onClick={() => { setMessageToView(row); setOpenMenuId(null); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-purple-700 hover:bg-purple-50">
+                                    <MessageSquare className="h-3.5 w-3.5" /> View Message
+                                  </button>
+                                )}
                                 {row.status !== 'completed' && (
                                   <button onClick={() => { handleComplete(row); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
@@ -1099,6 +1127,12 @@ export default function AdminWixDiscoverPage() {
                               {effectiveCompletionStatus(row) !== 'completed' && (
                                 <button onClick={() => handleComplete(row)} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-green-700 hover:bg-green-50">
                                   <CheckCircle className="h-3.5 w-3.5" /> Mark Complete
+                                </button>
+                              )}
+                              {effectiveCompletionStatus(row) === 'completed' && (
+                                <button onClick={() => { setMessageToView(row); setOpenMenuId(null); }}
+                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-purple-700 hover:bg-purple-50">
+                                  <MessageSquare className="h-3.5 w-3.5" /> View Message
                                 </button>
                               )}
                               {['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested'].includes(effectiveCompletionStatus(row)) && (
@@ -1471,6 +1505,75 @@ export default function AdminWixDiscoverPage() {
         }}
         recordOnly={true}
       />
+
+      {/* Therapist Message Modal */}
+      {messageToView && (() => {
+        const reportText = messageToView.report || messageToView.session_notes || '';
+        const parsed = parseTherapistReport(reportText);
+        const therapistName = messageToView.psychologist_name || messageToView.therapist_name || 'Therapist';
+        const clientName = messageToView.client_name || messageToView.client_full_name || messageToView.client_first_name || 'Client';
+        return (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">Message to Operations</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{therapistName} · {clientName}</p>
+                </div>
+                <button onClick={() => setMessageToView(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="overflow-y-auto flex-1 px-5 py-4 space-y-3">
+                {parsed.clientStatement && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-widest mb-1.5">Client Opening Statement</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{parsed.clientStatement}</p>
+                  </div>
+                )}
+
+                {parsed.operations ? (
+                  <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-1.5">Operations Note</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{parsed.operations}</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-8 text-center">
+                    <p className="text-sm text-gray-400">No message to operations submitted.</p>
+                  </div>
+                )}
+
+                {parsed.attachments.length > 0 && (
+                  <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                    <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">Attachments</p>
+                    <div className="flex flex-wrap gap-2">
+                      {parsed.attachments.map((att, i) => (
+                        <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-xs font-medium text-gray-600 hover:text-purple-700 transition-all">
+                          <Paperclip className="h-3 w-3 shrink-0" />
+                          View Attachment {parsed.attachments.length > 1 ? i + 1 : ''}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-5 py-3 border-t border-gray-100">
+                <button onClick={() => setMessageToView(null)}
+                  className="w-full py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

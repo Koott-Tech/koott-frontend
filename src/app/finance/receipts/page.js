@@ -34,9 +34,17 @@ function todayStr() {
 
 
 const DEFAULT_SESSION_ROWS = [
-  { type: 'Initial Consultation (New Patient)', sessions: '', ratePerSession: '', amount: '' },
-  { type: 'Follow Up (Couple Therapy)', sessions: '', ratePerSession: '', amount: '' },
-  { type: 'Follow Up', sessions: '', ratePerSession: '', amount: '' },
+  { type: 'Initial session', sessions: '', ratePerSession: '', amount: '' },
+  { type: 'Follow Up Session', sessions: '', ratePerSession: '', amount: '' },
+  { type: 'Couple Session', sessions: '', ratePerSession: '', amount: '' },
+  { type: 'Couple Follow Up', sessions: '', ratePerSession: '', amount: '' },
+];
+
+const DEFAULT_SESSION_TYPES = [
+  'Initial session',
+  'Follow Up Session',
+  'Couple Session',
+  'Couple Follow Up'
 ];
 
 // ─── PDF Generation using the actual template ────────────────────────────────
@@ -144,6 +152,28 @@ async function generateTherapistPDF(data) {
 // ─── Therapist Form ──────────────────────────────────────────────────────────
 
 function TherapistForm({ data, onChange }) {
+  const [customTypes, setCustomTypes] = useState([]);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('koott_receipt_session_types') || '[]');
+      if (Array.isArray(saved)) setCustomTypes(saved);
+    } catch (e) {
+      console.error('Error loading custom types', e);
+    }
+  }, []);
+
+  const handleSaveCustomType = (val) => {
+    const trimmed = val.trim();
+    if (!trimmed) return;
+    const allTypes = [...DEFAULT_SESSION_TYPES, ...customTypes];
+    if (!allTypes.includes(trimmed)) {
+      const updated = [...customTypes, trimmed];
+      setCustomTypes(updated);
+      localStorage.setItem('koott_receipt_session_types', JSON.stringify(updated));
+    }
+  };
+
   const updateField = (key, value) => onChange({ ...data, [key]: value });
 
   const updateSession = (idx, key, value) => {
@@ -251,12 +281,14 @@ function TherapistForm({ data, onChange }) {
           {data.sessions.map((row, idx) => (
             <div key={idx} className="grid grid-cols-12 gap-2 items-end">
               <div className="col-span-5">
-                <label className={labelClass}>Session Type</label>
+                <label className={labelClass}>Session Details</label>
                 <input
                   className={inputClass}
-                  placeholder="Session type"
+                  placeholder="Select or type new..."
+                  list="sessionTypes"
                   value={row.type}
                   onChange={e => updateSession(idx, 'type', e.target.value)}
+                  onBlur={e => handleSaveCustomType(e.target.value)}
                 />
               </div>
               <div className="col-span-2">
@@ -304,6 +336,11 @@ function TherapistForm({ data, onChange }) {
               </div>
             </div>
           ))}
+          <datalist id="sessionTypes">
+            {[...DEFAULT_SESSION_TYPES, ...customTypes].map(t => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
         </div>
         <button
           onClick={addSession}
