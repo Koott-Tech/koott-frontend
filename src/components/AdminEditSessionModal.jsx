@@ -27,6 +27,16 @@ export default function AdminEditSessionModal({
   const [status, setStatus] = useState('');
   const [price, setPrice] = useState('');
   const [therapistCommission, setTherapistCommission] = useState('');
+  const [sessionType, setSessionType] = useState('');
+  const [sessionCount, setSessionCount] = useState('');
+  const [packageSessionNumber, setPackageSessionNumber] = useState('');
+  const [packageGroupId, setPackageGroupId] = useState('');
+  const [packageId, setPackageId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [summary, setSummary] = useState('');
+  const [sessionNotes, setSessionNotes] = useState('');
+  const [sessionSummary, setSessionSummary] = useState('');
+  const [report, setReport] = useState('');
   
   // Payment details state
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -40,6 +50,7 @@ export default function AdminEditSessionModal({
   const [searchPsychologist, setSearchPsychologist] = useState('');
   const [searchClient, setSearchClient] = useState('');
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
 
   // Available statuses (only commonly used ones for admin)
   const availableStatuses = [
@@ -190,6 +201,16 @@ export default function AdminEditSessionModal({
     setStatus(session.status || 'booked');
     setPrice(session.price || '');
     setTherapistCommission(session.therapist_commission || '');
+    setSessionType(session.session_type || '');
+    setSessionCount(session.session_count || '');
+    setPackageSessionNumber(session.package_session_number || '');
+    setPackageGroupId(session.package_group_id || '');
+    setPackageId(session.package_id || '');
+    setNotes(session.notes || '');
+    setSummary(session.summary || '');
+    setSessionNotes(session.session_notes || '');
+    setSessionSummary(session.session_summary || '');
+    setReport(session.report || '');
 
     // Payment details
     if (session.payment) {
@@ -278,7 +299,7 @@ export default function AdminEditSessionModal({
     try {
       const updateData = {
         psychologist_id: psychologistId,
-        client_id: clientId, // Keep original client ID (read-only)
+        client_id: clientId,
         scheduled_date: scheduledDate,
         scheduled_time: scheduledTime,
         // Send original_scheduled_date explicitly - if empty, backend will use scheduled_date as fallback
@@ -290,7 +311,17 @@ export default function AdminEditSessionModal({
         transaction_id: transactionId.trim() || null,
         razorpay_order_id: razorpayOrderId.trim() || null,
         razorpay_payment_id: razorpayPaymentId.trim() || null,
-        notify_doctor: doctorChanged // Flag to send notification to new doctor
+        notify_doctor: doctorChanged, // Flag to send notification to new doctor
+        session_type: sessionType || null,
+        session_count: sessionCount !== '' && sessionCount !== null ? parseInt(sessionCount, 10) : null,
+        package_session_number: packageSessionNumber !== '' && packageSessionNumber !== null ? parseInt(packageSessionNumber, 10) : null,
+        package_group_id: packageGroupId.trim() || null,
+        package_id: packageId.trim() || null,
+        notes: notes.trim() || null,
+        summary: summary.trim() || null,
+        session_notes: sessionNotes.trim() || null,
+        session_summary: sessionSummary.trim() || null,
+        report: report.trim() || null
       };
       
       console.log('Updating session with original_scheduled_date:', updateData.original_scheduled_date);
@@ -452,7 +483,7 @@ export default function AdminEditSessionModal({
                 )}
               </div>
 
-              {/* Client Display (Read-only) */}
+              {/* Client Display with Reassign Option */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <User className="h-4 w-4 text-[#025545]" />
@@ -460,30 +491,77 @@ export default function AdminEditSessionModal({
                     Client Reference
                   </label>
                 </div>
-                <div className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm">
-                  <div className="text-sm font-bold text-slate-900">
-                    {(() => {
-                      if (session.client) {
-                        const clientName = `${session.client.first_name || ''} ${session.client.last_name || ''}`.trim();
-                        return clientName || session.client.email || 'Client';
-                      }
-                      if (clientId && clients.length > 0) {
-                        const selectedClient = clients.find(c => (c.id || c.client_id || c.profile?.id) === clientId);
-                        if (selectedClient) {
-                          const name = `${selectedClient.profile?.first_name || ''} ${selectedClient.profile?.last_name || ''}`.trim();
-                          return name || selectedClient.email || 'Unknown';
+                
+                {/* Current Client Display */}
+                <div className="group relative">
+                  <div className="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-white shadow-sm group-hover:border-[#025545]/30 transition-all">
+                    <div className="text-sm font-bold text-slate-900">
+                      {(() => {
+                        if (clientId && clients.length > 0) {
+                          const selectedClient = clients.find(c => (c.id || c.client_id || c.profile?.id) === clientId);
+                          if (selectedClient) {
+                            return selectedClient.display_name || `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim() || selectedClient.email || 'Unknown';
+                          }
                         }
-                      }
-                      return 'Client';
-                    })()}
-                  </div>
-                  {session.client?.child_name && (
-                    <div className="text-[11px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full inline-block mt-2">
-                      Child: {session.client.child_name} {session.client.child_age ? `(${session.client.child_age}y)` : ''}
+                        if (session.client) {
+                          const clientName = `${session.client.first_name || ''} ${session.client.last_name || ''}`.trim();
+                          return clientName || session.client.email || 'Client';
+                        }
+                        return 'Client';
+                      })()}
                     </div>
-                  )}
+                    {session.client?.child_name && (
+                      <div className="text-[11px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full inline-block mt-2">
+                        Child: {session.client.child_name} {session.client.child_age ? `(${session.client.child_age}y)` : ''}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShowClientDropdown(!showClientDropdown)}
+                    className="mt-3 w-full px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-xs font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-[0.98]"
+                    disabled={isLoading || isLoadingData}
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${showClientDropdown ? 'rotate-180' : ''} transition-transform duration-300`} />
+                    {showClientDropdown ? 'Keep Current' : 'Reassign Client'}
+                  </button>
                 </div>
-                <input type="hidden" value={clientId} name="client_id" />
+
+                {/* Client Dropdown */}
+                {showClientDropdown && (
+                  <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xl space-y-3 animate-in slide-in-from-top-2 duration-300">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Filter by name..."
+                        value={searchClient}
+                        onChange={(e) => setSearchClient(e.target.value)}
+                        className="w-full pl-10 pr-3 py-2.5 border border-slate-100 rounded-xl bg-slate-50 focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all text-sm outline-none"
+                      />
+                    </div>
+                    <select
+                      value={clientId}
+                      onChange={(e) => {
+                        setClientId(e.target.value);
+                        if (e.target.value) {
+                          setShowClientDropdown(false);
+                        }
+                      }}
+                      required
+                      className="w-full px-3 py-3 border border-slate-200 rounded-xl bg-white focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all text-sm outline-none font-medium cursor-pointer"
+                      disabled={isLoading || isLoadingData}
+                    >
+                      <option value="">Select Client</option>
+                      {filteredClients.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.display_name} ({c.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -540,6 +618,86 @@ export default function AdminEditSessionModal({
                       disabled={isLoading}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Session Type and Package Details Group */}
+            <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
+                <Tag className="h-3.5 w-3.5 text-[#025545]" />
+                Session &amp; Package Metadata
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Session Type
+                  </label>
+                  <select
+                    value={sessionType}
+                    onChange={(e) => setSessionType(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                  >
+                    <option value="individual">Individual</option>
+                    <option value="couple">Couple</option>
+                    <option value="package">Package Session</option>
+                    <option value="free_assessment">Free Assessment</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Session Count (e.g. 3 for Package of 3)
+                  </label>
+                  <input
+                    type="number"
+                    value={sessionCount}
+                    onChange={(e) => setSessionCount(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Package Session Number (e.g. 1, 2, 3)
+                  </label>
+                  <input
+                    type="number"
+                    value={packageSessionNumber}
+                    onChange={(e) => setPackageSessionNumber(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Package Group ID
+                  </label>
+                  <input
+                    type="text"
+                    value={packageGroupId}
+                    onChange={(e) => setPackageGroupId(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Package Catalog ID
+                  </label>
+                  <input
+                    type="text"
+                    value={packageId}
+                    onChange={(e) => setPackageId(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-mono focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
                 </div>
               </div>
             </div>
@@ -682,6 +840,78 @@ export default function AdminEditSessionModal({
                     className="w-full px-5 py-3.5 border border-slate-200 rounded-2xl bg-white shadow-sm font-mono text-xs focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                     placeholder="pay_..."
                     disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Notes, Summary & Report Section */}
+            <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
+                <Tag className="h-3.5 w-3.5 text-[#025545]" />
+                Notes, Summary &amp; Report
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Session Title/Summary (e.g. Google Calendar event title)
+                  </label>
+                  <input
+                    type="text"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Booking Notes (Wix/Admin checkout notes)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none min-h-[80px]"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Internal Psychologist Notes (Session notes)
+                  </label>
+                  <textarea
+                    value={sessionNotes}
+                    onChange={(e) => setSessionNotes(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none min-h-[100px]"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Client Summary/Feedback (Session summary shared with client)
+                  </label>
+                  <textarea
+                    value={sessionSummary}
+                    onChange={(e) => setSessionSummary(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none min-h-[100px]"
+                    disabled={isLoading}
+                    placeholder="None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Report URL / PDF / Text
+                  </label>
+                  <input
+                    type="text"
+                    value={report}
+                    onChange={(e) => setReport(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
+                    disabled={isLoading}
+                    placeholder="None"
                   />
                 </div>
               </div>
