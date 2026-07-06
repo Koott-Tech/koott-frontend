@@ -343,12 +343,24 @@ export default function AdminWixDiscoverPage() {
   const handleView = (row) => { setViewingRow(normalizeRowForModal(row)); setOpenMenuId(null); };
   const handleEdit = (row) => {
     setEditingRow(normalizeRowForModal(row));
+    // Derive the current date + time (IST) for the editable fields. Platform rows store
+    // scheduled_date/time directly; Wix rows store a UTC start_time.
+    let curDate = row.scheduled_date || '';
+    let curTime = (row.scheduled_time || '').slice(0, 5);
+    if (!curDate && row.start_time) {
+      const ist = new Date(new Date(row.start_time).getTime() + 5.5 * 60 * 60 * 1000);
+      curDate = ist.toISOString().slice(0, 10);
+      curTime = ist.toISOString().slice(11, 16);
+    }
     setEditForm({
       status: row.status || '',
       title: row.title || '',
       price: row.price ?? '',
       notes: row.notes || row.session_notes || '',
       psychologist_id: row.psychologist_id || row.psychologist?.id || '',
+      session_type: row.session_type || 'individual',
+      scheduled_date: curDate,
+      scheduled_time: curTime,
       // Client fields are a per-booking snapshot on Wix rows — safe to edit directly.
       // Platform rows share the client record across all their sessions, so identity
       // edits belong on the Users page instead (shown read-only here).
@@ -385,13 +397,15 @@ export default function AdminWixDiscoverPage() {
 
       let res;
       if (editingRow._isPlatform) {
-        // Platform session — update via the session endpoint (status / price / notes).
-        // Date/time changes are intentionally NOT sent here — use the dedicated
-        // Reschedule action, which moves the Google Calendar event too.
+        // Platform session — update status / price / notes / type / date / time directly.
+        // (updateSession moves the calendar event when the date/time actually changes.)
         res = await adminApi.updateSession(editingRow.id, {
           status: editForm.status || undefined,
           price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
           session_notes: editForm.notes || undefined,
+          session_type: editForm.session_type || undefined,
+          scheduled_date: editForm.scheduled_date || undefined,
+          scheduled_time: editForm.scheduled_time || undefined,
         });
       } else {
         res = await adminApi.editWixBooking(editingRow.id, {
@@ -399,6 +413,9 @@ export default function AdminWixDiscoverPage() {
           title: editForm.title || undefined,
           price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
           notes: editForm.notes || undefined,
+          session_type: editForm.session_type || undefined,
+          scheduled_date: editForm.scheduled_date || undefined,
+          scheduled_time: editForm.scheduled_time || undefined,
           client_full_name: editForm.client_full_name || undefined,
           client_email: editForm.client_email || undefined,
           client_phone: editForm.client_phone || undefined,
@@ -1233,7 +1250,10 @@ export default function AdminWixDiscoverPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { key: 'status', label: 'Status', type: 'select', options: ['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested', 'on_hold', 'completed', 'no_show', 'cancelled', 'refunded'] },
+                  { key: 'session_type', label: 'Session Type', type: 'select', options: ['individual', 'couple', 'package', 'assessment', 'discovery'] },
                   { key: 'psychologist_id', label: 'Therapist', type: 'psychologist', full: true },
+                  { key: 'scheduled_date', label: 'Date', type: 'date' },
+                  { key: 'scheduled_time', label: 'Time', type: 'time' },
                   { key: 'price', label: 'Price', type: 'number' },
                   // Client identity fields: real per-booking columns on Wix rows, safe to
                   // edit directly. Platform rows share the client record across every
@@ -1276,9 +1296,13 @@ export default function AdminWixDiscoverPage() {
                   </div>
                 ))}
               </div>
-              {editingRow._isPlatform && (
+              {editingRow._isPlatform ? (
                 <p className="text-xs text-slate-400 px-1">
                   Client name, email &amp; phone are shared across this client&apos;s other sessions — edit them from the Users page.
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400 px-1">
+                  Changing the date/time here edits the record only — for an active booking that needs the Google Calendar event moved, use <span className="font-semibold">Reschedule</span>.
                 </p>
               )}
             </div>
