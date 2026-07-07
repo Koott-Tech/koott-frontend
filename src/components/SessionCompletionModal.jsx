@@ -120,8 +120,8 @@ export default function SessionCompletionModal({
       setErrors(newErrors);
       return true;
     }
-    // "Message to other therapist" (report) is required
-    if (!formData.report.trim()) newErrors.report = "Required";
+    // "Message to operations" is required
+    if (!formData.message_to_operations.trim()) newErrors.message_to_operations = "Required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -281,7 +281,7 @@ export default function SessionCompletionModal({
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                    Message to other therapist {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                    Message to other therapist <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
                   </label>
                   <span className="text-[10px] px-2 py-0.5 border border-transparent self-start opacity-0 pointer-events-none select-none">Spacer</span>
                 </div>
@@ -289,14 +289,9 @@ export default function SessionCompletionModal({
                   value={formData.report}
                   onChange={(e) => handleInputChange("report", e.target.value)}
                   placeholder="Observations and clinical notes for other therapists..."
-                  className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
-                    errors.report
-                      ? "border-rose-500 ring-4 ring-rose-500/10"
-                      : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
-                  }`}
+                  className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
                   disabled={isSubmitting}
                 />
-                {errors.report && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.report}</p>}
               </div>
             </div>
 
@@ -319,15 +314,20 @@ export default function SessionCompletionModal({
               {/* Message to operation */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                  Message to operation <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
+                  Message to operation {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                 </label>
                 <textarea
                   value={formData.message_to_operations}
                   onChange={(e) => handleInputChange("message_to_operations", e.target.value)}
                   placeholder="Message regarding booking, payments, or scheduling issues..."
-                  className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
+                  className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
+                    errors.message_to_operations
+                      ? "border-rose-500 ring-4 ring-rose-500/10"
+                      : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
+                  }`}
                   disabled={isSubmitting}
                 />
+                {errors.message_to_operations && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.message_to_operations}</p>}
 
                 {/* File Upload Attachment */}
                 <div className="mt-2 space-y-2">
