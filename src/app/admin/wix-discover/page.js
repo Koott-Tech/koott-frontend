@@ -75,13 +75,13 @@ function deriveSessionType(row) {
 
   // A couple session with series evidence (count > 1, a session number, etc.) is a couple
   // PACKAGE — even for admin-booked ones that lack a Wix pricing-plan payload.
-  if (isCouple && (hasPlan || isPkg || hasSeriesEvidence)) return `Couple Package${pkgSuffix}`;
+  if (isCouple && (hasPlan || isPkg || hasSeriesEvidence)) return `Couple Pkg${pkgSuffix}`;
   if (isCouple) return 'Couple';
-  if (hasPlan || (isPkg && pkgNum)) return `Package${pkgSuffix}`;
-  if (isChild) return count ? `Session ${idx} of ${count} (Package)` : `Session ${idx} (Package)`;
+  if (hasPlan || (isPkg && pkgNum)) return `Pkg${pkgSuffix}`;
+  if (isChild) return count ? `Session ${idx} of ${count} (Pkg)` : `Session ${idx} (Pkg)`;
   if (isPkg) {
-    if (count && count > 1) return `Package (1/${count})`;
-    return 'Package';
+    if (count && count > 1) return `Pkg (1/${count})`;
+    return 'Pkg';
   }
   if (type === 'assessment') return 'Assessment';
   if (type === 'discovery') return 'Discovery';
@@ -852,6 +852,32 @@ export default function AdminWixDiscoverPage() {
           if (packageGroupMax[key] == null || num > packageGroupMax[key]) packageGroupMax[key] = num;
         }
 
+        // Package labels (A, B, C…): when a client has MORE THAN ONE package with the SAME
+        // therapist, plain "Package (1/3)" is ambiguous. Label each package group A/B/C by
+        // chronological order so "Package A (1/3)" vs "Package B (1/3)" are distinguishable.
+        const rowSortDate = (r) => r.scheduled_date
+          || (r.start_time ? new Date(r.start_time).toISOString().slice(0, 10) : '9999-12-31');
+        const groupsByPair = {}; // "clientId|psychId" -> { groupKey: earliestDate }
+        for (const r of allRows) {
+          if (!r.client_id || !r.psychologist_id) continue;
+          const total = r.session_count ?? r.payload?.creditsAvailable ?? 0;
+          const isPackage = r.session_type === 'package' || Number(total) > 1 || !!r.package_id;
+          if (!isPackage) continue;
+          const pair = `${r.client_id}|${r.psychologist_id}`;
+          const key = packageGroupKey(r);
+          const d = rowSortDate(r);
+          (groupsByPair[pair] = groupsByPair[pair] || {});
+          if (!groupsByPair[pair][key] || d < groupsByPair[pair][key]) groupsByPair[pair][key] = d;
+        }
+        const packageLabels = {}; // groupKey -> 'A' | 'B' | …  (only when >1 package for the pair)
+        for (const pair of Object.keys(groupsByPair)) {
+          const groups = Object.entries(groupsByPair[pair]).sort((a, b) => a[1].localeCompare(b[1]));
+          if (groups.length > 1) {
+            groups.forEach(([key], i) => { packageLabels[key] = String.fromCharCode(65 + i); });
+          }
+        }
+        const packageLabelFor = (r) => packageLabels[packageGroupKey(r)] || null;
+
         // Per-package payment method: a package is ONE purchase (paid on session 1 via
         // Razorpay/etc.), but its admin-booked follow-ups would otherwise show "Admin booked",
         // making one package display two different tags. Derive the paid session's method and
@@ -923,12 +949,15 @@ export default function AdminWixDiscoverPage() {
                               <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${typeColour}`}>
                                 {typeLabelRaw}{(Number(row.session_count) > 1 && row.package_session_number) ? ` (${row.package_session_number}/${row.session_count})` : ''}
                               </span>
+                              {packageLabelFor(row) && (
+                                <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-violet-100 text-violet-800" title="Distinguishes this client's multiple packages with the same therapist">Pkg {packageLabelFor(row)}</span>
+                              )}
                               {/* A package follow-up shows its package's payment method (so all
                                   sessions of one package read the same); otherwise "Admin booked". */}
                               {packageTagFor(row) ? (
                                 <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700">{packageTagFor(row)}</span>
                               ) : (
-                                <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>
+                                <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin</span>
                               )}
                             </div>
                           </td>
@@ -1048,6 +1077,9 @@ export default function AdminWixDiscoverPage() {
                               // deriveSessionType already includes the "(n/m)" suffix for packages.
                               return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium capitalize ${colour}`}>{st}</span>;
                             })()}
+                            {packageLabelFor(row) && (
+                              <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-bold bg-violet-100 text-violet-800" title="Distinguishes this client's multiple packages with the same therapist">Pkg {packageLabelFor(row)}</span>
+                            )}
                             {/* A package follow-up inherits its package's payment method so the
                                 whole package reads the same tag (not a mix of "Razorpay" + "Admin booked"). */}
                             {(() => {
@@ -1057,7 +1089,7 @@ export default function AdminWixDiscoverPage() {
                                 return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pkgTag}</span>;
                               }
                               if (row.payload?.isAdminManual) {
-                                return <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin booked</span>;
+                                return <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin</span>;
                               }
                               const pm = derivePaymentMethod(row);
                               if (!pm) return null;
