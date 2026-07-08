@@ -51,6 +51,41 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
   })();
   const [durationMinutes, setDurationMinutes] = useState(computedInitialDuration);
 
+  // Payment & Commission updates
+  const [updatePayment, setUpdatePayment] = useState(false);
+  const [feeAmount, setFeeAmount] = useState('');
+  const [feeMethod, setFeeMethod] = useState('cash');
+  const [feeReceiptUrl, setFeeReceiptUrl] = useState('');
+  const [feeReceiptName, setFeeReceiptName] = useState('');
+  const [isUploadingFee, setIsUploadingFee] = useState(false);
+
+  const handleFeeScreenshotUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      setError('Payment screenshot must be 15MB or smaller');
+      e.target.value = '';
+      return;
+    }
+    setError(null);
+    setIsUploadingFee(true);
+    try {
+      const response = await adminApi.uploadImage(file, { bucket: 'manual-bookings' });
+      if (!response?.success || !response?.url) {
+        throw new Error(response?.message || response?.error || 'Failed to upload payment screenshot');
+      }
+      setFeeReceiptUrl(response.url);
+      setFeeReceiptName(file.name);
+    } catch (uploadError) {
+      setFeeReceiptUrl('');
+      setFeeReceiptName('');
+      setError(uploadError.message || 'Failed to upload payment screenshot');
+      e.target.value = '';
+    } finally {
+      setIsUploadingFee(false);
+    }
+  };
+
   // Calendar nav
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -83,10 +118,30 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
     return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
   };
 
-  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+  const HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
-  const selectedHour = selectedTime ? selectedTime.slice(0, 2) : '';
-  const selectedMinute = selectedTime ? selectedTime.slice(3, 5) : '';
+  
+  let selectedHour = '';
+  let selectedMinute = '';
+  let selectedAmPm = 'AM';
+  
+  if (selectedTime) {
+    const h24 = parseInt(selectedTime.slice(0, 2), 10);
+    selectedMinute = selectedTime.slice(3, 5);
+    selectedAmPm = h24 >= 12 ? 'PM' : 'AM';
+    selectedHour = String(h24 % 12 || 12).padStart(2, '0');
+  }
+
+  const updateSelectedTime = (h12, m, ampm) => {
+    if (!h12 || !m) {
+      setSelectedTime('');
+      return;
+    }
+    let h24 = parseInt(h12, 10);
+    if (ampm === 'AM' && h24 === 12) h24 = 0;
+    else if (ampm === 'PM' && h24 !== 12) h24 += 12;
+    setSelectedTime(`${String(h24).padStart(2, '0')}:${m}`);
+  };
 
   // ── Effects ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -95,6 +150,11 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
     setChangeDateTime(false);
     setSelectedDate('');
     setSelectedTime('');
+    setUpdatePayment(false);
+    setFeeAmount('');
+    setFeeMethod('cash');
+    setFeeReceiptUrl('');
+    setFeeReceiptName('');
     setError(null);
     setCurrentDate(new Date());
     loadPsychologists();
@@ -126,11 +186,22 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
     setError(null);
     setIsSubmitting(true);
     try {
+      if (updatePayment && feeAmount && !feeReceiptUrl) {
+        setError('Please upload a payment screenshot for the additional amount.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
         new_psychologist_id: selectedPsychId,
         new_duration: parseInt(durationMinutes, 10),
         ...(changeDateTime && selectedDate ? { new_date: selectedDate } : {}),
         ...(changeDateTime && selectedTime ? { new_time: selectedTime } : {}),
+        ...(updatePayment && feeAmount ? {
+          transfer_fee_amount: parseFloat(feeAmount),
+          transfer_fee_method: feeMethod,
+          transfer_fee_receipt_url: feeReceiptUrl
+        } : {})
       };
       // Route to the right endpoint depending on whether this is a Wix booking or a platform session
       const res = session._isWixBooking
@@ -384,35 +455,38 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
                     <div className="text-sm text-gray-400 py-8">Select a date first.</div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Hour</label>
                           <select
                             value={selectedHour}
-                            onChange={(e) => {
-                              const h = e.target.value;
-                              const m = selectedMinute || '00';
-                              setSelectedTime(h && m ? `${h}:${m}` : '');
-                            }}
+                            onChange={(e) => updateSelectedTime(e.target.value, selectedMinute, selectedAmPm)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                           >
                             <option value="">HH</option>
-                            {hours.map((h) => <option key={h} value={h}>{h}</option>)}
+                            {HOURS_12.map((h) => <option key={h} value={h}>{h}</option>)}
                           </select>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Minute</label>
                           <select
                             value={selectedMinute}
-                            onChange={(e) => {
-                              const m = e.target.value;
-                              const h = selectedHour || '00';
-                              setSelectedTime(h && m ? `${h}:${m}` : '');
-                            }}
+                            onChange={(e) => updateSelectedTime(selectedHour, e.target.value, selectedAmPm)}
                             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
                           >
                             <option value="">MM</option>
                             {minutes.map((m) => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">AM/PM</label>
+                          <select
+                            value={selectedAmPm}
+                            onChange={(e) => updateSelectedTime(selectedHour, selectedMinute, e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                          >
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
                           </select>
                         </div>
                       </div>
@@ -428,6 +502,88 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
               </div>
             </div>
           )}
+
+          {/* Payment & Commission toggle */}
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer w-fit">
+              <div
+                role="checkbox"
+                aria-checked={updatePayment}
+                onClick={() => { setUpdatePayment(!updatePayment); }}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${updatePayment ? 'bg-[#025545]' : 'bg-gray-300'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${updatePayment ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="text-sm font-medium text-gray-800">
+                Update Payment & Commission
+              </span>
+              {!updatePayment && (
+                <span className="text-xs text-gray-400">
+                  (optional)
+                </span>
+              )}
+            </label>
+          </div>
+
+          {/* Payment & Commission fields (shown only when toggle is on) */}
+          {updatePayment && (
+            <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-1">
+                  Additional Amount Collected (₹)
+                </label>
+                <input
+                  type="number"
+                  value={feeAmount}
+                  onChange={(e) => setFeeAmount(e.target.value)}
+                  placeholder="e.g. 500"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-100 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-1">
+                      Payment Method
+                    </label>
+                    <select
+                      value={feeMethod}
+                      onChange={(e) => setFeeMethod(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:border-[#025545] focus:outline-none focus:ring-2 focus:ring-[#025545]/15"
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="upi">UPI</option>
+                      <option value="bank_transfer">Bank Transfer</option>
+                      <option value="razorpay">Razorpay</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-1">
+                      Payment Screenshot <span className="text-red-500">*</span>
+                    </label>
+                    <label className="flex items-center justify-center w-full px-3 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+                      {isUploadingFee ? (
+                        <span className="text-sm text-gray-500 flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-600">
+                          {feeReceiptName || 'Choose file'}
+                        </span>
+                      )}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*,.pdf"
+                        onChange={handleFeeScreenshotUpload}
+                        disabled={isUploadingFee}
+                      />
+                    </label>
+                  </div>
+                </div>
+            </div>
+          )}
+
         </div>
 
         {/* Footer */}

@@ -98,11 +98,18 @@ export default function SessionDetailsModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>Date</label>
-                <div className={valueBoxClass}>{formatDate(session.scheduled_date)}</div>
+                <div className={valueBoxClass}>
+                  {formatDate(session.scheduled_date)}
+                  {session.original_scheduled_date && (
+                    <div className="text-[10px] text-amber-600 mt-1">Was: {formatDate(session.original_scheduled_date)}</div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Time</label>
-                <div className={valueBoxClass}>{formatTime(session.scheduled_time)}</div>
+                <div className={valueBoxClass}>
+                  {formatTime(session.scheduled_time)}
+                </div>
               </div>
               {isPsychologist && (
                 <div className="sm:col-span-2">

@@ -1849,7 +1849,9 @@ export default function BookingsPage() {
                     {booking.price != null ? `₹${booking.price}` : '—'}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-400">
-                    {formatBookedAt(sessionBookedAtIso(booking))}
+                    {(booking.status === 'rescheduled' || booking.original_psychologist_id) && booking.updated_at
+                      ? formatBookedAt(booking.updated_at)
+                      : formatBookedAt(sessionBookedAtIso(booking))}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">

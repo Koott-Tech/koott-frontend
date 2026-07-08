@@ -188,6 +188,7 @@ export default function DoctorModal({
     psychiatrist30Price: '',
     experience_years: '',
     display_order: '',
+    wix_staff_id: '',
     packages: [
       { name: 'Individual Session', price: '', sessions: 1 }
     ],
@@ -511,6 +512,7 @@ export default function DoctorModal({
         phone: doctor.phone || '',
         email: doctor.email || '',
         designation: doctor.designation || null,
+        wix_staff_id: doctor.wix_staff_id || null,
         ug_college: doctor.ug_college || doctor.education?.ug || '',
         pg_college: doctor.pg_college || doctor.education?.pg || '',
         mphil_college: doctor.mphil_college || doctor.education?.mphil || '',
@@ -561,6 +563,7 @@ export default function DoctorModal({
         psychiatrist30Price: doctor.psychiatrist_30min_price || '',
         experience_years: doctor.experience_years || '',
         display_order: doctor.display_order !== null && doctor.display_order !== undefined ? String(doctor.display_order) : '',
+        wix_staff_id: doctor.wix_staff_id || '',
         packages: [
           // Start with individual session package
           { name: 'Individual Session', price: doctor.price || doctor.individual_session_price || '', sessions: 1 }
@@ -1221,6 +1224,7 @@ export default function DoctorModal({
         email: formData.email,
         phone: countryCode + formData.phone,
         designation: formData.designation?.trim() || null,
+        wix_staff_id: formData.wix_staff_id?.trim() || null,
         cover_image_url: safeImageUrl,
       };
 
@@ -1403,6 +1407,20 @@ export default function DoctorModal({
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
                 placeholder="e.g., Consultant Psychologist"
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Wix Staff ID
+              </label>
+              <input
+                type="text"
+                value={formData.wix_staff_id}
+                onChange={(e) => handleInputChange('wix_staff_id', e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                placeholder="e.g., 971fb91e-a015-43b1-90f4-295917c8bc59"
+              />
+              <p className="mt-1 text-xs text-gray-500">Optional: Used to map Wix bookings automatically.</p>
             </div>
 
             <div className="md:col-span-2">
