@@ -420,6 +420,7 @@ export default function AdminWixDiscoverPage() {
       notes: row.notes || row.session_notes || '',
       psychologist_id: row.psychologist_id || row.psychologist?.id || '',
       session_type: row.session_type || 'individual',
+      session_count: row.session_count ?? '',
       scheduled_date: curDate,
       scheduled_time: curTime,
       // Client fields are a per-booking snapshot on Wix rows — safe to edit directly.
@@ -465,6 +466,7 @@ export default function AdminWixDiscoverPage() {
           price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
           session_notes: editForm.notes || undefined,
           session_type: editForm.session_type || undefined,
+          session_count: editForm.session_count !== '' && editForm.session_count != null ? Number(editForm.session_count) : undefined,
           scheduled_date: editForm.scheduled_date || undefined,
           scheduled_time: editForm.scheduled_time || undefined,
         });
@@ -475,6 +477,7 @@ export default function AdminWixDiscoverPage() {
           price: editForm.price !== '' ? parseFloat(editForm.price) : undefined,
           notes: editForm.notes || undefined,
           session_type: editForm.session_type || undefined,
+          session_count: editForm.session_count !== '' && editForm.session_count != null ? Number(editForm.session_count) : undefined,
           scheduled_date: editForm.scheduled_date || undefined,
           scheduled_time: editForm.scheduled_time || undefined,
           client_full_name: editForm.client_full_name || undefined,
@@ -1365,7 +1368,7 @@ export default function AdminWixDiscoverPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { key: 'status', label: 'Status', type: 'select', options: ['booked', 'pending', 'confirmed', 'scheduled', 'rescheduled', 'reschedule_requested', 'on_hold', 'completed', 'no_show', 'cancelled', 'refunded'] },
-                  { key: 'session_type', label: 'Session Type', type: 'select', options: ['individual', 'couple', 'package', 'assessment', 'discovery'] },
+                  { key: 'session_type', label: 'Session Type', type: 'sessionType' },
                   { key: 'psychologist_id', label: 'Therapist', type: 'psychologist', full: true },
                   { key: 'scheduled_date', label: 'Date', type: 'date' },
                   { key: 'scheduled_time', label: 'Time', type: 'time' },
@@ -1387,7 +1390,33 @@ export default function AdminWixDiscoverPage() {
                         className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm capitalize focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
                         {field.options.map(o => <option key={o} value={o} className="capitalize">{o}</option>)}
                       </select>
-                    ) : field.type === 'psychologist' ? (
+                    ) : field.type === 'sessionType' ? (() => {
+                      // "package" expands into concrete sizes so the admin picks Package (N).
+                      // Selecting a size sets session_type='package' + session_count=N; any other
+                      // type is a single session (count 1). Always includes the current count so an
+                      // existing 4/2/… pack isn't silently changed.
+                      const curCount = Number(editForm.session_count) || 0;
+                      const pkgSizes = [...new Set([2, 3, 6, 9, 12, ...(curCount > 1 ? [curCount] : [])])].sort((a, b) => a - b);
+                      const value = editForm.session_type === 'package' ? `package_${curCount || 3}` : (editForm.session_type || 'individual');
+                      return (
+                        <select value={value} onChange={(e) => {
+                          const v = e.target.value;
+                          if (v.startsWith('package_')) {
+                            const n = parseInt(v.slice(8), 10);
+                            setEditForm(f => ({ ...f, session_type: 'package', session_count: n }));
+                          } else {
+                            setEditForm(f => ({ ...f, session_type: v, session_count: 1 }));
+                          }
+                        }}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
+                          <option value="individual">Individual</option>
+                          <option value="couple">Couple</option>
+                          {pkgSizes.map(n => <option key={n} value={`package_${n}`}>{`Package (${n} sessions)`}</option>)}
+                          <option value="assessment">Assessment</option>
+                          <option value="discovery">Discovery</option>
+                        </select>
+                      );
+                    })() : field.type === 'psychologist' ? (
                       <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
                         className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
                         <option value="">— Select therapist —</option>
