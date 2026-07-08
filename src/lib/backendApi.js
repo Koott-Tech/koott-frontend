@@ -1308,6 +1308,12 @@ export const adminApi = {
     return apiRequest('/admin/bookings/packages-with-remaining');
   },
 
+  // Stable A/B/C labels for clients with multiple packages from the same therapist.
+  // Returns { labels: { "<clientId>|<psychId>": { "<groupId>": "A", ... } } }.
+  async getPackageLabels() {
+    return apiRequest('/admin/bookings/package-labels');
+  },
+
   // Free Assessment Timeslots API
   async getFreeAssessmentTimeslots() {
     return apiRequest('/free-assessment-timeslots');

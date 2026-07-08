@@ -101,8 +101,12 @@ function derivePaymentMethod(row) {
   }
   const state = row.payload?.paymentState;
   if (state === 'FREE') return 'Free';
-  if (state === 'COMPLETE') return null;
   if (parseFloat(row.price || '0') === 0) return 'Free';
+  // A completed Wix payment collapses wixPayMultipleDetails to [] and only reports
+  // paymentState:'COMPLETE' (the vendor breakdown is gone). For Koott, a completed
+  // online Wix payment with a real price = Razorpay (the only online gateway).
+  if (state === 'COMPLETE' && !row.payload?.isAdminManual) return 'Razorpay';
+  if (state === 'COMPLETE') return null;
   return null;
 }
 
@@ -114,6 +118,7 @@ function statusBadge(status) {
   if (s === 'booked') return 'bg-emerald-100 text-emerald-800';
   if (s === 'no_show') return 'bg-amber-100 text-amber-900';
   if (s === 'on_hold') return 'bg-orange-100 text-orange-800';
+  if (s === 'pending') return 'bg-yellow-100 text-yellow-800';
   return 'bg-slate-100 text-slate-700';
 }
 
@@ -121,6 +126,33 @@ function effectiveCompletionStatus(row) {
   const primary = String(row?.status || '').toLowerCase();
   const linked = String(row?.session_status || '').toLowerCase();
   return linked || primary;
+}
+
+// Absolute start instant (ms) of a session. scheduled_date/time are IST wall-clock;
+// wix start_time is already an absolute UTC instant.
+function sessionStartMs(row) {
+  if (row?.scheduled_date && row?.scheduled_time) {
+    const [y, m, d] = String(row.scheduled_date).split('-').map(Number);
+    const [hh = 0, mm = 0, ss = 0] = String(row.scheduled_time).split(':').map(Number);
+    if (y && m && d) return Date.UTC(y, m - 1, d, hh, mm, ss) - 5.5 * 3600 * 1000; // IST → UTC
+  }
+  if (row?.start_time) {
+    const t = Date.parse(row.start_time);
+    if (!Number.isNaN(t)) return t;
+  }
+  return null;
+}
+
+// Status to SHOW in the badge. A session whose scheduled time has passed but that the
+// doctor hasn't marked completed yet reads as "pending" (awaiting completion) instead of
+// "booked". Display-only — does NOT affect action gating (Mark Complete etc.).
+function displayStatusFor(row) {
+  const st = effectiveCompletionStatus(row);
+  if (['booked', 'scheduled', 'confirmed', 'rescheduled', 'reschedule_requested'].includes(st)) {
+    const startMs = sessionStartMs(row);
+    if (startMs != null && startMs <= Date.now()) return 'pending';
+  }
+  return st;
 }
 
 export default function AdminWixDiscoverPage() {
@@ -131,6 +163,9 @@ export default function AdminWixDiscoverPage() {
   const [syncing, setSyncing] = useState(false);
   const [rows, setRows] = useState([]);
   const [platformRows, setPlatformRows] = useState([]);
+  // Stable package A/B/C labels computed by the backend over ALL of a client's packages
+  // (filter/page independent). Shape: { "<clientId>|<psychId>": { "<groupId>": "A" } }.
+  const [packageLabelMap, setPackageLabelMap] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   // Debounced copy used for the actual fetch — typing updates searchTerm instantly (input
   // stays responsive) but we only query after a short pause, so rapid keystrokes don't fire
@@ -229,7 +264,7 @@ export default function AdminWixDiscoverPage() {
       } : {};
 
       // Fetch Wix bookings (wix_bookings table)
-      const [res, platformRes] = await Promise.all([
+      const [res, platformRes, labelsRes] = await Promise.all([
         adminApi.getWixBookings({
           page: targetPage, limit: 10,
           ...dateParams,
@@ -249,7 +284,11 @@ export default function AdminWixDiscoverPage() {
             : statusFilter || undefined,
           ...dateParams,
         }).catch(() => null),
+        // Stable A/B/C package labels (computed backend-side over full history)
+        adminApi.getPackageLabels().catch(() => null),
       ]);
+
+      setPackageLabelMap(labelsRes?.data?.labels || {});
 
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
@@ -876,7 +915,17 @@ export default function AdminWixDiscoverPage() {
             groups.forEach(([key], i) => { packageLabels[key] = String.fromCharCode(65 + i); });
           }
         }
-        const packageLabelFor = (r) => packageLabels[packageGroupKey(r)] || null;
+        const packageLabelFor = (r) => {
+          // Prefer the backend-computed map: stable, computed over the client's FULL package
+          // history, so the label doesn't change with the current filter/page.
+          const pairLabels = packageLabelMap[`${r.client_id}|${r.psychologist_id}`];
+          if (pairLabels && r.package_group_id && pairLabels[r.package_group_id]) {
+            return pairLabels[r.package_group_id];
+          }
+          // Fallback to the local (page-scoped) computation for a package created after the
+          // last label fetch, or any row still lacking a real group id.
+          return packageLabels[packageGroupKey(r)] || null;
+        };
 
         // Per-package payment method: a package is ONE purchase (paid on session 1 via
         // Razorpay/etc.), but its admin-booked follow-ups would otherwise show "Admin booked",
@@ -972,7 +1021,7 @@ export default function AdminWixDiscoverPage() {
                           </td>
                           <td className="px-4 py-3 text-gray-700">{therapistName}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(row.status)}`}>{row.status || '—'}</span>
+                            {(() => { const ds = displayStatusFor(row); return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(ds)}`}>{ds || '—'}</span>; })()}
                           </td>
                           <td className="px-4 py-3 text-gray-700">{row.price != null ? `₹${row.price}` : '—'}</td>
                           <td className="px-4 py-3 text-xs text-gray-400">{bookedAt ? fmtDateTime(bookedAt) : '—'}</td>
@@ -1106,7 +1155,7 @@ export default function AdminWixDiscoverPage() {
                         <td className="px-4 py-3 text-gray-700">{row.therapist_name || '—'}</td>
                         <td className="px-4 py-3">
                           {(() => {
-                            const resolved = effectiveCompletionStatus(row);
+                            const resolved = displayStatusFor(row);
                             const s = resolved && resolved !== 'undefined' && resolved !== 'null' ? resolved : null;
                             return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(s)}`}>{s || '—'}</span>;
                           })()}
