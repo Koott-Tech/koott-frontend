@@ -110,22 +110,45 @@ function derivePaymentMethod(row) {
   return null;
 }
 
+function DeliveryDot({ done, on, label, compact = false }) {
+  const statusLabel = done ? 'sent' : 'not sent';
+  return (
+    <span className={`group relative inline-flex ${compact ? 'items-center gap-1.5' : ''}`}>
+      <span
+        aria-label={`${label}: ${statusLabel}`}
+        className={`inline-block h-2 w-2 rounded-full ${done ? on : 'bg-gray-200 ring-1 ring-inset ring-gray-300'}`}
+      />
+      {compact && (
+        <span className="text-xs text-gray-600">{label}</span>
+      )}
+      <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+        {label}: {statusLabel}
+      </span>
+    </span>
+  );
+}
+
 // Three delivery dots shown under the session details: green = WhatsApp sent,
 // blue = email sent, red = calendar event created. A dot is coloured when that channel
 // succeeded and greyed when it hasn't (so a missing/failed send is visible at a glance).
-function DeliveryDots({ row }) {
+function DeliveryDots({ row, showLabels = false }) {
+  const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url || row.google_calendar_link);
+  const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
   const dots = [
     { done: !!row.whatsapp_sent_at, on: 'bg-green-500', label: 'WhatsApp' },
     { done: !!row.email_sent_at, on: 'bg-blue-500', label: 'Email' },
-    { done: !!row.google_calendar_event_id, on: 'bg-red-500', label: 'Calendar event' },
+    { done: hasMeetLink, on: 'bg-orange-500', label: 'Meet link' },
+    { done: hasCalendarEvent, on: 'bg-red-500', label: 'Calendar' },
   ];
   return (
-    <div className="flex items-center gap-1 mt-1.5">
+    <div className={`flex flex-wrap items-center ${showLabels ? 'gap-x-3 gap-y-2' : 'gap-1'} mt-1.5`}>
       {dots.map((d) => (
-        <span
+        <DeliveryDot
           key={d.label}
-          title={`${d.label}: ${d.done ? 'sent ✓' : 'not sent'}`}
-          className={`inline-block h-2 w-2 rounded-full ${d.done ? d.on : 'bg-gray-200 ring-1 ring-inset ring-gray-300'}`}
+          done={d.done}
+          on={d.on}
+          label={d.label}
+          compact={showLabels}
         />
       ))}
     </div>
@@ -180,6 +203,7 @@ function displayStatusFor(row) {
 export default function AdminWixDiscoverPage() {
   const { showError, showSuccess } = useNotification();
   const initializedRef = useRef(false);
+  const calendarRefreshAttemptsRef = useRef(new Set());
   const [initialSyncDone, setInitialSyncDone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -314,14 +338,35 @@ export default function AdminWixDiscoverPage() {
 
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
-      const bookings = res.data?.bookings || [];
+      const allPlatformSessions = platformRes?.data?.sessions || [];
+      const wixSessionMap = new Map(
+        allPlatformSessions
+          .filter((s) => s?.wix_booking_id)
+          .map((s) => [s.wix_booking_id, s])
+      );
+
+      const bookings = (res.data?.bookings || []).map((booking) => {
+        const linkedSession = wixSessionMap.get(booking.wix_booking_id);
+        if (!linkedSession) return booking;
+        return {
+          ...booking,
+          session_id: booking.session_id || linkedSession.id || null,
+          google_calendar_event_id: booking.google_calendar_event_id || linkedSession.google_calendar_event_id || null,
+          google_calendar_link: booking.google_calendar_link || linkedSession.google_calendar_link || null,
+          google_meet_link: booking.google_meet_link || linkedSession.google_meet_link || null,
+          google_meet_join_url: booking.google_meet_join_url || linkedSession.google_meet_join_url || null,
+          google_meet_start_url: booking.google_meet_start_url || linkedSession.google_meet_start_url || null,
+          notified_at: booking.notified_at || linkedSession.notified_at || null,
+          email_sent_at: booking.email_sent_at || linkedSession.email_sent_at || null,
+          whatsapp_sent_at: booking.whatsapp_sent_at || linkedSession.whatsapp_sent_at || null,
+        };
+      });
       setRows(bookings);
       const p = res.data?.pagination || {};
       setPagination({ page: p.page || targetPage, limit: p.limit || 10, total: p.total || 0, totalPages: Math.max(1, Math.ceil((p.total || 0) / (p.limit || 10))) });
       setPage(p.page || targetPage);
 
       // Filter platform sessions to non-wix source only (exclude sessions already in wix_bookings)
-      const allPlatformSessions = platformRes?.data?.sessions || [];
       const wixBookingIdSet = new Set(bookings.map((b) => b.wix_booking_id).filter(Boolean));
       const platformOnly = allPlatformSessions.filter((s) => {
         const src = String(s.source || '').toLowerCase();
@@ -396,6 +441,34 @@ export default function AdminWixDiscoverPage() {
     if (page !== 1) { setPage(1); load(1); return; }
     load(1);
   }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing]);
+
+  useEffect(() => {
+    if (loading || syncing || !initialSyncDone) return;
+
+    const pendingCalendarRows = [...rows, ...platformRows].filter((row) => {
+      const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
+      const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url || row.google_calendar_link);
+      const hasSessionLink = !!(row.session_id || row.id);
+      const status = String(displayStatusFor(row) || row.status || '').toLowerCase();
+      return hasSessionLink && (!hasCalendarEvent || !hasMeetLink) && !['cancelled', 'refunded', 'deleted'].includes(status);
+    });
+
+    if (!pendingCalendarRows.length) return;
+
+    const refreshKey = pendingCalendarRows
+      .map((row) => String(row.session_id || row.id))
+      .sort()
+      .join('|');
+
+    if (!refreshKey || calendarRefreshAttemptsRef.current.has(refreshKey)) return;
+    calendarRefreshAttemptsRef.current.add(refreshKey);
+
+    const timer = setTimeout(() => {
+      load(page);
+    }, 6000);
+
+    return () => clearTimeout(timer);
+  }, [rows, platformRows, loading, syncing, initialSyncDone, load, page]);
 
   const handlePageChange = async (nextPage) => {
     const safePage = Math.max(1, Math.min(pagination.totalPages, nextPage));
@@ -789,7 +862,21 @@ export default function AdminWixDiscoverPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="text-xl font-semibold text-gray-900">Wix Bookings</div>
+        <div>
+          <div className="text-xl font-semibold text-gray-900">Wix Bookings</div>
+          <div className="mt-2 inline-flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
+            <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Delivery dots</span>
+            <DeliveryDots
+              showLabels
+              row={{
+                whatsapp_sent_at: true,
+                email_sent_at: true,
+                google_meet_link: 'https://meet.google.com/legend',
+                google_calendar_event_id: 'legend',
+              }}
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button type="button" onClick={() => setIsManualBookingOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#025545] text-white text-sm hover:bg-[#012f23]">
