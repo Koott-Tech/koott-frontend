@@ -110,6 +110,28 @@ function derivePaymentMethod(row) {
   return null;
 }
 
+// Three delivery dots shown under the session details: green = WhatsApp sent,
+// blue = email sent, red = calendar event created. A dot is coloured when that channel
+// succeeded and greyed when it hasn't (so a missing/failed send is visible at a glance).
+function DeliveryDots({ row }) {
+  const dots = [
+    { done: !!row.whatsapp_sent_at, on: 'bg-green-500', label: 'WhatsApp' },
+    { done: !!row.email_sent_at, on: 'bg-blue-500', label: 'Email' },
+    { done: !!row.google_calendar_event_id, on: 'bg-red-500', label: 'Calendar event' },
+  ];
+  return (
+    <div className="flex items-center gap-1 mt-1.5">
+      {dots.map((d) => (
+        <span
+          key={d.label}
+          title={`${d.label}: ${d.done ? 'sent ✓' : 'not sent'}`}
+          className={`inline-block h-2 w-2 rounded-full ${d.done ? d.on : 'bg-gray-200 ring-1 ring-inset ring-gray-300'}`}
+        />
+      ))}
+    </div>
+  );
+}
+
 function statusBadge(status) {
   const s = String(status || '').toLowerCase();
   if (s === 'completed') return 'bg-green-100 text-green-800';
@@ -1015,6 +1037,7 @@ export default function AdminWixDiscoverPage() {
                                 <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Admin</span>
                               )}
                             </div>
+                            <DeliveryDots row={row} />
                           </td>
                           <td className="px-4 py-3">
                             <p className="text-gray-900 font-medium truncate max-w-[180px]" title={clientName}>{clientName}</p>
@@ -1152,6 +1175,7 @@ export default function AdminWixDiscoverPage() {
                               return <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${isManual ? 'bg-orange-50 text-orange-700' : 'bg-emerald-50 text-emerald-700'}`}>{pm}</span>;
                             })()}
                           </div>
+                          <DeliveryDots row={row} />
                         </td>
                         <td className="px-4 py-3">
                           {(() => { const nm = row.client_full_name || row.client_first_name || '—'; return <p className="text-gray-900 font-medium truncate max-w-[180px]" title={nm}>{nm}</p>; })()}
