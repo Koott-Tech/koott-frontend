@@ -630,7 +630,10 @@ export default function AdminWixDiscoverPage() {
       : { date: null, time: null };
     return {
       ...row,
-      id: row.session_id || null,
+      // Wix rows carry the linked session id in `session_id`; platform (admin-booked)
+      // rows ARE the session, so their id lives in `row.id`. Fall back to it so admin
+      // package sessions (e.g. "Book Next" follow-ups) can still be rescheduled.
+      id: row.session_id || row.id || null,
       status: row.session_status || row.status,
       scheduled_date: startTimeIST.date,
       scheduled_time: startTimeIST.time,
