@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { RefreshCw, Loader2, Search, Mail, Phone, CloudDownload, MoreVertical, Eye, Edit, Trash2, CheckCircle, X, Save, AlertCircle, Package, Video, Calendar, Filter, XCircle, ArrowRightLeft, PauseCircle, MessageSquare, Paperclip } from 'lucide-react';
 import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
@@ -112,18 +113,47 @@ function derivePaymentMethod(row) {
 
 function DeliveryDot({ done, on, label, compact = false }) {
   const statusLabel = done ? 'sent' : 'not sent';
+  const dotRef = useRef(null);
+  const [tooltipPos, setTooltipPos] = useState(null);
+
+  const showTooltip = useCallback(() => {
+    if (!dotRef.current || typeof window === 'undefined') return;
+    const rect = dotRef.current.getBoundingClientRect();
+    setTooltipPos({
+      left: rect.left + rect.width / 2,
+      top: rect.top - 8,
+    });
+  }, []);
+
+  const hideTooltip = useCallback(() => {
+    setTooltipPos(null);
+  }, []);
+
   return (
-    <span className={`group relative inline-flex ${compact ? 'items-center gap-1.5' : ''}`}>
+    <span
+      className={`relative inline-flex ${compact ? 'items-center gap-1.5' : ''}`}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+    >
       <span
+        ref={dotRef}
         aria-label={`${label}: ${statusLabel}`}
         className={`inline-block h-2 w-2 rounded-full ${done ? on : 'bg-gray-200 ring-1 ring-inset ring-gray-300'}`}
       />
       {compact && (
         <span className="text-xs text-gray-600">{label}</span>
       )}
-      <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
-        {label}: {statusLabel}
-      </span>
+      {tooltipPos && typeof document !== 'undefined' && createPortal(
+        <span
+          className="pointer-events-none fixed z-[9999] -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white shadow-xl"
+          style={{ left: tooltipPos.left, top: tooltipPos.top }}
+        >
+          {label}: {statusLabel}
+        </span>,
+        document.body
+      )}
     </span>
   );
 }
@@ -1005,8 +1035,9 @@ export default function AdminWixDiscoverPage() {
 
       {/* Table — Wix bookings + Platform/manual sessions combined */}
       {(() => {
+        const pageLimit = pagination.limit || 10;
         const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
-        const allRows = [...rows, ...platformTagged];
+        const allRows = [...rows, ...platformTagged].slice(0, pageLimit);
         // Highest booked session number per package group → "Book Next" shows only on the latest.
         // Keyed by real package_group_id when present, else client+therapist+type fallback,
         // so couple/individual packages without a group_id are still tracked.
@@ -1123,7 +1154,7 @@ export default function AdminWixDiscoverPage() {
                       const startIso = (row.scheduled_date && row.scheduled_time) ? `${row.scheduled_date}T${row.scheduled_time}` : row.scheduled_date;
                       const meetLink = row.google_meet_link || row.google_meet_join_url || row.google_calendar_link;
                       return (
-                        <tr key={`platform-${row.id}`} className={`transition-colors bg-[#025545]/[0.02] ${openMenuId === `platform-${row.id}` ? 'bg-[#025545]/5' : 'hover:bg-[#025545]/[0.04]'}`}>
+                        <tr key={`platform-${row.id}`} className={`transition-colors bg-[#025545]/[0.02] ${openMenuId === `platform-${row.id}` ? 'bg-[#025545]/7' : 'hover:bg-[#025545]/[0.08]'}`}>
                           <td className="px-4 py-3">
                             <p className="font-medium text-gray-900 text-xs leading-snug">{startIso ? fmtDateTime(startIso) : '—'}</p>
                             <div className="flex flex-wrap gap-1 mt-1">
@@ -1243,7 +1274,7 @@ export default function AdminWixDiscoverPage() {
 
                     // ── Wix booking row ────────────────────────────────────────
                     return (
-                      <tr key={row.id} className={`transition-colors ${openMenuId === row.id ? 'bg-[#025545]/5' : 'hover:bg-gray-50/60'}`}>
+                      <tr key={row.id} className={`transition-colors ${openMenuId === row.id ? 'bg-[#025545]/7' : 'hover:bg-[#025545]/[0.08]'}`}>
                         <td className="px-4 py-3">
                           <p className="font-medium text-gray-900 text-xs leading-snug">{fmtDateTime(row.start_time)}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
