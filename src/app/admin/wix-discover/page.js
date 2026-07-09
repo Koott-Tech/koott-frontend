@@ -132,11 +132,12 @@ function DeliveryDot({ done, on, label, compact = false }) {
 // blue = email sent, red = calendar event created. A dot is coloured when that channel
 // succeeded and greyed when it hasn't (so a missing/failed send is visible at a glance).
 function DeliveryDots({ row, showLabels = false }) {
+  const hasLegacyNotification = !!row.notified_at;
   const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url || row.google_calendar_link);
   const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
   const dots = [
-    { done: !!row.whatsapp_sent_at, on: 'bg-green-500', label: 'WhatsApp' },
-    { done: !!row.email_sent_at, on: 'bg-blue-500', label: 'Email' },
+    { done: !!(row.whatsapp_sent_at || hasLegacyNotification), on: 'bg-green-500', label: 'WhatsApp' },
+    { done: !!(row.email_sent_at || hasLegacyNotification), on: 'bg-blue-500', label: 'Email' },
     { done: hasMeetLink, on: 'bg-orange-500', label: 'Meet link' },
     { done: hasCalendarEvent, on: 'bg-red-500', label: 'Calendar' },
   ];
@@ -339,6 +340,22 @@ export default function AdminWixDiscoverPage() {
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
       const allPlatformSessions = platformRes?.data?.sessions || [];
+      const visibleWixBookingIds = (res.data?.bookings || [])
+        .map((booking) => booking?.wix_booking_id)
+        .filter(Boolean);
+      const exactLinkedSessionsRes = visibleWixBookingIds.length
+        ? await sessionsApi.getAllSessions({
+            page: 1,
+            limit: Math.max(visibleWixBookingIds.length, 50),
+            wix_booking_id: visibleWixBookingIds,
+          }).catch(() => null)
+        : null;
+      const exactLinkedSessions = exactLinkedSessionsRes?.data?.sessions || [];
+      const exactWixSessionMap = new Map(
+        exactLinkedSessions
+          .filter((s) => s?.wix_booking_id)
+          .map((s) => [s.wix_booking_id, s])
+      );
       const wixSessionMap = new Map(
         allPlatformSessions
           .filter((s) => s?.wix_booking_id)
@@ -346,7 +363,7 @@ export default function AdminWixDiscoverPage() {
       );
 
       const bookings = (res.data?.bookings || []).map((booking) => {
-        const linkedSession = wixSessionMap.get(booking.wix_booking_id);
+        const linkedSession = exactWixSessionMap.get(booking.wix_booking_id) || wixSessionMap.get(booking.wix_booking_id);
         if (!linkedSession) return booking;
         return {
           ...booking,
