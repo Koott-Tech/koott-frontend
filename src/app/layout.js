@@ -364,20 +364,6 @@ export default function RootLayout({ children }) {
             gtag('config', 'G-K7Z8F94Z80');
           `}
         </Script>
-        {/* Microsoft Clarity - User behavior analytics */}
-        {/* Using proxy (/clarity/*) to bypass ad blockers - requests appear as first-party */}
-        <Script id="microsoft-clarity-analytics" strategy="afterInteractive">
-          {`
-            (function(c,l,a,r,i,t,y){
-              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-              t=l.createElement(r);t.async=1;
-              // Use proxy to bypass ad blockers - /clarity/* proxies to clarity.ms
-              t.src="/clarity/tag/"+i;
-              t.onerror=function(){/* Silently handle blocked requests */};
-              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-            })(window, document, "clarity", "script", "v8mh6s1q7j");
-          `}
-        </Script>
       </body>
     </html>
   );

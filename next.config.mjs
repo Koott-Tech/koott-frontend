@@ -99,10 +99,6 @@ const nextConfig = {
         source: '/posthog/:path*',
         destination: 'https://us.i.posthog.com/:path*',
       },
-      {
-        source: '/clarity/:path*',
-        destination: 'https://www.clarity.ms/:path*',
-      },
     ];
   },
 };
