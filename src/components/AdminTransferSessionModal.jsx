@@ -133,14 +133,15 @@ export default function AdminTransferSessionModal({ isOpen, onClose, session, on
   }
 
   const updateSelectedTime = (h12, m, ampm) => {
-    if (!h12 || !m) {
-      setSelectedTime('');
-      return;
-    }
-    let h24 = parseInt(h12, 10);
+    // Fields are picked one at a time, so default the part not chosen yet (hour→12, minute→00)
+    // instead of clearing — otherwise selecting the hour before the minute (or vice-versa)
+    // would reset the whole value and nothing would ever "stick".
+    const hour = h12 || '12';
+    const minute = m || '00';
+    let h24 = parseInt(hour, 10);
     if (ampm === 'AM' && h24 === 12) h24 = 0;
     else if (ampm === 'PM' && h24 !== 12) h24 += 12;
-    setSelectedTime(`${String(h24).padStart(2, '0')}:${m}`);
+    setSelectedTime(`${String(h24).padStart(2, '0')}:${minute}`);
   };
 
   // ── Effects ───────────────────────────────────────────────────────────────
