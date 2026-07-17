@@ -144,6 +144,26 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
               placeholder="MyKoott-summer-workshops-2026"
             />
           </Field>
+          <Field label="Event Mode">
+            <select
+              className="box-border w-full min-w-0 max-w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:outline-none focus:ring-1 focus:ring-[#025545]"
+              value={cms.eventMode || 'online'}
+              onChange={(e) => patch((p) => ({ ...p, eventMode: e.target.value }))}
+            >
+              <option value="online">Online</option>
+              <option value="offline">Offline</option>
+              <option value="hybrid">Hybrid</option>
+            </select>
+          </Field>
+          {cms.eventMode !== 'online' && (
+            <Field label="Event Location (for Offline/Hybrid)">
+              <TextInput
+                value={cms.eventLocation ?? ""}
+                onChange={(v) => patch((p) => ({ ...p, eventLocation: v }))}
+                placeholder="e.g. MyKoott Office, Bangalore"
+              />
+            </Field>
+          )}
           <Field label="Session join link (Google Meet, Zoom, etc.) — required when published">
             <TextInput
               value={cms.sessionJoinUrl ?? ""}

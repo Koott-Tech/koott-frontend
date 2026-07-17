@@ -163,7 +163,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (userData, authToken, options) => {
-    // This login function works for ALL roles: client, admin, psychologist, finance, superadmin
+    // This login function works for ALL roles: client, admin, psychologist, finance, superadmin, event_organizer
     // All roles use the same authentication storage system with "Remember Me" functionality
     
     // Explicitly check if remember preference is provided

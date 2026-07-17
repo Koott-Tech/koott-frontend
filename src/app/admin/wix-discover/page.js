@@ -715,7 +715,10 @@ export default function AdminWixDiscoverPage() {
     setActionLoading(true);
     try {
       const res = deleteIsPlatform
-        ? await adminApi.deleteSession(deleteConfirmId)
+        // Platform (admin/manual) sessions: adminApi has no deleteSession — use sessionsApi,
+        // which hits the admin route DELETE /admin/sessions/:sessionId. (adminApi.deleteSession
+        // was undefined, so the platform Delete button threw and did nothing.)
+        ? await sessionsApi.deleteSession(deleteConfirmId)
         : await adminApi.deleteWixBooking(deleteConfirmId);
       if (!res?.success) throw new Error(res?.error || 'Failed');
       showSuccess('Booking deleted', deleteIsPlatform ? 'Session' : 'Wix');

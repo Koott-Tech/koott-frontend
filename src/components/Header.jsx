@@ -398,6 +398,8 @@ export default function Header() {
       router.push('/psychologist');
     } else if (user?.role === 'finance') {
       router.push('/finance'); // Redirect finance role to finance dashboard
+    } else if (user?.role === 'event_organizer') {
+      router.push('/event-organizer');
     } else {
       router.push('/profile');
     }
@@ -410,6 +412,7 @@ export default function Header() {
       'superadmin': 'Super Admin',
       'psychologist': 'Psychologist',
       'finance': 'Finance',
+      'event_organizer': 'Event Organizer',
       'client': 'Client',
       'user': 'User'
     };
@@ -458,7 +461,7 @@ export default function Header() {
     }
     
     // For admins/superadmins, show email
-    if (user.role === 'admin' || user.role === 'superadmin') {
+    if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'event_organizer') {
       return user.email;
     }
     
@@ -472,7 +475,7 @@ export default function Header() {
     const displayName = getUserDisplayName();
     
     // For admins, use first letter of email
-    if (user.role === 'admin' || user.role === 'superadmin') {
+    if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'event_organizer') {
       return displayName.charAt(0).toUpperCase();
     }
     

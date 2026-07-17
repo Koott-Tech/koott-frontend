@@ -184,6 +184,8 @@ export default function AuthModal({
             window.location.href = '/finance';
           } else if (loggedInUser?.role === 'superadmin') {
             window.location.href = '/superadmin';
+          } else if (loggedInUser?.role === 'event_organizer') {
+            window.location.href = '/event-organizer';
           } else {
             window.location.reload();
           }
