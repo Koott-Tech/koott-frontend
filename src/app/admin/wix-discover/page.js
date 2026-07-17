@@ -231,6 +231,18 @@ function displayStatusFor(row) {
   return st;
 }
 
+// Whether a row belongs under the selected status tab, using the DISPLAYED status so tabs
+// stay consistent with the badges. A past-due active row displays as "pending", so it must
+// only appear under Pending — not under Upcoming/Rescheduled. Guards the platform rows (which
+// the backend can't filter by past-due) and back-stops the Wix rows.
+function matchesStatusTab(row, tab) {
+  if (!tab || tab === 'all') return true;
+  const disp = displayStatusFor(row);
+  if (tab === 'booked') return ['booked', 'scheduled', 'confirmed', 'rescheduled', 'reschedule_requested'].includes(disp);
+  if (tab === 'no_show') return disp === 'no_show' || disp === 'noshow';
+  return disp === tab;
+}
+
 export default function AdminWixDiscoverPage() {
   const { showError, showSuccess } = useNotification();
   const initializedRef = useRef(false);
@@ -1037,7 +1049,12 @@ export default function AdminWixDiscoverPage() {
       {(() => {
         const pageLimit = pagination.limit || 10;
         const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
-        const allRows = [...rows, ...platformTagged].slice(0, pageLimit);
+        const allRows = [...rows, ...platformTagged]
+          // Keep the visible rows consistent with the selected tab's badge. The backend can't
+          // filter platform rows by past-due, so a past-due rescheduled/booked platform row
+          // (which displays as "pending") would otherwise leak into the Rescheduled/Upcoming tab.
+          .filter((r) => matchesStatusTab(r, statusFilter))
+          .slice(0, pageLimit);
         // Highest booked session number per package group → "Book Next" shows only on the latest.
         // Keyed by real package_group_id when present, else client+therapist+type fallback,
         // so couple/individual packages without a group_id are still tracked.
