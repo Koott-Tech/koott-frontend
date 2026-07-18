@@ -11,6 +11,7 @@ export default function HeaderWrapper() {
   const shouldHideCompletely = pathname.startsWith('/admin') || 
                                 pathname.startsWith('/superadmin') || 
                                 pathname.startsWith('/finance') ||
+                                pathname.startsWith('/event-organizer') ||
                                 (pathname.startsWith('/psychologist') && !pathname.startsWith('/online-child-psychologist'));
   
   if (shouldHideCompletely) return null;

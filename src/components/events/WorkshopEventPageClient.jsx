@@ -5,9 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users,
+  Calendar,
+  Clock,
+  Ticket,
   ArrowRight,
-  ChevronLeft,
   ChevronRight,
   ChevronDown,
   Loader2,
@@ -15,14 +16,12 @@ import {
   X,
   CheckCircle2,
 } from "lucide-react";
-import Reviews from "@/components/Reviews";
 import {
   PHONE_COUNTRY_OPTIONS,
   DEFAULT_PHONE_COUNTRY_VALUE,
   dialFromPhoneCountryValue,
 } from "@/data/phoneCountryCodes";
 import { mergeWorkshopEventCms } from "@/data/workshopEventPageCms";
-import { getEventPageLucideIcon } from "@/lib/eventPageLucideIcon";
 import {
   BLOG_TYPOGRAPHY_ROOT_CLASS,
   BLOG_TYPOGRAPHY_ROOT_CSS,
@@ -126,12 +125,7 @@ function HeroMiniPassTicket({ cms, targetId = "session-pass-ticket" }) {
           ) : null}
         </div>
 
-        <div className="flex flex-row items-center justify-between gap-4 border-t border-dashed border-[#025545]/22 bg-[#f2fff1] px-5 py-3.5 sm:w-[9.5rem] sm:flex-none sm:flex-col sm:justify-center sm:border-l sm:border-t-0 sm:px-4 sm:py-5 md:w-[10.5rem]">
-          <div className="flex flex-col items-start leading-none sm:items-center">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-[#025545]/55 sm:text-[11px]">Price</span>
-            <span className="mt-1 text-xs font-medium text-gray-400 line-through sm:text-sm">{b.strikePrice}</span>
-            <span className="mt-1 text-3xl font-bold tabular-nums text-[#012f23] sm:text-4xl">{b.priceLarge}</span>
-          </div>
+        <div className="flex items-center justify-center border-t border-dashed border-[#025545]/22 bg-[#f2fff1] px-5 py-3.5 sm:w-[5rem] sm:flex-none sm:flex-col sm:border-l sm:border-t-0 sm:px-4 sm:py-5 md:w-[6rem]">
           <ChevronDown
             className="h-7 w-7 shrink-0 text-[#025545] transition-transform group-hover:translate-y-1 sm:h-8 sm:w-8"
             aria-hidden
@@ -163,14 +157,10 @@ function SessionPassTicket({ cms, onRegister, titleId }) {
         aria-hidden
       />
 
-      <div className="grid lg:grid-cols-[240px_1fr]">
-        <div className="relative border-b border-[#025545]/15 bg-[#f4f1ff] p-6 lg:border-b-0 lg:border-r lg:border-[#025545]/15">
+      <div className="grid lg:grid-cols-1">
+        <div className="relative border-b border-[#025545]/15 bg-[#f4f1ff] p-4 lg:p-5 flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase text-[#025545]/70">{b.passLabel}</p>
-          <div className="mt-2 flex items-baseline gap-3">
-            <span className="text-lg font-medium text-gray-400 line-through">{b.strikePrice}</span>
-            <span className="text-4xl font-bold text-[#012f23]">{b.priceLarge}</span>
-          </div>
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/80 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
             <Gift className="h-3 w-3 shrink-0" aria-hidden />
             {b.badgeText}
           </div>
@@ -224,16 +214,14 @@ export default function WorkshopEventPageClient({
   onPreviewSectionClick,
 } = {}) {
   const cms = mergeWorkshopEventCms(cmsPartial);
-  const speakers = Array.isArray(cms.speakers?.items) ? cms.speakers.items : [];
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneCountryValue, setPhoneCountryValue] = useState(DEFAULT_PHONE_COUNTRY_VALUE);
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
-  const [speakerIndex, setSpeakerIndex] = useState(0);
-  const [speakerPhase, setSpeakerPhase] = useState("idle");
-  const [speakerDirection, setSpeakerDirection] = useState(1);
+
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
   const jumpToEditorSection = useCallback(
@@ -327,41 +315,7 @@ export default function WorkshopEventPageClient({
     [fullName, email, phoneCountryValue, phone, closeRegisterModal, cms.registerEventSlug, previewMode]
   );
 
-  const activeSpeaker = speakers[speakerIndex] || speakers[0];
 
-  const changeSpeaker = useCallback((nextIndex, direction = 1) => {
-    if (nextIndex === speakerIndex) return;
-    setSpeakerDirection(direction);
-    setSpeakerPhase("out");
-    setTimeout(() => {
-      setSpeakerIndex(nextIndex);
-      setSpeakerPhase("in");
-      setTimeout(() => setSpeakerPhase("idle"), 20);
-    }, 220);
-  }, [speakerIndex]);
-
-  const goPrevSpeaker = () => {
-    if (!speakers.length) return;
-    const next = (speakerIndex - 1 + speakers.length) % speakers.length;
-    changeSpeaker(next, -1);
-  };
-
-  const goNextSpeaker = () => {
-    if (!speakers.length) return;
-    const next = (speakerIndex + 1) % speakers.length;
-    changeSpeaker(next, 1);
-  };
-
-  useEffect(() => {
-    if (speakers.length <= 1) return undefined;
-    const ms = Number(cms.speakers?.autoAdvanceMs) || 6000;
-    const autoTimer = setInterval(() => {
-      const next = (speakerIndex + 1) % speakers.length;
-      changeSpeaker(next);
-    }, ms);
-
-    return () => clearInterval(autoTimer);
-  }, [speakerIndex, changeSpeaker, speakers.length, cms.speakers?.autoAdvanceMs]);
 
   const heroSectionClass = previewMode
     ? "relative w-full min-h-[min(54vh,440px)] overflow-visible sm:min-h-[min(58vh,500px)] md:min-h-[min(62vh,560px)]"
@@ -467,265 +421,59 @@ export default function WorkshopEventPageClient({
 
       {/* Content sections — CMS-like grids */}
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 sm:py-24 space-y-28 sm:space-y-32 lg:space-y-36">
-        <section
-          className="relative overflow-hidden rounded-3xl border border-[#025545]/20 bg-gradient-to-br from-[#f8f5ff] via-white to-[#eef6ff] p-6 sm:p-8"
-          aria-labelledby="what-is-this-heading"
-          onClick={previewMode ? (e) => jumpToEditorSection("what-is-this", e) : undefined}
-        >
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#025545]/10 blur-2xl" aria-hidden />
-          <div className="pointer-events-none absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-[#7b68b8]/10 blur-xl" aria-hidden />
-
-          <div className="relative">
-            <p className={`inline-flex rounded-full border border-[#025545]/20 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
-              {cms.whatIsThis.eyebrow}
-            </p>
-            <h2
-              id="what-is-this-heading"
-              className={`mt-3 text-gray-900 ${BLOG_SECTION_HEADING_CLASS}`}
-              style={BLOG_SECTION_HEADING_STYLE}
-            >
-              {cms.whatIsThis.title}
-            </h2>
-            <p className={`mt-4 max-w-3xl text-gray-700 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
-              {cms.whatIsThis.body}
-            </p>
-
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {(cms.whatIsThis.bullets || []).map((b) => {
-                const Icon = getEventPageLucideIcon(b.iconKey);
-                return (
-                  <div key={b.text} className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#025545]/10 text-[#025545]">
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <p className={`mt-3 text-gray-700 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{b.text}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {speakers.length > 0 ? (
-        <section
-          aria-labelledby="event-speakers-heading"
-          onClick={previewMode ? (e) => jumpToEditorSection("speakers", e) : undefined}
-        >
-          <div className="mb-8 sm:mb-10">
-            <p className={`text-xs font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.speakers.eyebrow}</p>
-            <h2
-              id="event-speakers-heading"
-              className={`mt-3 text-gray-900 ${BLOG_SECTION_HEADING_CLASS}`}
-              style={BLOG_SECTION_HEADING_STYLE}
-            >
-              {cms.speakers.heading}
-            </h2>
-          </div>
-
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <div className="text-xs font-medium text-[#025545]">
-              {speakerIndex + 1} / {speakers.length}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={goPrevSpeaker}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#025545]/20 text-[#025545] hover:bg-[#f4f1ff] transition-colors"
-                aria-label="Previous speaker"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={goNextSpeaker}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#025545]/20 text-[#025545] hover:bg-[#f4f1ff] transition-colors"
-                aria-label="Next speaker"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <article
-            className={`grid gap-10 lg:grid-cols-2 lg:gap-14 items-start lg:items-center transition-all duration-500 ease-out ${
-              speakerPhase === "out"
-                ? speakerDirection === 1
-                  ? "opacity-0 -translate-x-6"
-                  : "opacity-0 translate-x-6"
-                : speakerPhase === "in"
-                  ? speakerDirection === 1
-                    ? "opacity-0 translate-x-6"
-                    : "opacity-0 -translate-x-6"
-                  : "opacity-100 translate-x-0"
-            }`}
-          >
-            {activeSpeaker ? (
-            <div>
-              <div className={`text-gray-900 ${BLOG_FEATURED_TITLE_CLASS}`} style={BLOG_FEATURED_TITLE_STYLE}>{activeSpeaker.name}</div>
-              <p className={`mt-2 text-sm font-medium text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>
-                {activeSpeaker.designation} · {activeSpeaker.experience}
-              </p>
-              <p className={`mt-4 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{activeSpeaker.details}</p>
-              <div className="mt-4 space-y-2 text-xs sm:text-sm text-gray-700">
-                <p><span className="font-semibold text-[#012f23]">Languages:</span> {activeSpeaker.languages}</p>
-                <p><span className="font-semibold text-[#012f23]">Session focus:</span> {activeSpeaker.focus}</p>
-                <p><span className="font-semibold text-[#012f23]">Approach:</span> {activeSpeaker.style}</p>
-              </div>
-            </div>
-            ) : null}
-
-            {activeSpeaker ? (
-            <div className="relative w-full max-w-[220px] sm:max-w-[250px] lg:max-w-[280px] rounded-2xl overflow-hidden border border-gray-200 aspect-[3/4] mx-auto lg:ml-auto lg:mr-0">
+        
+        {/* New Poster Display Component */}
+        {cms.posterUrl && (
+          <section className="flex flex-col items-center">
+            <div className="relative mx-auto w-full max-w-3xl rounded-3xl overflow-hidden shadow-2xl mb-12 border border-gray-100">
               <Image
-                src={activeSpeaker.image}
-                alt={activeSpeaker.name}
-                fill
-                className="object-cover rounded-2xl"
-                sizes="(min-width: 1024px) 280px, (min-width: 640px) 250px, 220px"
+                src={cms.posterUrl}
+                alt={cms.topic || "Event Poster"}
+                width={1200}
+                height={1600}
+                className="w-full h-auto object-cover"
+                priority
               />
             </div>
-            ) : null}
-          </article>
-
-          <div className="mt-5 flex items-center gap-2">
-            {speakers.map((speaker, idx) => (
-              <button
-                key={speaker.name}
-                type="button"
-                onClick={() => changeSpeaker(idx, idx > speakerIndex ? 1 : -1)}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === speakerIndex ? "w-8 bg-[#025545]" : "w-4 bg-[#025545]/25"
-                }`}
-                aria-label={`Go to speaker ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </section>
-        ) : null}
-
-        {/* Rula-style: centered headline, 4 soft cards, purple icons, pill CTA */}
-        <section
-          className="w-full py-2 sm:py-4"
-          aria-labelledby="why-it-matters-heading"
-          onClick={previewMode ? (e) => jumpToEditorSection("why-it-matters", e) : undefined}
-        >
-          <div className="mx-auto max-w-4xl px-4 text-center sm:px-0">
-            <p className={`text-xs font-semibold uppercase text-[#025545] ${BLOG_UI_LINE_HEIGHT_CLASS}`}>{cms.whyItMatters.eyebrow}</p>
-            <h2
-              id="why-it-matters-heading"
-              className={`mt-3 text-gray-900 ${BLOG_FEATURED_TITLE_CLASS}`}
-              style={BLOG_FEATURED_TITLE_STYLE}
-            >
-              {cms.whyItMatters.heading}
-            </h2>
-            <p className={`mt-4 text-gray-600 max-w-2xl mx-auto ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
-              {cms.whyItMatters.body}
-            </p>
-          </div>
-
-          {/* Wider than page column (max-w-6xl) so each card has more horizontal room */}
-          <div className="relative left-1/2 right-auto mt-10 w-screen max-w-[100vw] -translate-x-1/2 overflow-x-clip px-4 sm:px-6 lg:px-10">
-            <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-7 lg:grid-cols-4 lg:gap-8">
-              {(cms.whyItMatters.outcomeCards || []).map((card) => {
-                const Icon = getEventPageLucideIcon(card.iconKey);
-                return (
-                  <div
-                    key={card.title}
-                    className="min-w-0 rounded-2xl bg-[#F2F2F2] p-7 text-left transition-shadow hover:shadow-md sm:p-8"
-                  >
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center text-[#025545]" aria-hidden>
-                      <Icon className="h-7 w-7" strokeWidth={1.5} />
-                    </div>
-                    <div className={`text-gray-900 ${BLOG_CARD_TITLE_CLASS}`} style={BLOG_CARD_TITLE_STYLE} role="heading" aria-level={3}>
-                      {card.title}
-                    </div>
-                    <p className={`mt-2 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{card.body}</p>
+            {(cms.topic || cms.speaker || cms.date) && (
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 w-full max-w-4xl">
+                {cms.topic && (
+                  <div className="w-full text-center mb-2">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{cms.topic}</h2>
+                    {cms.speaker && <p className="text-lg text-[#025545] font-medium mt-1">By {cms.speaker}</p>}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-10 flex justify-center px-4">
-            <button
-              type="button"
-              onClick={openRegisterModal}
-              className="inline-flex items-center rounded-full bg-[#025545] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#012f23] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#025545] focus-visible:ring-offset-2"
-            >
-              {cms.whyItMatters.ctaLabel}
-            </button>
-          </div>
-        </section>
-
-        <section
-          className="py-4"
-          aria-labelledby="who-can-join-heading"
-          onClick={previewMode ? (e) => jumpToEditorSection("who-can-join", e) : undefined}
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 text-[#025545]">
-              <Users className="h-5 w-5" />
-              <h2 id="who-can-join-heading" className={`text-gray-900 ${BLOG_SECTION_HEADING_CLASS} mb-0`} style={BLOG_SECTION_HEADING_STYLE}>
-                {cms.whoCanJoin.heading}
-              </h2>
-            </div>
-            <span className="inline-flex items-center rounded-full bg-[#f4f1ff] px-3 py-1 text-xs font-semibold text-[#025545]">
-              {cms.whoCanJoin.badge}
-            </span>
-          </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {(cms.whoCanJoin.columns || []).map((col) => (
-              <div key={col.label} className="border-l-2 border-[#025545]/30 pl-4">
-                <p className="text-[11px] font-semibold uppercase text-[#025545]/60">{col.label}</p>
-                <p className="mt-1 text-sm font-medium text-[#012f23]">{col.body}</p>
+                )}
+                {cms.date && (
+                  <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                    <Calendar className="h-5 w-5 text-[#025545]" />
+                    <span className="font-medium">{cms.date}</span>
+                  </div>
+                )}
+                {cms.time && (
+                  <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                    <Clock className="h-5 w-5 text-[#025545]" />
+                    <span className="font-medium">{cms.time}</span>
+                  </div>
+                )}
+                {cms.method && (
+                  <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
+                    <span className="font-medium">{cms.method}</span>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </section>
+            )}
+          </section>
+        )}
+
+
 
         <div onClick={previewMode ? (e) => jumpToEditorSection("session-banner", e) : undefined}>
           <SessionPassTicket cms={cms} onRegister={openRegisterModal} titleId="ticket-heading" />
         </div>
 
-        <section
-          className="rounded-3xl border border-[#025545]/18 bg-white p-6 sm:p-8 shadow-[0_8px_30px_rgba(63,46,115,0.08)]"
-          onClick={previewMode ? (e) => jumpToEditorSection("take-back", e) : undefined}
-        >
-          <h2 className={`text-gray-900 ${BLOG_SECTION_HEADING_CLASS}`} style={BLOG_SECTION_HEADING_STYLE}>
-            {cms.takeBack.title}
-          </h2>
-          <p className={`mt-2 text-gray-600 ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>
-            {cms.takeBack.body}
-          </p>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {(cms.takeBack.items || []).map((item) => {
-              const Icon = getEventPageLucideIcon(item.iconKey);
-              return (
-                <div key={item.text} className="flex items-start gap-3 rounded-2xl border border-[#025545]/12 bg-[#f2fff1] p-4">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#025545]/12 text-[#025545]">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <p className={`text-sm sm:text-base text-[#012f23] ${HERO_BODY_TEXT_CLASS}`} style={HERO_BODY_TEXT_STYLE}>{item.text}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
       </div>
 
-      <div
-        className={`mt-20 sm:mt-24 md:mt-28 ${previewMode ? "cursor-pointer" : ""}`}
-        onClick={previewMode ? (e) => jumpToEditorSection("reviews", e) : undefined}
-      >
-        <Reviews
-          cmsData={{
-            title: cms.reviews.title,
-            reviews: cms.reviews.items || [],
-          }}
-        />
-      </div>
 
       <AnimatePresence>
         {registerModalOpen ? (

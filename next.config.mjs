@@ -27,7 +27,19 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'www.koott.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'koott.in',
+      },
+      {
+        protocol: 'https',
         hostname: 'static.wixstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'iylutfwntoqcnqnjdnnp.supabase.co',
       },
       // Development
       {

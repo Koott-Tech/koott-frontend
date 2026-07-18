@@ -4,7 +4,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 import HeaderWrapper from "@/components/HeaderWrapper";
-import FooterWrapper from "@/components/FooterWrapper";
 import ConditionalProviders from "@/components/ConditionalProviders";
 import ConditionalPadding from "@/components/ConditionalPadding";
 import WhatsAppWidgetWrapper from "@/components/WhatsAppWidgetWrapper";
@@ -343,7 +342,6 @@ export default function RootLayout({ children }) {
                 <ConditionalPadding>
                   {children}
                 </ConditionalPadding>
-                <FooterWrapper />
                 <WhatsAppWidgetWrapper />
               </ConditionalProviders>
             </PostHogProvider>

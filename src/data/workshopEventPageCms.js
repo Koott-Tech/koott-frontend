@@ -22,6 +22,15 @@ export function getWorkshopEventPageDefaults() {
     registerEventSlug: "MyKoott-summer-workshops-2026",
     /** Single join link for this event (e.g. Google Meet). Sent in registration email + WhatsApp; set in admin CMS. */
     sessionJoinUrl: "",
+    
+    // Core event details
+    topic: "",
+    speaker: "",
+    date: "",
+    time: "",
+    method: "Online", // Online, Offline, Hybrid
+    posterUrl: "",
+    
     heroImageUrl: SUMMER_WORKSHOP_2026_HERO_IMAGE,
     heroImageAlt:
       "Children and family learning together at home — MyKoott Summer Workshops",

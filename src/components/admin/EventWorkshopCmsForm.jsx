@@ -135,6 +135,64 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
 
   return (
     <div className="min-w-0 max-w-full space-y-2">
+      <EditorSection title="Core Event Details (Poster & Info)" sectionKey="core-details">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Event Poster">
+              <ImageUrlField
+                value={cms.posterUrl}
+                onChange={(v) => patch((p) => ({ ...p, posterUrl: v }))}
+                uploading={!!uploadingByKey.posterImage}
+                inputId="event-cms-poster-upload"
+                onUpload={(file) =>
+                  uploadImageAndApply(file, "posterImage", (url) =>
+                    patch((p) => ({ ...p, posterUrl: url }))
+                  )
+                }
+                placeholder="/events/poster.webp or https://..."
+              />
+              <div className="mt-4 flex justify-center">
+                {cms.posterUrl && (
+                  <img src={cms.posterUrl} alt="Poster preview" className="h-64 w-auto rounded-xl object-cover shadow-sm border border-gray-200" />
+                )}
+              </div>
+            </Field>
+          </div>
+          
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Topic">
+              <TextInput value={cms.topic} onChange={(v) => patch((p) => ({ ...p, topic: v }))} />
+            </Field>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Speaker">
+              <TextInput value={cms.speaker} onChange={(v) => patch((p) => ({ ...p, speaker: v }))} />
+            </Field>
+          </div>
+
+          <Field label="Date">
+            <TextInput value={cms.date} onChange={(v) => patch((p) => ({ ...p, date: v }))} placeholder="e.g. Sat, 18 April 2026" />
+          </Field>
+
+          <Field label="Time">
+            <TextInput value={cms.time} onChange={(v) => patch((p) => ({ ...p, time: v }))} placeholder="e.g. 11:00 AM IST" />
+          </Field>
+
+          <Field label="Method">
+            <select
+              className="box-border w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#025545] focus:ring-1 focus:ring-[#025545]"
+              value={cms.method || "Online"}
+              onChange={(e) => patch((p) => ({ ...p, method: e.target.value }))}
+            >
+              <option value="Online">Online</option>
+              <option value="Offline">Offline</option>
+              <option value="Hybrid">Hybrid</option>
+            </select>
+          </Field>
+        </div>
+      </EditorSection>
+
       <EditorSection title="Registration & hero image" sectionKey="registration-hero">
         <div className="space-y-3">
           <Field label="Register event slug (API)">
@@ -289,7 +347,6 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
             ["sessionTitle", "Session title"],
             ["datetimeLine", "Date / time line"],
             ["sessionPassLabel", "Session pass label"],
-            ["priceLabel", "Price label"],
             ["registerCta", "Register button"],
             ["helperText", "Helper text"],
           ].map(([key, lab]) => (
@@ -304,231 +361,10 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
         </div>
       </EditorSection>
 
-      <EditorSection title="What is this?" sectionKey="what-is-this">
-        <div>
-          <Field label="Eyebrow">
-            <TextInput value={cms.whatIsThis.eyebrow} onChange={(v) => patch((p) => ({ ...p, whatIsThis: { ...p.whatIsThis, eyebrow: v } }))} />
-          </Field>
-          <Field label="Title">
-            <TextInput value={cms.whatIsThis.title} onChange={(v) => patch((p) => ({ ...p, whatIsThis: { ...p.whatIsThis, title: v } }))} />
-          </Field>
-          <Field label="Body">
-            <TextInput value={cms.whatIsThis.body} onChange={(v) => patch((p) => ({ ...p, whatIsThis: { ...p.whatIsThis, body: v } }))} rows={5} />
-          </Field>
-          <p className="mt-4 text-sm text-gray-800" style={{ fontWeight: 500 }}>
-            Three bullets
-          </p>
-          {(cms.whatIsThis.bullets || []).map((b, i) => (
-            <div key={i} className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
-              <div className="min-w-0">
-                <span className="text-xs text-gray-500" style={{ fontWeight: 500 }}>
-                  Text
-                </span>
-                <TextInput value={b.text} onChange={(v) => patch((p) => {
-                  const bullets = [...(p.whatIsThis.bullets || [])];
-                  bullets[i] = { ...bullets[i], text: v };
-                  return { ...p, whatIsThis: { ...p.whatIsThis, bullets } };
-                })} rows={2} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Speakers" sectionKey="speakers">
-        <div>
-          <Field label="Section eyebrow">
-            <TextInput value={cms.speakers.eyebrow} onChange={(v) => patch((p) => ({ ...p, speakers: { ...p.speakers, eyebrow: v } }))} />
-          </Field>
-          <Field label="Section heading">
-            <TextInput value={cms.speakers.heading} onChange={(v) => patch((p) => ({ ...p, speakers: { ...p.speakers, heading: v } }))} />
-          </Field>
-          <Field label="Auto-advance (ms)">
-            <input
-              type="number"
-              className="box-border w-full min-w-0 max-w-[12rem] rounded-lg border border-gray-200 px-3 py-2 text-sm"
-              value={cms.speakers.autoAdvanceMs || 6000}
-              onChange={(e) =>
-                patch((p) => ({
-                  ...p,
-                  speakers: { ...p.speakers, autoAdvanceMs: parseInt(e.target.value, 10) || 6000 },
-                }))
-              }
-            />
-          </Field>
-          {(cms.speakers.items || []).map((sp, i) => (
-            <div key={i} className="mt-4 min-w-0 max-w-full space-y-2 rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="min-w-0 flex-1 text-sm text-gray-800" style={{ fontWeight: 500 }}>
-                  Speaker {i + 1}
-                </span>
-                <button
-                  type="button"
-                  className="text-sm text-red-600 hover:underline"
-                  onClick={() =>
-                    patch((p) => ({
-                      ...p,
-                      speakers: {
-                        ...p.speakers,
-                        items: (p.speakers.items || []).filter((_, j) => j !== i),
-                      },
-                    }))
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-              {["name", "designation", "experience", "image", "details", "languages", "focus", "style"].map((f) => (
-                <Field key={f} label={f}>
-                  {f === "image" ? (
-                    <ImageUrlField
-                      value={sp[f]}
-                      onChange={(v) =>
-                        patch((p) => {
-                          const items = [...(p.speakers.items || [])];
-                          items[i] = { ...items[i], image: v };
-                          return { ...p, speakers: { ...p.speakers, items } };
-                        })
-                      }
-                      uploading={!!uploadingByKey[`speakerImage-${i}`]}
-                      inputId={`event-cms-speaker-image-upload-${i}`}
-                      onUpload={(file) =>
-                        uploadImageAndApply(file, `speakerImage-${i}`, (url) =>
-                          patch((p) => {
-                            const items = [...(p.speakers.items || [])];
-                            items[i] = { ...items[i], image: url };
-                            return { ...p, speakers: { ...p.speakers, items } };
-                          })
-                        )
-                      }
-                      placeholder="/speakers/name.webp or https://..."
-                    />
-                  ) : (
-                    <TextInput
-                      value={sp[f]}
-                      onChange={(v) =>
-                        patch((p) => {
-                          const items = [...(p.speakers.items || [])];
-                          items[i] = { ...items[i], [f]: v };
-                          return { ...p, speakers: { ...p.speakers, items } };
-                        })
-                      }
-                      rows={f === "details" ? 3 : 1}
-                    />
-                  )}
-                </Field>
-              ))}
-            </div>
-          ))}
-          <button
-            type="button"
-            className="mt-3 text-sm text-[#025545] hover:underline"
-            style={{ fontWeight: 500 }}
-            onClick={() =>
-              patch((p) => ({
-                ...p,
-                speakers: { ...p.speakers, items: [...(p.speakers.items || []), emptySpeaker()] },
-              }))
-            }
-          >
-            + Add speaker
-          </button>
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Why it matters" sectionKey="why-it-matters">
-        <div className="space-y-3">
-          <Field label="Eyebrow">
-            <TextInput value={cms.whyItMatters.eyebrow} onChange={(v) => patch((p) => ({ ...p, whyItMatters: { ...p.whyItMatters, eyebrow: v } }))} />
-          </Field>
-          <Field label="Heading">
-            <TextInput value={cms.whyItMatters.heading} onChange={(v) => patch((p) => ({ ...p, whyItMatters: { ...p.whyItMatters, heading: v } }))} rows={2} />
-          </Field>
-          <Field label="Body">
-            <TextInput value={cms.whyItMatters.body} onChange={(v) => patch((p) => ({ ...p, whyItMatters: { ...p.whyItMatters, body: v } }))} rows={5} />
-          </Field>
-          <Field label="CTA label">
-            <TextInput value={cms.whyItMatters.ctaLabel} onChange={(v) => patch((p) => ({ ...p, whyItMatters: { ...p.whyItMatters, ctaLabel: v } }))} />
-          </Field>
-          <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>
-            Outcome cards (4)
-          </p>
-          {(cms.whyItMatters.outcomeCards || []).map((c, i) => (
-            <div key={i} className="grid min-w-0 max-w-full gap-2 rounded-lg bg-gray-50 p-3 sm:grid-cols-[minmax(0,120px)_minmax(0,1fr)]">
-              <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-500">
-                Icon fixed: {c.iconKey || "LineChart"}
-              </div>
-              <div className="min-w-0 space-y-2">
-                <TextInput
-                  placeholder="Title"
-                  value={c.title}
-                  onChange={(v) =>
-                    patch((p) => {
-                      const outcomeCards = [...(p.whyItMatters.outcomeCards || [])];
-                      outcomeCards[i] = { ...outcomeCards[i], title: v };
-                      return { ...p, whyItMatters: { ...p.whyItMatters, outcomeCards } };
-                    })
-                  }
-                />
-                <TextInput
-                  placeholder="Body"
-                  value={c.body}
-                  onChange={(v) =>
-                    patch((p) => {
-                      const outcomeCards = [...(p.whyItMatters.outcomeCards || [])];
-                      outcomeCards[i] = { ...outcomeCards[i], body: v };
-                      return { ...p, whyItMatters: { ...p.whyItMatters, outcomeCards } };
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Who can join" sectionKey="who-can-join">
-        <div className="space-y-3">
-          <Field label="Heading">
-            <TextInput value={cms.whoCanJoin.heading} onChange={(v) => patch((p) => ({ ...p, whoCanJoin: { ...p.whoCanJoin, heading: v } }))} />
-          </Field>
-          <Field label="Badge">
-            <TextInput value={cms.whoCanJoin.badge} onChange={(v) => patch((p) => ({ ...p, whoCanJoin: { ...p.whoCanJoin, badge: v } }))} />
-          </Field>
-          {(cms.whoCanJoin.columns || []).map((col, i) => (
-            <div key={i} className="min-w-0 max-w-full space-y-2 rounded-lg border p-3">
-              <TextInput
-                placeholder="Column label"
-                value={col.label}
-                onChange={(v) =>
-                  patch((p) => {
-                    const columns = [...(p.whoCanJoin.columns || [])];
-                    columns[i] = { ...columns[i], label: v };
-                    return { ...p, whoCanJoin: { ...p.whoCanJoin, columns } };
-                  })
-                }
-              />
-              <TextInput
-                placeholder="Column body"
-                value={col.body}
-                onChange={(v) =>
-                  patch((p) => {
-                    const columns = [...(p.whoCanJoin.columns || [])];
-                    columns[i] = { ...columns[i], body: v };
-                    return { ...p, whoCanJoin: { ...p.whoCanJoin, columns } };
-                  })
-                }
-                rows={2}
-              />
-            </div>
-          ))}
-        </div>
-      </EditorSection>
 
       <EditorSection title="Session banner (lower ticket)" sectionKey="session-banner">
         <div className="grid min-w-0 max-w-full gap-3 sm:grid-cols-2">
-          {["passLabel", "strikePrice", "priceLarge", "badgeText", "title", "subtitle", "ctaText"].map((key) => (
+          {["passLabel", "badgeText", "title", "subtitle", "ctaText"].map((key) => (
             <Field key={key} label={key}>
               <TextInput
                 value={cms.sessionBanner[key]}
@@ -569,83 +405,7 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
         </div>
       </EditorSection>
 
-      <EditorSection title="Take back" sectionKey="take-back">
-        <div>
-          <Field label="Title">
-            <TextInput value={cms.takeBack.title} onChange={(v) => patch((p) => ({ ...p, takeBack: { ...p.takeBack, title: v } }))} />
-          </Field>
-          <Field label="Body">
-            <TextInput value={cms.takeBack.body} onChange={(v) => patch((p) => ({ ...p, takeBack: { ...p.takeBack, body: v } }))} rows={3} />
-          </Field>
-          {(cms.takeBack.items || []).map((item, i) => (
-            <div key={i} className="mt-2 flex min-w-0 max-w-full flex-col gap-2 sm:flex-row sm:items-start">
-              <div className="min-w-0 sm:w-36 sm:shrink-0">
-                <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-500">
-                  Icon fixed: {item.iconKey || "Heart"}
-                </div>
-              </div>
-              <div className="min-w-0 w-full flex-1 sm:min-w-0">
-                <TextInput
-                  value={item.text}
-                  onChange={(v) =>
-                    patch((p) => {
-                      const items = [...(p.takeBack.items || [])];
-                      items[i] = { ...items[i], text: v };
-                      return { ...p, takeBack: { ...p.takeBack, items } };
-                    })
-                  }
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </EditorSection>
 
-      <EditorSection title="Reviews" sectionKey="reviews">
-        <div>
-          <Field label="Section title">
-            <TextInput value={cms.reviews.title} onChange={(v) => patch((p) => ({ ...p, reviews: { ...p.reviews, title: v } }))} />
-          </Field>
-          {(cms.reviews.items || []).map((r, i) => (
-            <div key={i} className="mt-3 min-w-0 max-w-full space-y-2 rounded-lg border p-3">
-              <TextInput
-                placeholder="Author"
-                value={r.author}
-                onChange={(v) =>
-                  patch((p) => {
-                    const items = [...(p.reviews.items || [])];
-                    items[i] = { ...items[i], author: v };
-                    return { ...p, reviews: { ...p.reviews, items } };
-                  })
-                }
-              />
-              <TextInput
-                placeholder="Text"
-                value={r.text}
-                onChange={(v) =>
-                  patch((p) => {
-                    const items = [...(p.reviews.items || [])];
-                    items[i] = { ...items[i], text: v };
-                    return { ...p, reviews: { ...p.reviews, items } };
-                  })
-                }
-                rows={3}
-              />
-              <TextInput
-                placeholder="Avatar URL"
-                value={r.avatarUrl}
-                onChange={(v) =>
-                  patch((p) => {
-                    const items = [...(p.reviews.items || [])];
-                    items[i] = { ...items[i], avatarUrl: v };
-                    return { ...p, reviews: { ...p.reviews, items } };
-                  })
-                }
-              />
-            </div>
-          ))}
-        </div>
-      </EditorSection>
 
       <EditorSection title="Registration modal" sectionKey="registration-modal">
         <div>

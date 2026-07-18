@@ -22,11 +22,7 @@ import {
   HERO_BODY_TEXT_CLASS,
   HERO_BODY_TEXT_STYLE,
 } from "@/constants/heroTypography";
-import Testimonials from "@/components/Testimonials";
-import {
-  WORKSHOP_TESTIMONIALS_PHOTOS,
-  WORKSHOP_TESTIMONIALS_DESKTOP_GRID,
-} from "@/data/workshopTestimonialsHomeStyle";
+
 import { SUMMER_WORKSHOP_2026_HERO_IMAGE } from "@/data/summerWorkshop2026Assets";
 
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001/api";
@@ -44,18 +40,18 @@ async function getPublishedEventCards() {
       const cms = row?.cms_data || {};
       const listCard = cms?.eventListCard || {};
       const details = Array.isArray(cms?.sessionBanner?.details) ? cms.sessionBanner.details : [];
-      const date = details.find((d) => String(d?.label || "").toLowerCase().includes("date"))?.value || "";
-      const time = details.find((d) => String(d?.label || "").toLowerCase().includes("time"))?.value || "";
+      const date = cms.date || details.find((d) => String(d?.label || "").toLowerCase().includes("date"))?.value || "";
+      const time = cms.time || details.find((d) => String(d?.label || "").toLowerCase().includes("time"))?.value || "";
       const schedule = String(listCard?.scheduleText || "").trim() || [date, time].filter(Boolean).join(" at ");
       const slug = row?.slug || "";
       return {
         id: row?.id || slug,
-        category: listCard?.category || cms?.whatIsThis?.eyebrow || "Family Workshop",
-        title: listCard?.title || cms?.sessionBanner?.title || cms?.hero?.title || row?.seo_title || "Event",
-        description: listCard?.description || cms?.hero?.body || row?.seo_description || "Join this event with MyKoott.",
+        category: cms.method || listCard?.category || cms?.whatIsThis?.eyebrow || "Family Workshop",
+        title: cms.topic || listCard?.title || cms?.sessionBanner?.title || cms?.hero?.title || row?.seo_title || "Event",
+        description: cms.speaker ? `Speaker: ${cms.speaker}` : listCard?.description || cms?.hero?.body || row?.seo_description || "Join this event with MyKoott.",
         organizer: listCard?.organizer || "MyKoott",
         schedule: schedule || "Schedule to be announced",
-        image: listCard?.imageUrl || cms?.heroImageUrl || SUMMER_WORKSHOP_2026_HERO_IMAGE,
+        image: cms.posterUrl || listCard?.imageUrl || cms?.heroImageUrl || SUMMER_WORKSHOP_2026_HERO_IMAGE,
         detailsHref: `/events/${slug}`,
         ticketHref: `/events/${slug}`,
       };
@@ -351,17 +347,7 @@ export default async function EventsPage() {
 
       </div>
 
-      <div className="mt-16 sm:mt-20">
-        <Testimonials
-          photos={WORKSHOP_TESTIMONIALS_PHOTOS}
-          desktopGrid={WORKSHOP_TESTIMONIALS_DESKTOP_GRID}
-          eyebrowText="Testimonials"
-          headingLine1="What families say about our workshops"
-          headingLine2=""
-          useAccessibleHeading
-          headingTag="h3"
-        />
-      </div>
+
 
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 sm:pt-28 lg:px-8">
         <div className="pb-12 sm:pb-16">
