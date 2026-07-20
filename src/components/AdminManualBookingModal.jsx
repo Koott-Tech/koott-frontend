@@ -66,7 +66,11 @@ const MANUAL_SESSION_TYPE_OPTIONS = [
   { value: 'package_6', label: 'Package of 6' },
   { value: 'package_9', label: 'Package of 9' },
   { value: 'couple_package_3', label: 'Couple Package of 3' },
+  { value: 'package_custom', label: 'Package of… (custom)' },
+  { value: 'couple_package_custom', label: 'Couple Package of… (custom)' },
 ];
+// Types whose size the admin types in (e.g. a package of 5).
+const CUSTOM_PACKAGE_TYPES = new Set(['package_custom', 'couple_package_custom']);
 const MANUAL_SESSION_STAGE_OPTIONS = [
   { value: 'first', label: 'First Session' },
   { value: 'follow_up', label: 'Follow-up' },
@@ -74,7 +78,17 @@ const MANUAL_SESSION_STAGE_OPTIONS = [
 
 // How many sessions each package contains → drives the upfront multi-date schedulers.
 const PACKAGE_SESSION_COUNTS = { package_3: 3, package_6: 6, package_9: 9, couple_package_3: 3 };
-const getPackageSessionCount = (t) => PACKAGE_SESSION_COUNTS[t] || 0;
+const getPackageSessionCount = (t, customCount = 0) =>
+  (CUSTOM_PACKAGE_TYPES.has(t) ? (parseInt(customCount, 10) || 0) : (PACKAGE_SESSION_COUNTS[t] || 0));
+
+// The value actually sent to the API. A custom pick becomes package_N / couple_package_N,
+// which the backend resolves generically (e.g. package_5 → package, 5 sessions).
+const resolveSessionTypeValue = (t, customCount) => {
+  if (!CUSTOM_PACKAGE_TYPES.has(t)) return t;
+  const n = parseInt(customCount, 10) || 0;
+  if (n < 1) return t;
+  return t === 'couple_package_custom' ? `couple_package_${n}` : `package_${n}`;
+};
 
 // Hour-only 12h label ("01" → "1 AM") for a separate hour dropdown (minutes are picked separately).
 const hourLabel12 = (hh) => {
@@ -226,7 +240,12 @@ export default function AdminManualBookingModal({
   // false = book first session now, schedule the rest later (sequential, "like before")
   // true  = schedule ALL sessions of the package upfront (one date/time per session)
   const [scheduleAllUpfront, setScheduleAllUpfront] = useState(false);
-  const packageCount = getPackageSessionCount(sessionType);
+  // Size for the "custom" package types — free number (e.g. 5), defaults to 5.
+  const [customPackageCount, setCustomPackageCount] = useState('5');
+  const isCustomPackage = CUSTOM_PACKAGE_TYPES.has(sessionType);
+  const packageCount = getPackageSessionCount(sessionType, customPackageCount);
+  // What actually gets submitted (package_custom + 5 → "package_5").
+  const effectiveSessionType = resolveSessionTypeValue(sessionType, customPackageCount);
 
   // ── Record-only PACKAGE state ──────────────────────────────────────────────
   // When adding records for a package (e.g. 3 of a 6-session package that happened offline):
@@ -237,7 +256,7 @@ export default function AdminManualBookingModal({
   const [recordTotal, setRecordTotal] = useState('');
   const [recordRows, setRecordRows] = useState([{ date: '', time: '', status: 'completed' }]);
 
-  // Resize the per-session schedule rows whenever the package type changes.
+  // Resize the per-session schedule rows whenever the package type (or custom size) changes.
   useEffect(() => {
     setPackageSchedules((prev) => {
       if (packageCount <= 0) return prev.length ? [] : prev;
@@ -247,7 +266,7 @@ export default function AdminManualBookingModal({
     // Prefill the record-package total from the selected package type (still editable).
     if (packageCount > 0) setRecordTotal(String(packageCount));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionType]);
+  }, [sessionType, customPackageCount]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -701,6 +720,13 @@ export default function AdminManualBookingModal({
       return;
     }
 
+    // A custom package must have a real size, otherwise the type stays "package_custom"
+    // and the backend would fall back to a single individual session.
+    if (isCustomPackage && (parseInt(customPackageCount, 10) || 0) < 1) {
+      setError('Please enter the number of sessions for the custom package');
+      return;
+    }
+
     if (isUploadingPaymentScreenshot) {
       setError('Please wait for the payment screenshot to finish uploading');
       return;
@@ -754,7 +780,7 @@ export default function AdminManualBookingModal({
         const response = await adminApi.createRecordOnlyPackage({
           client_id: clientId,
           psychologist_id: psychologistId,
-          session_type: sessionType,
+          session_type: effectiveSessionType,
           total_sessions: total,
           total_amount: parseFloat(amount) || 0,
           payment_method: paymentMethod,
@@ -928,7 +954,7 @@ export default function AdminManualBookingModal({
         const response = await adminApi.createManualPackageBooking({
           client_id: finalClientId,
           psychologist_id: psychologistId,
-          session_type: sessionType,
+          session_type: effectiveSessionType,
           schedules,
           amount: parseFloat(amount),
           payment_received_date: paymentReceivedDate,
@@ -990,7 +1016,7 @@ export default function AdminManualBookingModal({
         client_id: finalClientId,
         psychologist_id: psychologistId,
         package_id: null,
-        session_type: sessionType,
+        session_type: effectiveSessionType,
         session_stage: sessionStage,
         scheduled_date: scheduledDate,
         scheduled_time: convertTo24Hour(selectedTime),
@@ -1387,6 +1413,26 @@ export default function AdminManualBookingModal({
                       </option>
                     ))}
                   </select>
+                  {/* Custom package size — e.g. a package of 5. Submitted as package_5. */}
+                  {isCustomPackage && (
+                    <div className="sm:col-span-2 flex items-center gap-2">
+                      <label className="text-sm text-slate-600 whitespace-nowrap">Number of sessions *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={customPackageCount}
+                        onChange={(e) => setCustomPackageCount(e.target.value)}
+                        placeholder="e.g. 5"
+                        className="w-28 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                      />
+                      <span className="text-xs text-slate-400">
+                        {packageCount > 0
+                          ? `→ ${sessionType === 'couple_package_custom' ? 'Couple package' : 'Package'} of ${packageCount}`
+                          : 'Enter a number of 1 or more'}
+                      </span>
+                    </div>
+                  )}
                   <select
                     value={sessionStage}
                     onChange={(e) => setSessionStage(e.target.value)}
