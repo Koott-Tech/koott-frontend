@@ -147,12 +147,10 @@ export default function AdminRescheduleModal({
       return;
     }
 
-    // No-show reschedules require the additional payment details (proof + amount + type).
-    if (isNoShow) {
-      if (!feeAmount || parseFloat(feeAmount) <= 0) {
-        setError('Enter the additional payment amount for this no-show reschedule.');
-        return;
-      }
+    // No-show reschedule fee is OPTIONAL — a no-show can be rescheduled without charging.
+    // Only validate the supporting details once an amount has actually been entered, so a
+    // half-filled fee (amount but no type/proof) still can't be recorded.
+    if (isNoShow && feeAmount && parseFloat(feeAmount) > 0) {
       if (!feeMethod) {
         setError('Select the payment type for the no-show fee.');
         return;
@@ -170,8 +168,10 @@ export default function AdminRescheduleModal({
       const new_date = selectedDate;
       const new_time = convertTo24Hour(selectedTime);
 
-      // Only attach the no-show fee when this is actually a no-show reschedule.
-      const noShowFee = isNoShow ? {
+      // Only attach the no-show fee when this is a no-show reschedule AND a fee was actually
+      // charged. Rescheduling a no-show without a fee sends nothing, so no payment is recorded.
+      const chargingNoShowFee = isNoShow && feeAmount && parseFloat(feeAmount) > 0;
+      const noShowFee = chargingNoShowFee ? {
         noshow_fee_amount: parseFloat(feeAmount),
         noshow_fee_method: feeMethod,
         noshow_fee_receipt_url: feeReceiptUrl,
@@ -521,10 +521,11 @@ export default function AdminRescheduleModal({
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-semibold text-amber-800">No-show reschedule fee (required)</span>
+                <span className="text-sm font-semibold text-amber-800">No-show reschedule fee (optional)</span>
               </div>
               <p className="text-xs text-amber-700 -mt-1">
-                This session was a no-show. Collect the additional payment before rescheduling and record the details below.
+                This session was a no-show. If you are charging an additional payment, record the details below —
+                otherwise leave the amount blank and reschedule without a fee.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
