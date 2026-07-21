@@ -216,5 +216,49 @@ export function mergeWorkshopEventCms(partial) {
   if (merged.registerModal) {
     merged.registerModal = scrubRegisterModalSubtitle(merged.registerModal);
   }
+
+  // Sync Core Details to everywhere else so we only need to edit them once in the CMS
+  if (merged.topic) {
+    if (merged.hero) merged.hero.title = merged.topic;
+    if (merged.sessionBanner) merged.sessionBanner.title = merged.topic;
+    if (merged.eventListCard) merged.eventListCard.title = merged.topic;
+  }
+  
+  if (merged.date || merged.time) {
+    if (merged.sessionBanner && merged.sessionBanner.details) {
+      const details = [...merged.sessionBanner.details];
+      const dIdx = details.findIndex(d => String(d.label).toLowerCase().includes('date'));
+      if (dIdx !== -1 && merged.date) details[dIdx].value = merged.date;
+      
+      const tIdx = details.findIndex(d => String(d.label).toLowerCase().includes('time'));
+      if (tIdx !== -1 && merged.time) details[tIdx].value = merged.time;
+
+      const fIdx = details.findIndex(d => String(d.label).toLowerCase().includes('format'));
+      if (fIdx !== -1 && merged.method) details[fIdx].value = merged.method;
+      
+      merged.sessionBanner.details = details;
+    }
+    if (merged.eventListCard) {
+      merged.eventListCard.scheduleText = [merged.date, merged.time].filter(Boolean).join(" at ");
+    }
+  }
+
+  if (merged.posterUrl) {
+    const defaultHero = getWorkshopEventPageDefaults().heroImageUrl;
+    if (!merged.heroImageUrl || merged.heroImageUrl === defaultHero) {
+      merged.heroImageUrl = merged.posterUrl;
+    }
+    
+    const defaultCard = getWorkshopEventPageDefaults().eventListCard.imageUrl;
+    if (merged.eventListCard && (!merged.eventListCard.imageUrl || merged.eventListCard.imageUrl === defaultCard)) {
+      merged.eventListCard.imageUrl = merged.posterUrl;
+    }
+  }
+
+  if (merged.speaker) {
+    if (merged.hero) merged.hero.body = `Speaker: ${merged.speaker}`;
+    if (merged.eventListCard) merged.eventListCard.description = `Speaker: ${merged.speaker}`;
+  }
+
   return merged;
 }

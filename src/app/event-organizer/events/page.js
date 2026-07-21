@@ -33,15 +33,12 @@ export default function AdminEventsPage() {
   const [viewRow, setViewRow] = useState(null);
   const [editRow, setEditRow] = useState(null);
   const [deleteRow, setDeleteRow] = useState(null);
-  const [addClientRow, setAddClientRow] = useState(null);
+  const [registerTherapistOpen, setRegisterTherapistOpen] = useState(false);
+  const [psychologists, setPsychologists] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [clientForm, setClientForm] = useState({
+  const [therapistForm, setTherapistForm] = useState({
     event_slug: '',
-    first_name: '',
-    last_name: '',
-    child_name: 'Not provided',
-    child_age: 0,
-    password: '',
+    therapist_id: '',
   });
 
   const load = useCallback(async () => {
@@ -56,6 +53,11 @@ export default function AdminEventsPage() {
       }
       const list = res.data?.events || [];
       setEvents(list);
+
+      const pRes = await adminApi.getPsychologists();
+      if (pRes?.success) {
+        setPsychologists(Array.isArray(pRes.data) ? pRes.data : (pRes.data?.psychologists || []));
+      }
     } catch (e) {
       setError(e?.message || 'Failed to load');
       setEvents([]);
@@ -107,38 +109,9 @@ export default function AdminEventsPage() {
     return name.includes(q) || email.includes(q) || eventTitle.includes(q) || eventSlug.includes(q);
   });
 
-  const openAddClient = (row = null) => {
-    const selectedRow = row || allRows[0] || null;
-    if (!selectedRow) return;
-    const parts = String(selectedRow.full_name || '').trim().split(/\s+/).filter(Boolean);
-    const first = parts[0] || '';
-    const last = parts.slice(1).join(' ');
-    setClientForm({
-      event_slug: selectedRow.event_slug || '',
-      first_name: first,
-      last_name: last,
-      child_name: 'Not provided',
-      child_age: 0,
-      password: '',
-    });
-    setAddClientRow(selectedRow);
-  };
-
-  const updateSelectedRegistration = (registrationId) => {
-    const selectedRow = allRows.find((row) => String(row.id) === String(registrationId));
-    if (!selectedRow) return;
-    const parts = String(selectedRow.full_name || '').trim().split(/\s+/).filter(Boolean);
-    const first = parts[0] || '';
-    const last = parts.slice(1).join(' ');
-    setClientForm({
-      event_slug: selectedRow.event_slug || '',
-      first_name: first,
-      last_name: last,
-      child_name: 'Not provided',
-      child_age: 0,
-      password: '',
-    });
-    setAddClientRow(selectedRow);
+  const openRegisterTherapist = () => {
+    setTherapistForm({ event_slug: '', therapist_id: '' });
+    setRegisterTherapistOpen(true);
   };
 
   const saveEdit = async () => {
@@ -182,39 +155,31 @@ export default function AdminEventsPage() {
     }
   };
 
-  const createClientFromRegistration = async () => {
-    if (!addClientRow?.id) return;
+  const registerTherapistForEvent = async () => {
+    if (!therapistForm.event_slug || !therapistForm.therapist_id) {
+      setError('Please select both an event and a therapist.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      const selected = clientForm.event_slug;
-      if (!selected) throw new Error('Please select an event.');
-      if (!clientForm.password || clientForm.password.length < 8) {
-        throw new Error('Password is required (minimum 8 characters).');
-      }
+      const selectedEvent = eventOptions.find((e) => e.slug === therapistForm.event_slug);
+      const selectedTherapist = psychologists.find((p) => String(p.id) === String(therapistForm.therapist_id));
+      
+      if (!selectedEvent || !selectedTherapist) throw new Error('Please select both an event and a therapist.');
 
-      // Assign registration to selected event before creating the client.
-      const selectedTitle = eventOptions.find((e) => e.slug === selected)?.title || selected;
-      await adminApi.updateEventRegistration(addClientRow.id, {
-        event_slug: selected,
-        event_title: selectedTitle,
+      await adminApi.createEventRegistration({
+        event_slug: therapistForm.event_slug,
+        event_title: selectedEvent.title,
+        full_name: selectedTherapist.full_name || selectedTherapist.name || 'Therapist',
+        email: selectedTherapist.email,
       });
 
-      await adminApi.createUser({
-        email: addClientRow.email,
-        password: clientForm.password,
-        first_name: clientForm.first_name,
-        last_name: clientForm.last_name,
-        phone_number: `${addClientRow.country_code || ''}${addClientRow.phone || ''}`.trim(),
-        child_name: clientForm.child_name || 'Not provided',
-        child_age: Number(clientForm.child_age || 0),
-      });
-
-      setAddClientRow(null);
-      setMessage('Client created and assigned to selected event.');
+      setRegisterTherapistOpen(false);
+      setMessage('Therapist registered for event successfully.');
       await load();
     } catch (e) {
-      setError(e?.message || 'Failed to create client');
+      setError(e?.message || 'Failed to register therapist');
     } finally {
       setSaving(false);
     }
@@ -237,17 +202,16 @@ export default function AdminEventsPage() {
               )}
             </div>
             <p className="mt-1 text-sm text-gray-600">
-              Manage workshop/event signups and convert entries into clients.
+              Manage workshop/event signups.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => openAddClient()}
-            disabled={allRows.length === 0}
-            className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-[#025545] px-4 py-2 text-sm font-medium text-white hover:bg-[#012f23] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={openRegisterTherapist}
+            className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-[#025545] px-4 py-2 text-sm font-medium text-white hover:bg-[#012f23]"
           >
             <UserPlus className="h-4 w-4" />
-            Add Client
+            Add Therapist
           </button>
         </div>
 
@@ -337,15 +301,16 @@ export default function AdminEventsPage() {
                       <div className="text-sm text-gray-600 whitespace-nowrap">{formatWhen(r.created_at)}</div>
                     </td>
                     <td className="px-4 sm:px-6 py-4">
-                      <select
-                        value={r.attendance_status || 'pending'}
-                        onChange={(e) => updateAttendance(r.id, e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#025545] bg-white"
+                      <button
+                        onClick={() => updateAttendance(r.id, r.attendance_status === 'attended' ? 'pending' : 'attended')}
+                        className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                          r.attendance_status === 'attended'
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                        }`}
                       >
-                        <option value="pending">Pending</option>
-                        <option value="present">Present</option>
-                        <option value="absent">Absent</option>
-                      </select>
+                        {r.attendance_status === 'attended' ? 'Attended' : 'Mark Attended'}
+                      </button>
                     </td>
                     <td className="px-4 sm:px-6 py-4 text-right text-sm font-medium">
                       <DropdownMenu>
@@ -520,9 +485,9 @@ export default function AdminEventsPage() {
         </div>
       )}
 
-      {addClientRow && (
+      {registerTherapistOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -530,13 +495,13 @@ export default function AdminEventsPage() {
                 </div>
                 <div>
                   <div className="text-sm font-semibold text-slate-800 tracking-tight" role="heading" aria-level={1}>
-                    Add Client from Registration
+                    Register Therapist
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">Create client account and link event</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Manually add an in-house therapist to an event</p>
                 </div>
               </div>
               <button
-                onClick={() => setAddClientRow(null)}
+                onClick={() => setRegisterTherapistOpen(false)}
                 className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200/80"
                 aria-label="Close modal"
               >
@@ -547,56 +512,39 @@ export default function AdminEventsPage() {
             <div className="p-6 space-y-5">
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                 <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>
-                  Select registration
+                  Registration Details
                 </div>
-                <select
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                  value={addClientRow?.id || ''}
-                  onChange={(e) => updateSelectedRegistration(e.target.value)}
-                >
-                  {allRows.map((row) => (
-                    <option key={row.id} value={row.id}>
-                      {row.full_name || 'Unknown'} - {row.email || 'No email'} ({row.event_slug || '—'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3" role="heading" aria-level={2}>
-                  Client account details
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" value={addClientRow.email || ''} readOnly />
-                  </div>
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">First name</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" value={clientForm.first_name} onChange={(e) => setClientForm((p) => ({ ...p, first_name: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Last name</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" value={clientForm.last_name} onChange={(e) => setClientForm((p) => ({ ...p, last_name: e.target.value }))} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Assign event</label>
-                    <select className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" value={clientForm.event_slug} onChange={(e) => setClientForm((p) => ({ ...p, event_slug: e.target.value }))}>
-                      <option value="">Select event</option>
-                      {eventOptions.map((o) => <option key={o.slug} value={o.slug}>{o.title} ({o.slug})</option>)}
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Select Event</label>
+                    <select
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#025545] focus:border-transparent outline-none"
+                      value={therapistForm.event_slug}
+                      onChange={(e) => setTherapistForm((p) => ({ ...p, event_slug: e.target.value }))}
+                    >
+                      <option value="">-- Choose Event --</option>
+                      {eventOptions.map((o) => (
+                        <option key={o.slug} value={o.slug}>
+                          {o.title} ({o.slug})
+                        </option>
+                      ))}
                     </select>
                   </div>
+                  
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Child name</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" value={clientForm.child_name} onChange={(e) => setClientForm((p) => ({ ...p, child_name: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Child age</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" type="number" min="0" value={clientForm.child_age} onChange={(e) => setClientForm((p) => ({ ...p, child_age: e.target.value }))} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white" placeholder="Minimum 8 characters" type="password" value={clientForm.password} onChange={(e) => setClientForm((p) => ({ ...p, password: e.target.value }))} />
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Select Therapist</label>
+                    <select
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#025545] focus:border-transparent outline-none"
+                      value={therapistForm.therapist_id}
+                      onChange={(e) => setTherapistForm((p) => ({ ...p, therapist_id: e.target.value }))}
+                    >
+                      <option value="">-- Choose Therapist --</option>
+                      {psychologists.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.full_name || p.name} ({p.email})
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -604,16 +552,16 @@ export default function AdminEventsPage() {
               <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200">
                 <button
                   className="px-4 py-2 text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
-                  onClick={() => setAddClientRow(null)}
+                  onClick={() => setRegisterTherapistOpen(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  disabled={saving}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
-                  onClick={createClientFromRegistration}
+                  disabled={saving || !therapistForm.event_slug || !therapistForm.therapist_id}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={registerTherapistForEvent}
                 >
-                  {saving ? 'Creating...' : 'Create Client'}
+                  {saving ? 'Registering...' : 'Register Therapist'}
                 </button>
               </div>
             </div>

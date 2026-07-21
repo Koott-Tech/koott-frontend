@@ -122,6 +122,23 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
     }
   };
 
+  const uploadDocumentAndApply = async (file, key, applyUrl) => {
+    setUploading(key, true);
+    try {
+      const res = await adminApi.uploadDocument(file);
+      const url = res?.data?.url || res?.url;
+      const originalName = res?.data?.filename || res?.filename || file.name;
+      if (!url) {
+        throw new Error(res?.message || "Document upload failed");
+      }
+      applyUrl(url, originalName);
+    } catch (err) {
+      alert(err?.message || "Failed to upload document");
+    } finally {
+      setUploading(key, false);
+    }
+  };
+
   const emptySpeaker = () => ({
     name: "",
     designation: "",
@@ -156,6 +173,23 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
                   <img src={cms.posterUrl} alt="Poster preview" className="h-64 w-auto rounded-xl object-cover shadow-sm border border-gray-200" />
                 )}
               </div>
+            </Field>
+          </div>
+
+          <div className="sm:col-span-2 lg:col-span-3">
+            <Field label="Hero Background Image (Optional)">
+              <div className="text-sm text-gray-500 mb-2">Upload a background image for the top of the event page. If left blank, it defaults to the Event Poster.</div>
+              <ImageUrlField
+                value={cms.heroImageUrl}
+                onChange={(v) => patch((p) => ({ ...p, heroImageUrl: v }))}
+                uploading={!!uploadingByKey.heroImageUrl}
+                inputId="event-cms-hero-image-upload"
+                onUpload={(file) =>
+                  uploadImageAndApply(file, "heroImageUrl", (url) =>
+                    patch((p) => ({ ...p, heroImageUrl: url }))
+                  )
+                }
+              />
             </Field>
           </div>
           
@@ -193,7 +227,7 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
         </div>
       </EditorSection>
 
-      <EditorSection title="Registration & hero image" sectionKey="registration-hero">
+      <EditorSection title="Registration Settings" sectionKey="registration-hero">
         <div className="space-y-3">
           <Field label="Register event slug (API)">
             <TextInput
@@ -229,192 +263,101 @@ export default function EventWorkshopCmsForm({ cms, setCms }) {
               placeholder="https://meet.google.com/…"
             />
           </Field>
-          <Field label="Hero background image URL">
-            <ImageUrlField
-              value={cms.heroImageUrl}
-              onChange={(v) => patch((p) => ({ ...p, heroImageUrl: v }))}
-              uploading={!!uploadingByKey.heroImageUrl}
-              inputId="event-cms-hero-image-upload"
-              onUpload={(file) =>
-                uploadImageAndApply(file, "heroImageUrl", (url) =>
-                  patch((p) => ({ ...p, heroImageUrl: url }))
-                )
-              }
-            />
-          </Field>
-          <Field label="Hero image alt">
-            <TextInput value={cms.heroImageAlt} onChange={(v) => patch((p) => ({ ...p, heroImageAlt: v }))} rows={2} />
-          </Field>
-          <Field label="Events page card image URL">
-            <ImageUrlField
-              value={cms.eventListCard?.imageUrl}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, imageUrl: v } }))}
-              uploading={!!uploadingByKey.eventCardImage}
-              inputId="event-cms-card-image-upload-top"
-              onUpload={(file) =>
-                uploadImageAndApply(file, "eventCardImage", (url) =>
-                  patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, imageUrl: url } }))
-                )
-              }
-              placeholder="/events/your-cover.webp or https://..."
-            />
-          </Field>
-          <Field label="Events page card schedule (date/time text)">
-            <TextInput
-              value={cms.eventListCard?.scheduleText}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, scheduleText: v } }))}
-              placeholder="e.g. Sat, 18 April at 11:00 AM IST"
-            />
-          </Field>
         </div>
       </EditorSection>
 
-      <EditorSection title="Hero copy" sectionKey="hero-copy">
-        <div>
-          <Field label="Eyebrow">
-            <TextInput value={cms.hero.eyebrow} onChange={(v) => patch((p) => ({ ...p, hero: { ...p.hero, eyebrow: v } }))} />
-          </Field>
-          <Field label="Title">
-            <TextInput value={cms.hero.title} onChange={(v) => patch((p) => ({ ...p, hero: { ...p.hero, title: v } }))} rows={3} />
-          </Field>
-          <Field label="Body">
-            <TextInput value={cms.hero.body} onChange={(v) => patch((p) => ({ ...p, hero: { ...p.hero, body: v } }))} rows={4} />
-          </Field>
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Events listing card" sectionKey="events-list-card">
-        <div className="grid min-w-0 max-w-full gap-3 sm:grid-cols-2">
-          <Field label="Category">
-            <TextInput
-              value={cms.eventListCard?.category}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, category: v } }))}
-            />
-          </Field>
-          <Field label="Organizer">
-            <TextInput
-              value={cms.eventListCard?.organizer}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, organizer: v } }))}
-            />
-          </Field>
-          <Field label="Card title">
-            <TextInput
-              value={cms.eventListCard?.title}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, title: v } }))}
-              rows={2}
-            />
-          </Field>
-          <Field label="Card image URL">
-            <ImageUrlField
-              value={cms.eventListCard?.imageUrl}
-              onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, imageUrl: v } }))}
-              uploading={!!uploadingByKey.eventCardImage}
-              inputId="event-cms-card-image-upload-listing"
-              onUpload={(file) =>
-                uploadImageAndApply(file, "eventCardImage", (url) =>
-                  patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, imageUrl: url } }))
-                )
-              }
-              placeholder="/events/your-cover.webp or https://..."
-            />
-          </Field>
-          <div className="sm:col-span-2">
-            <Field label="Card description">
-              <TextInput
-                value={cms.eventListCard?.description}
-                onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, description: v } }))}
-                rows={3}
-              />
-            </Field>
-          </div>
-          <div className="sm:col-span-2">
-            <Field label="Schedule text (optional override)">
-              <TextInput
-                value={cms.eventListCard?.scheduleText}
-                onChange={(v) => patch((p) => ({ ...p, eventListCard: { ...p.eventListCard, scheduleText: v } }))}
-                placeholder="e.g. Sat, 18 April at 11:00 AM IST"
-              />
-            </Field>
-          </div>
-        </div>
-      </EditorSection>
-
-      <EditorSection title="Hero ticket card" sectionKey="hero-ticket">
-        <div className="grid min-w-0 max-w-full gap-3 sm:grid-cols-2">
-          {[
-            ["admitLabel", "ADMIT ONE"],
-            ["seriesLine", "Series line"],
-            ["sessionTitle", "Session title"],
-            ["datetimeLine", "Date / time line"],
-            ["sessionPassLabel", "Session pass label"],
-            ["registerCta", "Register button"],
-            ["helperText", "Helper text"],
-          ].map(([key, lab]) => (
-            <Field key={key} label={lab}>
-              <TextInput
-                value={cms.ticketCard[key]}
-                onChange={(v) => patch((p) => ({ ...p, ticketCard: { ...p.ticketCard, [key]: v } }))}
-                rows={key === "helperText" ? 2 : 1}
-              />
-            </Field>
-          ))}
-        </div>
-      </EditorSection>
-
-
-      <EditorSection title="Session banner (lower ticket)" sectionKey="session-banner">
-        <div className="grid min-w-0 max-w-full gap-3 sm:grid-cols-2">
-          {["passLabel", "badgeText", "title", "subtitle", "ctaText"].map((key) => (
-            <Field key={key} label={key}>
-              <TextInput
-                value={cms.sessionBanner[key]}
-                onChange={(v) => patch((p) => ({ ...p, sessionBanner: { ...p.sessionBanner, [key]: v } }))}
-                rows={key === "subtitle" ? 2 : 1}
-              />
-            </Field>
-          ))}
-          <p className="col-span-full text-sm text-gray-800" style={{ fontWeight: 500 }}>
-            Detail row (Date / Time / Format)
+      <EditorSection title="Event Materials" sectionKey="event-materials">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Upload materials (PDF, DOCX, PPTX) that will be shared with attendees. These will be linked in the Certificate email.
           </p>
-          {(cms.sessionBanner.details || []).slice(0, 3).map((d, i) => (
-            <div key={i} className="col-span-full grid min-w-0 max-w-full gap-2 rounded bg-gray-50 p-2 sm:grid-cols-2">
-              <TextInput
-                placeholder="Label"
-                value={d.label}
-                onChange={(v) =>
-                  patch((p) => {
-                    const details = [...(p.sessionBanner.details || [])];
-                    details[i] = { ...details[i], label: v };
-                    return { ...p, sessionBanner: { ...p.sessionBanner, details } };
-                  })
-                }
+          <div className="flex flex-col gap-3">
+            {(cms.materials || []).map((m, i) => (
+              <div key={i} className="flex items-center justify-between rounded border border-gray-200 bg-gray-50 px-3 py-2">
+                <a href={m.url} target="_blank" rel="noreferrer" className="truncate text-sm font-medium text-[#025545] hover:underline">
+                  {m.name}
+                </a>
+                <button
+                  type="button"
+                  onClick={() =>
+                    patch((p) => {
+                      const mats = [...(p.materials || [])];
+                      mats.splice(i, 1);
+                      return { ...p, materials: mats };
+                    })
+                  }
+                  className="ml-4 text-xs text-red-600 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                id="event-cms-material-upload"
+                type="file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  uploadDocumentAndApply(file, "eventMaterials", (url, name) => {
+                    patch((p) => ({
+                      ...p,
+                      materials: [...(p.materials || []), { name, url }]
+                    }));
+                  });
+                  e.target.value = "";
+                }}
               />
-              <TextInput
-                placeholder="Value"
-                value={d.value}
-                onChange={(v) =>
-                  patch((p) => {
-                    const details = [...(p.sessionBanner.details || [])];
-                    details[i] = { ...details[i], value: v };
-                    return { ...p, sessionBanner: { ...p.sessionBanner, details } };
-                  })
-                }
-              />
+              <label
+                htmlFor="event-cms-material-upload"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                {uploadingByKey.eventMaterials ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploadingByKey.eventMaterials ? "Uploading..." : "Upload Material"}
+              </label>
             </div>
-          ))}
+          </div>
         </div>
       </EditorSection>
-
-
-
-      <EditorSection title="Registration modal" sectionKey="registration-modal">
-        <div>
-          <Field label="Title">
-            <TextInput value={cms.registerModal.title} onChange={(v) => patch((p) => ({ ...p, registerModal: { ...p.registerModal, title: v } }))} />
-          </Field>
-          <Field label="Subtitle">
-            <TextInput value={cms.registerModal.subtitle} onChange={(v) => patch((p) => ({ ...p, registerModal: { ...p.registerModal, subtitle: v } }))} rows={2} />
-          </Field>
+      
+      <EditorSection title="Certificate Settings" sectionKey="certificate-settings">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Field label="Custom Certificate Template (Optional)">
+              <div className="text-sm text-gray-500 mb-2">Upload a custom blank certificate background for this event. Leave blank to use the default Koott template.</div>
+              <ImageUrlField
+                value={cms.certificateTemplateUrl}
+                onChange={(v) => patch((p) => ({ ...p, certificateTemplateUrl: v }))}
+                uploading={!!uploadingByKey.certificateTemplate}
+                inputId="event-cms-cert-template-upload"
+                onUpload={(file) =>
+                  uploadImageAndApply(file, "certificateTemplate", (url) =>
+                    patch((p) => ({ ...p, certificateTemplateUrl: url }))
+                  )
+                }
+                placeholder="/events/cert_template.png or https://..."
+              />
+              <div className="mt-4 flex justify-center">
+                {cms.certificateTemplateUrl && (
+                  <img src={cms.certificateTemplateUrl} alt="Template preview" className="h-64 w-auto rounded-xl object-cover shadow-sm border border-gray-200" />
+                )}
+              </div>
+            </Field>
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Custom Certificate Paragraph (Optional)">
+              <div className="text-sm text-gray-500 mb-2">Use {'{{participant_name}}'} as a placeholder for the attendee's name. Leave blank to use the default generated paragraph.</div>
+              <textarea
+                className="w-full border p-2 rounded"
+                rows={4}
+                value={cms.certificateText || ''}
+                onChange={(e) => patch((p) => ({ ...p, certificateText: e.target.value }))}
+              />
+            </Field>
+          </div>
         </div>
       </EditorSection>
     </div>

@@ -974,6 +974,23 @@ export const adminApi = {
     return result;
   },
 
+  // Upload document (admin). E.g. event materials (PDF, PPTX)
+  async uploadDocument(file) {
+    const url = `${BACKEND_BASE_URL}/admin/upload/document`;
+    const token = typeof window !== 'undefined' ? getStoredToken() : null;
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+    const result = await handleResponse(response);
+    return result;
+  },
+
   // Delete psychologist (admin only)
   async deletePsychologist(psychologistId) {
     return apiRequest(`/admin/psychologists/${psychologistId}`, {
@@ -1507,6 +1524,12 @@ export const adminApi = {
   // Workshop / event registrations (Supabase-backed)
   async getEventRegistrations() {
     return apiRequest('/admin/event-registrations');
+  },
+  async createEventRegistration(data) {
+    return apiRequest('/admin/event-registrations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
   async updateEventRegistration(registrationId, data) {
     return apiRequest(`/admin/event-registrations/${registrationId}`, {
