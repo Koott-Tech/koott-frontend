@@ -249,6 +249,8 @@ export default function AdminWixDiscoverPage() {
   const calendarRefreshAttemptsRef = useRef(new Set());
   const [initialSyncDone, setInitialSyncDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Monotonic id for load() calls — only the newest response is allowed to render.
+  const loadSeqRef = useRef(0);
   const [syncing, setSyncing] = useState(false);
   const [rows, setRows] = useState([]);
   const [platformRows, setPlatformRows] = useState([]);
@@ -343,8 +345,15 @@ export default function AdminWixDiscoverPage() {
 
   const hasActiveFilters =
     Boolean(searchTerm.trim()) || hasDateRangeBounds(dateRange) || wixFilterType !== 'all' || (statusFilter !== 'booked' && statusFilter !== 'all');
+  const isSearchPending = searchTerm.trim() !== debouncedSearchTerm.trim();
 
   const load = useCallback(async (targetPage = 1) => {
+    // Race guard: several triggers can call load() at once (search change, the load identity
+    // changing, the 6s calendar re-check). Without this, a slower EARLIER request can resolve
+    // after a newer one and overwrite the screen with stale rows — the "wrong data flickers,
+    // then corrects itself" behaviour. Only the newest request is allowed to render.
+    const seq = ++loadSeqRef.current;
+    const isStale = () => seq !== loadSeqRef.current;
     setLoading(true);
     try {
       const dateParams = hasDateRangeBounds(dateRange) ? {
@@ -364,7 +373,11 @@ export default function AdminWixDiscoverPage() {
         // Fetch platform (manual) sessions from sessions table — non-wix source only
         sessionsApi.getAllSessions({
           page: 1,
-          limit: 200,
+          // Searching used to pull 200 rows and filter them in the browser. Push the term to
+          // the server (getAllSessions supports `search`) so a search returns a small result
+          // set instead of a 200-row payload — the main source of the slow search.
+          limit: debouncedSearchTerm.trim() ? 50 : 200,
+          search: debouncedSearchTerm.trim() || undefined,
           sort: 'created_at',
           order: 'desc',
           // Map wix status filter to platform status equivalents
@@ -373,11 +386,16 @@ export default function AdminWixDiscoverPage() {
             : statusFilter || undefined,
           ...dateParams,
         }).catch(() => null),
-        // Stable A/B/C package labels (computed backend-side over full history)
-        adminApi.getPackageLabels().catch(() => null),
+        // Stable A/B/C package labels. This scans every package session platform-wide, so it
+        // must NOT run on each keystroke — the map is global and unaffected by the search.
+        // Fetch it only when not searching; the existing map is reused during a search.
+        debouncedSearchTerm.trim()
+          ? Promise.resolve(null)
+          : adminApi.getPackageLabels().catch(() => null),
       ]);
 
-      setPackageLabelMap(labelsRes?.data?.labels || {});
+      if (isStale()) return; // a newer search/filter superseded this request
+      if (labelsRes?.data?.labels) setPackageLabelMap(labelsRes.data.labels);
 
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
@@ -452,12 +470,14 @@ export default function AdminWixDiscoverPage() {
         }
         return true;
       });
+      if (isStale()) return;
       setPlatformRows(platformOnly);
     } catch (e) {
+      if (isStale()) return;
       showError(e?.message || 'Failed to load Wix bookings', 'Wix');
       setRows([]);
       setPlatformRows([]);
-    } finally { setLoading(false); }
+    } finally { if (!isStale()) setLoading(false); }
   }, [dateRange, debouncedSearchTerm, showError, wixFilterType, statusFilter]);
 
   const syncAndReload = useCallback(async ({ silentSuccess = false } = {}) => {
@@ -503,6 +523,9 @@ export default function AdminWixDiscoverPage() {
 
   useEffect(() => {
     if (loading || syncing || !initialSyncDone) return;
+    // Don't run the calendar re-check while the user is searching — its delayed load(page)
+    // would land on top of the search results and swap them for a different page.
+    if (debouncedSearchTerm.trim()) return;
 
     const pendingCalendarRows = [...rows, ...platformRows].filter((row) => {
       const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
@@ -527,7 +550,7 @@ export default function AdminWixDiscoverPage() {
     }, 6000);
 
     return () => clearTimeout(timer);
-  }, [rows, platformRows, loading, syncing, initialSyncDone, load, page]);
+  }, [rows, platformRows, loading, syncing, initialSyncDone, load, page, debouncedSearchTerm]);
 
   const handlePageChange = async (nextPage) => {
     const safePage = Math.max(1, Math.min(pagination.totalPages, nextPage));
@@ -1145,8 +1168,8 @@ export default function AdminWixDiscoverPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 bg-white">
-                {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />Loading…</td></tr>
+                {(loading || isSearchPending) ? (
+                  <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400"><Loader2 className="h-4 w-4 animate-spin inline mr-2" />{isSearchPending ? 'Searching…' : 'Loading…'}</td></tr>
                 ) : allRows.length === 0 ? (
                   <tr><td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-400">No bookings found{hasActiveFilters ? ' for current filters' : ''}.</td></tr>
                 ) : (

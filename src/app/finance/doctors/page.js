@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit, Save, X, TrendingUp, Calendar, Wallet, Eye, User, MoreVertical, Filter } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
@@ -72,6 +73,7 @@ const COUPLE_PACKAGE_GROUPS = [
 
 export default function FinanceDoctors() {
   const { showError } = useNotification();
+  const router = useRouter();
   const [doctors, setDoctors] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -496,6 +498,14 @@ export default function FinanceDoctors() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/finance/doctors/${doctor.psychologist_id}`)}
+                              className="cursor-pointer"
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleViewMore(doctor)} className="cursor-pointer">
                               <Eye className="h-4 w-4 mr-2" />
                               View Details

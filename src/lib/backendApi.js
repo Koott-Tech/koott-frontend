@@ -2030,6 +2030,17 @@ export const financeApi = {
     );
   },
 
+  /** Full financial profile for one therapist: every session + commission split + payout state. */
+  async getDoctorFinanceProfile(psychologistId, params = {}) {
+    const clean = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    );
+    const queryString = new URLSearchParams(clean).toString();
+    return apiRequest(
+      `/finance/doctors/${psychologistId}/profile${queryString ? `?${queryString}` : ''}`
+    );
+  },
+
   // Get all sessions (same handler as admin, but finance-authenticated route — not /admin/sessions/all)
   async getAllSessions(params = {}) {
     const queryParams = new URLSearchParams();
