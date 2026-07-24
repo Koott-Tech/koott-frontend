@@ -407,6 +407,19 @@ export default function FinanceDoctors() {
     }
   };
 
+  const buildDoctorProfileHref = (psychologistId) => {
+    const params = new URLSearchParams();
+    params.set('dateBasis', 'scheduled');
+    if (hasDateRangeBounds(dateRange)) {
+      const from = formatIstCalendarYmd(dateRange.from);
+      const to = formatIstCalendarYmd(dateRange.to);
+      if (from) params.set('dateFrom', from);
+      if (to) params.set('dateTo', to);
+    }
+    const query = params.toString();
+    return `/finance/doctors/${psychologistId}${query ? `?${query}` : ''}`;
+  };
+
   if (isLoading && doctors.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -499,7 +512,7 @@ export default function FinanceDoctors() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem
-                              onClick={() => router.push(`/finance/doctors/${doctor.psychologist_id}`)}
+                              onClick={() => router.push(buildDoctorProfileHref(doctor.psychologist_id))}
                               className="cursor-pointer"
                             >
                               <User className="h-4 w-4 mr-2" />

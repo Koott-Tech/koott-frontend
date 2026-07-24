@@ -24,6 +24,67 @@ function pendingPayoutIstMonthYear(from) {
   return { year: parseInt(yStr, 10), month: parseInt(mStr, 10) };
 }
 
+const inr = (n) =>
+  `₹${(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const fmtDate = (d) => {
+  if (!d) return '—';
+  try {
+    return new Date(`${d}T00:00:00+05:30`).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata',
+    });
+  } catch {
+    return d;
+  }
+};
+
+const fmtTime = (t) => {
+  if (!t) return '';
+  const [hh, mm] = String(t).split(':');
+  const h = parseInt(hh, 10);
+  if (Number.isNaN(h)) return t;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 === 0 ? 12 : h % 12}:${mm || '00'} ${ampm}`;
+};
+
+const STATUS_STYLES = {
+  completed: 'bg-green-100 text-green-800',
+  booked: 'bg-emerald-100 text-emerald-800',
+  rescheduled: 'bg-slate-100 text-slate-700',
+  no_show: 'bg-amber-100 text-amber-900',
+  noshow: 'bg-amber-100 text-amber-900',
+  cancelled: 'bg-red-100 text-red-800',
+  refunded: 'bg-red-50 text-red-700',
+  on_hold: 'bg-slate-100 text-slate-700',
+};
+
+const PAYOUT_STYLES = {
+  paid: { cls: 'bg-green-100 text-green-800', label: 'Paid' },
+  pending: { cls: 'bg-amber-100 text-amber-900', label: 'Pending' },
+  not_due: { cls: 'bg-slate-100 text-slate-600', label: 'Not due' },
+  void: { cls: 'bg-red-50 text-red-700', label: 'Void' },
+};
+
+const SOURCE_STYLES = {
+  admin: { cls: 'bg-sky-100 text-sky-800', label: 'Admin' },
+  admin_manual: { cls: 'bg-sky-100 text-sky-800', label: 'Admin' },
+  razorpay: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  wix: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  platform: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  koott: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+};
+
+const sourceStyleFor = (source) => {
+  const key = String(source || 'razorpay').toLowerCase();
+  return SOURCE_STYLES[key] || {
+    cls: key.includes('admin') ? SOURCE_STYLES.admin.cls : SOURCE_STYLES.razorpay.cls,
+    label: key.includes('admin') ? 'Admin' : 'Razorpay',
+  };
+};
+
 export default function FinancePayouts() {
   const { user, isAuthenticated, hasRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -32,6 +93,9 @@ export default function FinancePayouts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPayout, setSelectedPayout] = useState(null);
+  const [selectedPayoutProfile, setSelectedPayoutProfile] = useState(null);
+  const [selectedPayoutProfileLoading, setSelectedPayoutProfileLoading] = useState(false);
+  const [selectedPayoutProfileError, setSelectedPayoutProfileError] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [markingAsPaid, setMarkingAsPaid] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -218,8 +282,31 @@ export default function FinancePayouts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const handleViewDetails = (payout) => {
+  const handleViewDetails = async (payout) => {
     setSelectedPayout(payout);
+    setSelectedPayoutProfile(null);
+    setSelectedPayoutProfileError(null);
+
+    if (!payout?.psychologist_id) return;
+
+    try {
+      setSelectedPayoutProfileLoading(true);
+      const params = { dateBasis: 'scheduled' };
+      if (hasDateRangeBounds(dateRange)) {
+        params.dateFrom = formatIstCalendarYmd(dateRange.from);
+        params.dateTo = formatIstCalendarYmd(dateRange.to);
+      }
+      const response = await financeApi.getDoctorFinanceProfile(payout.psychologist_id, params);
+      if (!response?.success) {
+        throw new Error(response?.message || 'Failed to load full session breakdown');
+      }
+      setSelectedPayoutProfile(response.data || null);
+    } catch (err) {
+      console.error('Failed to load payout doctor profile:', err);
+      setSelectedPayoutProfileError(err?.message || 'Failed to load full session breakdown');
+    } finally {
+      setSelectedPayoutProfileLoading(false);
+    }
   };
 
   const handleMarkAsPaidClick = (payout) => {
@@ -244,6 +331,9 @@ export default function FinancePayouts() {
 
       const response = await financeApi.markPayoutAsPaid({
         psychologist_id: payoutToMark.psychologist_id,
+        sessionIds: (payoutToMark.session_details || [])
+          .map((session) => session.session_id)
+          .filter(Boolean),
         dateFrom,
         dateTo
       });
@@ -305,6 +395,16 @@ export default function FinancePayouts() {
   const totalSessions = activeTab === 'pending' 
     ? pendingSessions
     : completedSessions;
+  const selectedProfileSessions = selectedPayoutProfile?.sessions || null;
+  const selectedDetailRows = selectedProfileSessions || selectedPayout?.session_details || [];
+  const selectedDetailCount = selectedProfileSessions?.length ?? selectedPayout?.session_details?.length ?? 0;
+  const isUsingProfileRows = Array.isArray(selectedProfileSessions);
+  const selectedDetailTotals = selectedDetailRows.reduce((acc, session) => {
+    acc.amount += Number(session.session_amount || 0);
+    acc.doctor += Number((isUsingProfileRows ? session.doctor_amount : session.doctor_wallet) || 0);
+    acc.company += Number((isUsingProfileRows ? session.company_amount : session.company_commission) || 0);
+    return acc;
+  }, { amount: 0, doctor: 0, company: 0 });
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-3 lg:p-4">
@@ -407,7 +507,9 @@ export default function FinancePayouts() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Sessions</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          {activeTab === 'pending' ? 'Completed Sessions' : 'Paid Sessions'}
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Commission</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           {activeTab === 'pending' ? 'Pending Payout' : 'Doctor Wallet'}
@@ -510,7 +612,7 @@ export default function FinancePayouts() {
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-600">Total Sessions:</span>
+                      <span className="text-gray-600">{activeTab === 'pending' ? 'Completed Sessions:' : 'Paid Sessions:'}</span>
                       <span className="ml-2 font-semibold text-gray-900">{payoutToMark.total_sessions || 0}</span>
                     </div>
                     <div>
@@ -544,12 +646,16 @@ export default function FinancePayouts() {
         {/* Payout Details Modal */}
         {selectedPayout && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-[96vw] w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div role="heading" aria-level="2" style={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>Payout Details</div>
                   <button
-                    onClick={() => setSelectedPayout(null)}
+                    onClick={() => {
+                      setSelectedPayout(null);
+                      setSelectedPayoutProfile(null);
+                      setSelectedPayoutProfileError(null);
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     ✕
@@ -576,8 +682,13 @@ export default function FinancePayouts() {
                 {/* Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Total Sessions</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      {activeTab === 'pending' ? 'Completed Sessions' : 'Paid Sessions'}
+                    </label>
                     <p className="mt-1 text-lg font-semibold text-gray-900">{selectedPayout.total_sessions || 0}</p>
+                    {isUsingProfileRows && (
+                      <p className="mt-0.5 text-xs text-gray-500">Full profile rows: {selectedDetailCount}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Company Commission</label>
@@ -606,41 +717,111 @@ export default function FinancePayouts() {
                 </div>
 
                 {/* Session Details */}
-                {selectedPayout.session_details && selectedPayout.session_details.length > 0 && (
+                {selectedPayoutProfileLoading ? (
+                  <div className="py-10 text-center text-gray-500">
+                    <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
+                    Loading full session breakdown...
+                  </div>
+                ) : selectedPayoutProfileError ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    {selectedPayoutProfileError}. Showing payout-only rows.
+                  </div>
+                ) : null}
+
+                {selectedDetailRows.length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-3">Session Details</label>
+                    <div className="mb-3">
+                      <label className="text-sm font-medium text-gray-700">
+                        Session Breakdown ({selectedDetailCount})
+                      </label>
+                      {isUsingProfileRows && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Showing the same full doctor-profile breakdown for this date range.
+                        </p>
+                      )}
+                    </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
+                      <table className="min-w-full text-sm">
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Session Amount</th>
-                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Company</th>
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Doctor</th>
+                            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Company</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payout</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                          {selectedPayout.session_details.map((session, idx) => (
-                            <tr key={idx}>
-                              <td className="px-4 py-2 text-gray-900">
-                                {session.session_date ? new Date(session.session_date).toLocaleDateString('en-IN') : '-'}
-                              </td>
-                              <td className="px-4 py-2 text-gray-600 capitalize">{session.session_type?.replace('_', ' ') || '-'}</td>
-                              <td className="px-4 py-2 text-right font-semibold text-gray-900">
-                                ₹{(session.session_amount || 0).toLocaleString('en-IN')}
-                              </td>
-                              <td className="px-4 py-2 text-right text-gray-900">
-                                ₹{(session.company_commission || 0).toLocaleString('en-IN')}
-                              </td>
-                              <td className="px-4 py-2 text-right font-semibold text-green-600">
-                                ₹{(session.doctor_wallet || 0).toLocaleString('en-IN')}
-                              </td>
-                            </tr>
-                          ))}
+                          {selectedDetailRows.map((session, idx) => {
+                            const isProfileRow = isUsingProfileRows;
+                            const status = session.status || (activeTab === 'pending' ? 'completed' : 'paid');
+                            const statusKey = String(status || '').toLowerCase();
+                            const payoutStatus = isProfileRow
+                              ? session.payout_status
+                              : (activeTab === 'pending' ? 'pending' : 'paid');
+                            const payoutStyle = PAYOUT_STYLES[payoutStatus] || PAYOUT_STYLES.not_due;
+                            const companyAmount = (isProfileRow ? session.company_amount : session.company_commission) || 0;
+                            const doctorAmount = (isProfileRow ? session.doctor_amount : session.doctor_wallet) || 0;
+                            const source = sourceStyleFor(session.source);
+                            return (
+                              <tr key={session.session_id || session.id || idx} className="hover:bg-slate-50/60">
+                                <td className="px-4 py-2.5 whitespace-nowrap">
+                                  <div className="text-slate-900">{fmtDate(session.session_date)}</div>
+                                  <div className="text-xs text-slate-400">{fmtTime(session.session_time)}</div>
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-700 max-w-[180px] truncate" title={session.client_name}>
+                                  {session.client_name || '—'}
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-600 capitalize">
+                                  {session.package_label || session.session_type_label || session.session_type?.replace(/_/g, ' ') || '-'}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${source.cls}`}>
+                                    {source.label}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[statusKey] || 'bg-slate-100 text-slate-700'}`}>
+                                    {String(status || '-').replace(/_/g, ' ')}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-right text-slate-700">{inr(session.session_amount)}</td>
+                                <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">{inr(doctorAmount)}</td>
+                                <td className={`px-4 py-2.5 text-right ${Number(companyAmount) < 0 ? 'text-slate-400' : 'text-indigo-700'}`}>
+                                  {inr(companyAmount)}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${payoutStyle.cls}`}>
+                                    {payoutStyle.label}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
+                        {selectedDetailRows.length > 0 && (
+                          <tfoot className="bg-slate-50 font-semibold">
+                            <tr>
+                              <td colSpan={5} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
+                              <td className="px-4 py-2.5 text-right text-slate-900">{inr(selectedDetailTotals.amount)}</td>
+                              <td className="px-4 py-2.5 text-right text-emerald-700">{inr(selectedDetailTotals.doctor)}</td>
+                              <td className="px-4 py-2.5 text-right text-indigo-700">{inr(selectedDetailTotals.company)}</td>
+                              <td />
+                            </tr>
+                          </tfoot>
+                        )}
                       </table>
                     </div>
+                    {isUsingProfileRows && (
+                      <p className="border-t border-slate-100 px-4 py-2.5 text-xs text-slate-400">
+                        A package is paid on its first session while the therapist&apos;s commission is split across all
+                        its sessions, so follow-ups can show ₹0 received while still showing the per-session therapist share.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

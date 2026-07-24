@@ -163,8 +163,8 @@ function DeliveryDot({ done, on, label, compact = false }) {
 // succeeded and greyed when it hasn't (so a missing/failed send is visible at a glance).
 function DeliveryDots({ row, showLabels = false }) {
   const hasLegacyNotification = !!row.notified_at;
-  const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url || row.google_calendar_link);
-  const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
+  const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url);
+  const hasCalendarEvent = !!row.google_calendar_event_id;
   const dots = [
     { done: !!(row.whatsapp_sent_at || hasLegacyNotification), on: 'bg-green-500', label: 'WhatsApp' },
     { done: !!(row.email_sent_at || hasLegacyNotification), on: 'bg-blue-500', label: 'Email' },
@@ -528,8 +528,8 @@ export default function AdminWixDiscoverPage() {
     if (debouncedSearchTerm.trim()) return;
 
     const pendingCalendarRows = [...rows, ...platformRows].filter((row) => {
-      const hasCalendarEvent = !!(row.google_calendar_event_id || row.google_calendar_link);
-      const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url || row.google_calendar_link);
+      const hasCalendarEvent = !!row.google_calendar_event_id;
+      const hasMeetLink = !!(row.google_meet_link || row.google_meet_join_url || row.google_meet_start_url);
       const hasSessionLink = !!(row.session_id || row.id);
       const status = String(displayStatusFor(row) || row.status || '').toLowerCase();
       return hasSessionLink && (!hasCalendarEvent || !hasMeetLink) && !['cancelled', 'refunded', 'deleted'].includes(status);

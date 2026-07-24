@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Wallet, TrendingUp, Calendar, User, Download, Loader2, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
@@ -30,6 +30,13 @@ const fmtTime = (t) => {
   return `${h % 12 === 0 ? 12 : h % 12}:${mm || '00'} ${ampm}`;
 };
 
+const parseYmdToLocalDate = (ymd) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ymd || ''))) return null;
+  const [year, month, day] = String(ymd).split('-').map((part) => parseInt(part, 10));
+  const parsed = new Date(year, month - 1, day);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 const STATUS_STYLES = {
   completed: 'bg-green-100 text-green-800',
   booked: 'bg-emerald-100 text-emerald-800',
@@ -44,6 +51,23 @@ const PAYOUT_STYLES = {
   pending: { cls: 'bg-amber-100 text-amber-900', label: 'Pending' },
   not_due: { cls: 'bg-slate-100 text-slate-600', label: 'Not due' },
   void: { cls: 'bg-red-50 text-red-700', label: 'Void' },
+};
+
+const SOURCE_STYLES = {
+  admin: { cls: 'bg-sky-100 text-sky-800', label: 'Admin' },
+  admin_manual: { cls: 'bg-sky-100 text-sky-800', label: 'Admin' },
+  razorpay: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  wix: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  platform: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+  koott: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
+};
+
+const sourceStyleFor = (source) => {
+  const key = String(source || 'razorpay').toLowerCase();
+  return SOURCE_STYLES[key] || {
+    cls: key.includes('admin') ? SOURCE_STYLES.admin.cls : SOURCE_STYLES.razorpay.cls,
+    label: key.includes('admin') ? 'Admin' : 'Razorpay',
+  };
 };
 
 function StatCard({ icon: Icon, label, value, sub, tone = 'default' }) {
@@ -68,12 +92,23 @@ function StatCard({ icon: Icon, label, value, sub, tone = 'default' }) {
 export default function DoctorFinanceProfilePage() {
   const { psychologistId } = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showError } = useNotification();
+
+  const initialDateRange = (() => {
+    const fromParam = searchParams.get('dateFrom');
+    const toParam = searchParams.get('dateTo');
+    const from = parseYmdToLocalDate(fromParam);
+    const to = parseYmdToLocalDate(toParam);
+    if (from && to) return { from, to };
+    return istCalendarMonthBounds(new Date());
+  })();
+  const initialDateBasis = searchParams.get('dateBasis') === 'booked' ? 'booked' : 'scheduled';
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
-  const [dateBasis, setDateBasis] = useState('scheduled');
+  const [dateRange, setDateRange] = useState(initialDateRange);
+  const [dateBasis, setDateBasis] = useState(initialDateBasis);
   const [statusFilter, setStatusFilter] = useState('all');
   const [payoutFilter, setPayoutFilter] = useState('all');
 
@@ -99,7 +134,7 @@ export default function DoctorFinanceProfilePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const sessions = data?.sessions || [];
+  const sessions = useMemo(() => data?.sessions || [], [data?.sessions]);
   const filtered = useMemo(() => sessions.filter((r) => {
     if (statusFilter !== 'all' && String(r.status).toLowerCase() !== statusFilter) return false;
     if (payoutFilter !== 'all' && r.payout_status !== payoutFilter) return false;
@@ -114,9 +149,9 @@ export default function DoctorFinanceProfilePage() {
   }), { amount: 0, doctor: 0, company: 0 }), [filtered]);
 
   const exportCsv = () => {
-    const head = ['Date', 'Time', 'Client', 'Type', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Payout', 'Order'];
+    const head = ['Date', 'Time', 'Client', 'Type', 'Source', 'Payment Proof', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Payout', 'Order'];
     const lines = filtered.map((r) => [
-      r.session_date, r.session_time, r.client_name, r.package_label, r.status,
+      r.session_date, r.session_time, r.client_name, r.package_label, sourceStyleFor(r.source).label, r.payment_proof_url || '', r.status,
       r.session_amount, r.doctor_amount, r.company_amount, r.payout_status, r.order_id || '',
     ].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
     const csv = [head.join(','), ...lines].join('\n');
@@ -213,16 +248,17 @@ export default function DoctorFinanceProfilePage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    {['Date', 'Client', 'Type', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Payout'].map((h, i) => (
-                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 4 && i <= 6 ? 'text-right' : 'text-left'}`}>{h}</th>
+                    {['Date', 'Client', 'Type', 'Source', 'Proof', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Payout'].map((h, i) => (
+                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 6 && i <= 8 ? 'text-right' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={8} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
+                    <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
                   ) : filtered.map((r) => {
                     const po = PAYOUT_STYLES[r.payout_status] || PAYOUT_STYLES.not_due;
+                    const source = sourceStyleFor(r.source);
                     return (
                       <tr key={r.session_id} className="hover:bg-slate-50/60">
                         <td className="px-4 py-2.5 whitespace-nowrap">
@@ -231,6 +267,18 @@ export default function DoctorFinanceProfilePage() {
                         </td>
                         <td className="px-4 py-2.5 text-slate-700 max-w-[180px] truncate" title={r.client_name}>{r.client_name}</td>
                         <td className="px-4 py-2.5 text-slate-600 capitalize">{r.package_label}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${source.cls}`}>{source.label}</span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {r.payment_proof_url ? (
+                            <a href={r.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-sky-700 hover:text-sky-900 underline">
+                              View
+                            </a>
+                          ) : (
+                            <span className="text-xs text-slate-400">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-2.5">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[String(r.status).toLowerCase()] || 'bg-slate-100 text-slate-700'}`}>
                             {r.status}
@@ -249,7 +297,7 @@ export default function DoctorFinanceProfilePage() {
                 {filtered.length > 0 && (
                   <tfoot className="bg-slate-50 font-semibold">
                     <tr>
-                      <td colSpan={4} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
+                      <td colSpan={6} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
                       <td className="px-4 py-2.5 text-right text-slate-900">{inr(shown.amount)}</td>
                       <td className="px-4 py-2.5 text-right text-emerald-700">{inr(shown.doctor)}</td>
                       <td className="px-4 py-2.5 text-right text-indigo-700">{inr(shown.company)}</td>

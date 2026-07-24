@@ -47,6 +47,16 @@ import { sessionBookedAtIso, sessionBookingCreatedIstYmd } from "@/lib/sessionBo
 
 const labelClass = "block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5";
 const valueBoxClass = "bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800";
+const ACTIVE_SESSION_STATUSES = new Set([
+  'booked',
+  'pending',
+  'confirmed',
+  'scheduled',
+  'rescheduled',
+  'reschedule_requested',
+  'upcoming',
+]);
+const CLOSED_SESSION_STATUSES = new Set(['completed', 'cancelled', 'no_show', 'noshow']);
 
 function parseTherapistReport(text) {
   if (!text) return { main: '', operations: '', clientStatement: '', attachments: [] };
@@ -508,14 +518,9 @@ export default function PsychologistSessions() {
   const allUpcomingSessions = dateFilteredSessions.filter(s => {
     if (!isAssignedToCurrentPsychologist(s)) return false;
     if (!excludeFreeAssessment(s)) return false;
-    // Include booked and rescheduled sessions
-    if (s.status === 'booked' || s.status === 'rescheduled') return true;
-    // For pending sessions, only include if they don't have scheduled_date and scheduled_time
-    // If they have both, they're already scheduled (just status hasn't been updated yet)
-    if (s.status === 'pending') {
-      return !s.scheduled_date || !s.scheduled_time;
-    }
-    return false;
+    const status = String(s.status || '').toLowerCase();
+    if (CLOSED_SESSION_STATUSES.has(status)) return false;
+    return ACTIVE_SESSION_STATUSES.has(status);
   });
 
   // Sort upcoming sessions by date/time (nearest first)
@@ -651,7 +656,8 @@ export default function PsychologistSessions() {
     const isOngoing = isSessionOngoing(session);
     const isTimePassed = sessionEnd ? now >= sessionEnd : (session.scheduled_date && session.scheduled_time && new Date(`${session.scheduled_date}T${session.scheduled_time}`) < now);
 
-    let status = session.status;
+    const rawStatus = String(session.status || '').toLowerCase();
+    let status = rawStatus;
     let label = session.status;
     if (session.status === 'completed') {
       status = 'completed';
@@ -665,6 +671,15 @@ export default function PsychologistSessions() {
     } else if (session.status === 'rescheduled') {
       status = 'rescheduled';
       label = 'Rescheduled';
+    } else if (rawStatus === 'reschedule_requested') {
+      status = 'rescheduled';
+      label = 'Reschedule Requested';
+    } else if (rawStatus === 'confirmed') {
+      status = 'booked';
+      label = 'Confirmed';
+    } else if (rawStatus === 'scheduled' || rawStatus === 'upcoming') {
+      status = 'booked';
+      label = 'Scheduled';
     } else if (isOngoing) {
       status = 'ongoing';
       label = 'Ongoing';
