@@ -400,22 +400,6 @@ export default function AdminWixDiscoverPage() {
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
       const allPlatformSessions = platformRes?.data?.sessions || [];
-      const visibleWixBookingIds = (res.data?.bookings || [])
-        .map((booking) => booking?.wix_booking_id)
-        .filter(Boolean);
-      const exactLinkedSessionsRes = visibleWixBookingIds.length
-        ? await sessionsApi.getAllSessions({
-            page: 1,
-            limit: Math.max(visibleWixBookingIds.length, 50),
-            wix_booking_id: visibleWixBookingIds,
-          }).catch(() => null)
-        : null;
-      const exactLinkedSessions = exactLinkedSessionsRes?.data?.sessions || [];
-      const exactWixSessionMap = new Map(
-        exactLinkedSessions
-          .filter((s) => s?.wix_booking_id)
-          .map((s) => [s.wix_booking_id, s])
-      );
       const wixSessionMap = new Map(
         allPlatformSessions
           .filter((s) => s?.wix_booking_id)
@@ -423,7 +407,7 @@ export default function AdminWixDiscoverPage() {
       );
 
       const bookings = (res.data?.bookings || []).map((booking) => {
-        const linkedSession = exactWixSessionMap.get(booking.wix_booking_id) || wixSessionMap.get(booking.wix_booking_id);
+        const linkedSession = wixSessionMap.get(booking.wix_booking_id);
         if (!linkedSession) return booking;
         return {
           ...booking,
@@ -519,7 +503,7 @@ export default function AdminWixDiscoverPage() {
     if (!initialSyncDone || syncing) return;
     if (page !== 1) { setPage(1); load(1); return; }
     load(1);
-  }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing]);
+  }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing, page]);
 
   useEffect(() => {
     if (loading || syncing || !initialSyncDone) return;
