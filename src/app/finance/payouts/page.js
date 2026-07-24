@@ -88,8 +88,9 @@ const sourceStyleFor = (source) => {
 export default function FinancePayouts() {
   const { user, isAuthenticated, hasRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState(null);
   const [doctorPayouts, setDoctorPayouts] = useState([]);
+  const [pendingPayoutRows, setPendingPayoutRows] = useState([]);
+  const [completedPayoutRows, setCompletedPayoutRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPayout, setSelectedPayout] = useState(null);
@@ -118,10 +119,6 @@ export default function FinancePayouts() {
         router.push('/');
         return;
       }
-      
-      loadDashboardData();
-      loadDoctorPayouts();
-      loadTabCounts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, hasRole, router]);
@@ -129,158 +126,59 @@ export default function FinancePayouts() {
   // Reload data when date range changes
   useEffect(() => {
     if (!authLoading && (hasRole('finance') || hasRole('admin') || hasRole('superadmin')) && dateRange) {
-      loadDashboardData();
-      loadDoctorPayouts();
-      loadTabCounts();
+      loadPayoutPageData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange, authLoading]);
 
-  const loadDashboardData = async () => {
+  useEffect(() => {
+    setDoctorPayouts(activeTab === 'pending' ? pendingPayoutRows : completedPayoutRows);
+  }, [activeTab, pendingPayoutRows, completedPayoutRows]);
+
+  const getDateParams = () => {
+    let dateFrom = null;
+    let dateTo = null;
+    if (hasDateRangeBounds(dateRange)) {
+      dateFrom = formatIstCalendarYmd(dateRange.from) || null;
+      dateTo = formatIstCalendarYmd(dateRange.to) || null;
+    }
+    return { dateFrom, dateTo };
+  };
+
+  const loadPayoutPageData = async (displayTab = activeTab) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const getCurrentMonthUtcYmdBounds = () => {
-        const { from, to } = istCalendarMonthBounds(new Date());
-        return {
-          from: formatIstCalendarYmd(from),
-          to: formatIstCalendarYmd(to),
-        };
-      };
-
-      const allTime = !!(dateRange && dateRange.all);
-      let dateFrom;
-      let dateTo;
-
-      if (allTime) {
-        dateFrom = undefined;
-        dateTo = undefined;
-      } else if (hasDateRangeBounds(dateRange)) {
-        dateFrom = formatIstCalendarYmd(dateRange.from);
-        dateTo = formatIstCalendarYmd(dateRange.to);
-      } else {
-        const cur = getCurrentMonthUtcYmdBounds();
-        dateFrom = cur.from;
-        dateTo = cur.to;
-      }
-
-      if (!allTime) {
-        if (!dateFrom || !dateTo || typeof dateFrom !== 'string' || typeof dateTo !== 'string') {
-          console.error('CRITICAL: Dates validation failed!', { dateFrom, dateTo, dateRange });
-          const cur = getCurrentMonthUtcYmdBounds();
-          dateFrom = cur.from;
-          dateTo = cur.to;
-        }
-      }
-
-      const response = await financeApi.getDashboard(
-        allTime ? { allTime: true } : { dateFrom, dateTo }
-      );
-      
-      if (response.success) {
-        setDashboardData(response.data);
-      } else {
-        setError(response.message || 'Failed to load dashboard data');
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      setError('Failed to load dashboard data. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadDoctorPayouts = async (tabOverride = null) => {
-    try {
-      const tabToLoad = tabOverride || activeTab;
-      // Format dates for API
-      let dateFrom = null;
-      let dateTo = null;
-      
-      if (hasDateRangeBounds(dateRange)) {
-        dateFrom = formatIstCalendarYmd(dateRange.from) || null;
-        dateTo = formatIstCalendarYmd(dateRange.to) || null;
-      }
-
+      const { dateFrom, dateTo } = getDateParams();
       const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
-      const response = tabToLoad === 'pending'
-        ? await financeApi.getPendingPayouts({
-            month: pendingMy.month,
-            year: pendingMy.year,
-          })
-        : await financeApi.getDoctorPayouts({
-            dateFrom,
-            dateTo,
-            status: 'completed'
-          });
-      
-      if (response.success) {
-        setDoctorPayouts(response.data.payouts || []);
-      }
-    } catch (err) {
-      console.error('Failed to load doctor payouts:', err);
-    }
-  };
 
-  const loadTabCounts = async () => {
-    try {
-      let dateFrom = null;
-      let dateTo = null;
-      if (hasDateRangeBounds(dateRange)) {
-        dateFrom = formatIstCalendarYmd(dateRange.from) || null;
-        dateTo = formatIstCalendarYmd(dateRange.to) || null;
-      }
-
-      const tabPendingMy = pendingPayoutIstMonthYear(dateRange?.from);
       const [pendingRes, completedRes] = await Promise.all([
         financeApi.getPendingPayouts({
-          month: tabPendingMy.month,
-          year: tabPendingMy.year,
+          month: pendingMy.month,
+          year: pendingMy.year,
         }),
-        financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' })
+        financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' }),
       ]);
 
       const pendingPayouts = pendingRes?.data?.payouts || [];
       const completedPayouts = completedRes?.data?.payouts || [];
 
+      setPendingPayoutRows(pendingPayouts);
+      setCompletedPayoutRows(completedPayouts);
+      setDoctorPayouts(displayTab === 'pending' ? pendingPayouts : completedPayouts);
+
       setPendingTabCount(pendingPayouts.length);
       setCompletedTabCount(completedPayouts.length);
-
-      const pendingAmount = pendingPayouts.reduce((sum, p) => {
-        const amount = parseFloat(
-          p?.pending_payout_amount ??
-          p?.total_doctor_wallet ??
-          p?.net_payout ??
-          0
-        ) || 0;
-        return sum + amount;
-      }, 0);
-
-      const completedAmount = completedPayouts.reduce((sum, p) => {
-        const amount = parseFloat(
-          p?.total_doctor_wallet ??
-          p?.net_payout ??
-          p?.pending_payout_amount ??
-          0
-        ) || 0;
-        return sum + amount;
-      }, 0);
-
-      setPendingTabAmount(pendingAmount);
-      setCompletedTabAmount(completedAmount);
-    } catch (countErr) {
-      console.error('Failed to load payout tab counts:', countErr);
+      setPendingTabAmount(pendingPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
+      setCompletedTabAmount(completedPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
+    } catch (err) {
+      console.error('Failed to load payout page data:', err);
+      setError('Failed to load payout data. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!authLoading && (hasRole('finance') || hasRole('admin') || hasRole('superadmin'))) {
-      loadDoctorPayouts();
-      loadTabCounts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
 
   const handleViewDetails = async (payout) => {
     setSelectedPayout(payout);
@@ -341,9 +239,7 @@ export default function FinancePayouts() {
       if (response.success) {
         // Switch first, then load completed payouts explicitly to avoid stale-tab fetches.
         setActiveTab('completed');
-        await loadDashboardData();
-        await loadDoctorPayouts('completed');
-        await loadTabCounts();
+        await loadPayoutPageData('completed');
       } else {
         alert(response.message || 'Failed to mark payout as paid');
       }
@@ -387,11 +283,10 @@ export default function FinancePayouts() {
     );
   }
 
-  const stats = dashboardData?.summary || {};
   const pendingTotal = pendingTabAmount;
   const completedTotal = completedTabAmount;
-  const pendingSessions = stats.pending_sessions || 0;
-  const completedSessions = stats.completed_sessions || 0;
+  const pendingSessions = pendingPayoutRows.reduce((sum, payout) => sum + (Number(payout.total_sessions) || 0), 0);
+  const completedSessions = completedPayoutRows.reduce((sum, payout) => sum + (Number(payout.total_sessions) || 0), 0);
   const totalSessions = activeTab === 'pending' 
     ? pendingSessions
     : completedSessions;
