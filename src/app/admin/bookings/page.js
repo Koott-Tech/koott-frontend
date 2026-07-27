@@ -234,7 +234,8 @@ export default function BookingsPage() {
         page: currentPage,
         limit: itemsPerPage,
         sort: 'created_at',
-        order: 'desc'
+        order: 'desc',
+        source: 'non_wix'
       };
 
       // Add filters (Upcoming tab = booked + rescheduled — repeated ?status= for reliable parsing).

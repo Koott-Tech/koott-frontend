@@ -254,9 +254,7 @@ export default function AdminWixDiscoverPage() {
   const [syncing, setSyncing] = useState(false);
   const [rows, setRows] = useState([]);
   const [platformRows, setPlatformRows] = useState([]);
-  // Stable package A/B/C labels computed by the backend over ALL of a client's packages
-  // (filter/page independent). Shape: { "<clientId>|<psychId>": { "<groupId>": "A" } }.
-  const [packageLabelMap, setPackageLabelMap] = useState({});
+  const packageLabelMap = {};
   const [searchTerm, setSearchTerm] = useState('');
   // Debounced copy used for the actual fetch — typing updates searchTerm instantly (input
   // stays responsive) but we only query after a short pause, so rapid keystrokes don't fire
@@ -362,7 +360,7 @@ export default function AdminWixDiscoverPage() {
       } : {};
 
       // Fetch Wix bookings (wix_bookings table)
-      const [res, platformRes, labelsRes] = await Promise.all([
+      const [res, platformRes] = await Promise.all([
         adminApi.getWixBookings({
           page: targetPage, limit: 10,
           ...dateParams,
@@ -371,12 +369,12 @@ export default function AdminWixDiscoverPage() {
           session_type: wixFilterType !== 'all' ? wixFilterType : undefined,
         }),
         // Fetch platform (manual) sessions from sessions table — non-wix source only
-        sessionsApi.getAllSessions({
+        adminApi.getWixPlatformSessions({
           page: 1,
           // Searching used to pull 200 rows and filter them in the browser. Push the term to
           // the server (getAllSessions supports `search`) so a search returns a small result
           // set instead of a 200-row payload — the main source of the slow search.
-          limit: debouncedSearchTerm.trim() ? 50 : 200,
+          limit: 20,
           search: debouncedSearchTerm.trim() || undefined,
           sort: 'created_at',
           order: 'desc',
@@ -386,16 +384,9 @@ export default function AdminWixDiscoverPage() {
             : statusFilter || undefined,
           ...dateParams,
         }).catch(() => null),
-        // Stable A/B/C package labels. This scans every package session platform-wide, so it
-        // must NOT run on each keystroke — the map is global and unaffected by the search.
-        // Fetch it only when not searching; the existing map is reused during a search.
-        debouncedSearchTerm.trim()
-          ? Promise.resolve(null)
-          : adminApi.getPackageLabels().catch(() => null),
       ]);
 
       if (isStale()) return; // a newer search/filter superseded this request
-      if (labelsRes?.data?.labels) setPackageLabelMap(labelsRes.data.labels);
 
       if (!res?.success) throw new Error(res?.error || 'Failed to load Wix bookings');
 
@@ -501,9 +492,17 @@ export default function AdminWixDiscoverPage() {
 
   useEffect(() => {
     if (!initialSyncDone || syncing) return;
-    if (page !== 1) { setPage(1); load(1); return; }
+    // A filter changed → reset to page 1 and reload.
+    // Deliberately keyed on the raw filters ONLY:
+    //   • NOT on `page` — otherwise clicking page 2 re-fires this effect and snaps
+    //     you straight back to page 1 (pagination could never advance).
+    //   • NOT on `load` — its identity churns every render (showError/showSuccess
+    //     from the notification context aren't memoized), which made this effect
+    //     re-run in a loop and kept the page spinning.
+    setPage(1);
     load(1);
-  }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, load, initialSyncDone, syncing, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange, debouncedSearchTerm, wixFilterType, statusFilter, initialSyncDone, syncing]);
 
   useEffect(() => {
     if (loading || syncing || !initialSyncDone) return;
@@ -534,7 +533,12 @@ export default function AdminWixDiscoverPage() {
     }, 6000);
 
     return () => clearTimeout(timer);
-  }, [rows, platformRows, loading, syncing, initialSyncDone, load, page, debouncedSearchTerm]);
+    // `load` intentionally omitted: its identity churns every render (unmemoized
+    // notification context), which would clear/reschedule this 6s timer on every
+    // render and prevent the auto-refresh from ever firing. We only want to
+    // re-evaluate when the data/page/search actually change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, platformRows, loading, syncing, initialSyncDone, page, debouncedSearchTerm]);
 
   const handlePageChange = async (nextPage) => {
     const safePage = Math.max(1, Math.min(pagination.totalPages, nextPage));
@@ -1106,8 +1110,8 @@ export default function AdminWixDiscoverPage() {
           }
         }
         const packageLabelFor = (r) => {
-          // Prefer the backend-computed map: stable, computed over the client's FULL package
-          // history, so the label doesn't change with the current filter/page.
+          // Prefer a backend-computed map when one is available. The main table no longer
+          // blocks on that global scan, so the page-scoped fallback below is normally used.
           const pairLabels = packageLabelMap[`${r.client_id}|${r.psychologist_id}`];
           if (pairLabels && r.package_group_id && pairLabels[r.package_group_id]) {
             return pairLabels[r.package_group_id];

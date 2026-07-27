@@ -1195,6 +1195,23 @@ export const adminApi = {
     return apiRequest(`/admin/wix/bookings${q ? `?${q}` : ''}`);
   },
 
+  /** Platform/manual sessions shown alongside Wix Discover rows. */
+  async getWixPlatformSessions(params = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (v !== undefined && v !== null && v !== '') queryParams.append(key, String(v));
+        });
+        return;
+      }
+      queryParams.append(key, String(value));
+    });
+    const q = queryParams.toString();
+    return apiRequest(`/admin/wix/platform-sessions${q ? `?${q}` : ''}`);
+  },
+
   /** Detect orphan / suspicious Wix bookings (unlinked ₹0, duplicates, dangling children). */
   async getWixOrphans() {
     return apiRequest('/admin/wix/orphans');
