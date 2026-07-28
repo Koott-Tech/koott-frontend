@@ -204,8 +204,13 @@ export default function DoctorFinanceProfilePage() {
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard icon={Calendar} label="Sessions" value={s.total_sessions}
-              sub={`${s.completed_sessions} completed · ${s.upcoming_sessions} upcoming`} />
+            <StatCard icon={Calendar} label="Total sessions" value={s.total_sessions} sub="All profile rows" />
+            <StatCard icon={CheckCircle2} label="Completed" value={s.completed_sessions} tone="doctor" sub="Finished sessions" />
+            <StatCard icon={Clock} label="Upcoming" value={s.upcoming_sessions} tone="pending" sub="Not completed yet" />
+            <StatCard icon={XCircle} label="Void / cancelled" value={s.cancelled_sessions || 0} sub="No payout counted" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <StatCard icon={TrendingUp} label="Gross revenue" value={inr(s.gross_revenue)} sub="Client payments" />
             <StatCard icon={Wallet} label="Doctor earnings" value={inr(s.doctor_earnings)} tone="doctor" sub="Therapist share" />
             <StatCard icon={User} label="Company earnings" value={inr(s.company_earnings)} tone="company" sub="After therapist share" />

@@ -291,9 +291,15 @@ export default function FinancePayouts() {
     ? pendingSessions
     : completedSessions;
   const selectedProfileSessions = selectedPayoutProfile?.sessions || null;
+  const selectedProfileSummary = selectedPayoutProfile?.summary || null;
   const selectedDetailRows = selectedProfileSessions || selectedPayout?.session_details || [];
   const selectedDetailCount = selectedProfileSessions?.length ?? selectedPayout?.session_details?.length ?? 0;
   const isUsingProfileRows = Array.isArray(selectedProfileSessions);
+  const selectedSummaryTotalSessions = selectedProfileSummary?.total_sessions ?? selectedPayout?.profile_total_sessions ?? selectedPayout?.total_sessions ?? 0;
+  const selectedSummaryCompletedSessions = selectedProfileSummary?.completed_sessions ?? selectedPayout?.completed_sessions ?? selectedPayout?.total_sessions ?? 0;
+  const selectedSummaryCompanyEarnings = selectedProfileSummary?.company_earnings ?? selectedPayout?.profile_company_earnings ?? selectedPayout?.total_company_commission ?? 0;
+  const selectedSummaryPendingPayout = selectedProfileSummary?.payout_pending ?? getPayoutDisplayAmount(selectedPayout, activeTab);
+  const selectedSummaryNotDue = selectedProfileSummary?.payout_not_due ?? selectedPayout?.profile_payout_not_due ?? 0;
   const selectedDetailTotals = selectedDetailRows.reduce((acc, session) => {
     acc.amount += Number(session.session_amount || 0);
     acc.doctor += Number((isUsingProfileRows ? session.doctor_amount : session.doctor_wallet) || 0);
@@ -405,7 +411,7 @@ export default function FinancePayouts() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           {activeTab === 'pending' ? 'Completed Sessions' : 'Paid Sessions'}
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Commission</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Earnings</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           {activeTab === 'pending' ? 'Pending Payout' : 'Doctor Wallet'}
                         </th>
@@ -577,25 +583,24 @@ export default function FinancePayouts() {
                 {/* Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      {activeTab === 'pending' ? 'Completed Sessions' : 'Paid Sessions'}
-                    </label>
-                    <p className="mt-1 text-lg font-semibold text-gray-900">{selectedPayout.total_sessions || 0}</p>
+                    <label className="text-sm font-medium text-gray-700">Total Sessions</label>
+                    <p className="mt-1 text-lg font-semibold text-gray-900">{selectedSummaryTotalSessions}</p>
                     {isUsingProfileRows && (
-                      <p className="mt-0.5 text-xs text-gray-500">Full profile rows: {selectedDetailCount}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">Completed sessions: {selectedSummaryCompletedSessions}</p>
                     )}
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Company Commission</label>
+                    <label className="text-sm font-medium text-gray-700">Company Earnings</label>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
-                      ₹{(selectedPayout.total_company_commission || 0).toLocaleString('en-IN')}
+                      ₹{Number(selectedSummaryCompanyEarnings || 0).toLocaleString('en-IN')}
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">{activeTab === 'pending' ? 'Pending Payout' : 'Doctor Wallet'}</label>
+                    <label className="text-sm font-medium text-gray-700">Pending Payout</label>
                     <p className="mt-1 text-lg font-semibold text-green-600">
-                      ₹{getPayoutDisplayAmount(selectedPayout, activeTab).toLocaleString('en-IN')}
+                      ₹{Number(selectedSummaryPendingPayout || 0).toLocaleString('en-IN')}
                     </p>
+                    <p className="mt-0.5 text-xs text-gray-500">Not yet due: ₹{Number(selectedSummaryNotDue || 0).toLocaleString('en-IN')}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Status</label>

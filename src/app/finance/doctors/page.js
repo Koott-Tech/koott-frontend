@@ -465,11 +465,11 @@ export default function FinanceDoctors() {
                       <div className="flex flex-wrap items-stretch gap-y-3 text-sm min-w-0">
                         {[
                           { label: 'Total Sessions', value: doctor.total_sessions_finance ?? doctor.total_sessions ?? 0, valueClass: 'text-gray-900' },
-                          { label: 'Pending', value: doctor.pending_sessions || 0, valueClass: 'text-amber-700' },
+                          { label: 'Upcoming', value: doctor.upcoming_sessions ?? doctor.pending_sessions ?? 0, valueClass: 'text-amber-700' },
                           { label: 'Completed', value: doctor.completed_sessions || 0, valueClass: 'text-emerald-700' },
-                          { label: 'Company Commission', value: formatAmount(doctor.total_commission_to_company), valueClass: 'text-sky-700' },
+                          { label: 'Company Earnings', value: formatAmount(doctor.total_commission_to_company), valueClass: 'text-sky-700' },
                           { label: 'Pending Payout', value: formatAmount(doctor.pending_payout), valueClass: 'text-orange-700' },
-                          { label: 'Completed Payout', value: formatAmount(doctor.completed_payout), valueClass: 'text-green-700' },
+                          { label: 'Not Yet Due', value: formatAmount(doctor.not_due_payout ?? doctor.payout_not_due), valueClass: 'text-green-700' },
                         ].map((item, index, arr) => (
                           <div key={item.label} className="flex items-stretch">
                             <div className="min-w-[110px] pr-4">
@@ -916,8 +916,8 @@ export default function FinanceDoctors() {
                           <span className="text-sm font-semibold text-slate-900">{selectedDoctor.total_sessions_finance ?? selectedDoctor.total_sessions ?? 0}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
-                          <span className="text-xs text-amber-600">Pending:</span>
-                          <span className="text-sm font-semibold text-amber-800">{selectedDoctor.pending_sessions || 0}</span>
+                          <span className="text-xs text-amber-600">Upcoming:</span>
+                          <span className="text-sm font-semibold text-amber-800">{selectedDoctor.upcoming_sessions ?? selectedDoctor.pending_sessions ?? 0}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
                           <span className="text-xs text-emerald-600">Completed:</span>
@@ -939,11 +939,11 @@ export default function FinanceDoctors() {
                           <span className="text-sm font-medium text-orange-700">{formatAmount(selectedDoctor.pending_payout)}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
-                          <span className="text-xs text-green-600">Completed Payout:</span>
-                          <span className="text-sm font-medium text-green-700">{formatAmount(selectedDoctor.completed_payout)}</span>
+                          <span className="text-xs text-green-600">Not Yet Due:</span>
+                          <span className="text-sm font-medium text-green-700">{formatAmount(selectedDoctor.not_due_payout ?? selectedDoctor.payout_not_due)}</span>
                         </div>
                         <div className="flex justify-between bg-white border border-slate-200 rounded-lg px-3 py-2">
-                          <span className="text-xs text-blue-600">Company Commission:</span>
+                          <span className="text-xs text-blue-600">Company Earnings:</span>
                           <span className="text-sm font-medium text-blue-700">{formatAmount(selectedDoctor.total_commission_to_company)}</span>
                         </div>
                       </div>
