@@ -136,8 +136,7 @@ export default function FinanceSessionsPage() {
           const src = String(s.source || '').toLowerCase();
           const wp = s.wix_payload;
           const isUndefinedWix = src === 'wix' && !s.payment_id && (!wp || typeof wp !== 'object' || !wp.sessionId);
-          const isPackageChild = src === 'wix' && Number(s.package_session_number || 1) > 1;
-          return !(isUndefinedWix || isPackageChild);
+          return !isUndefinedWix;
         });
         setSessions(sessionsData);
       } else {

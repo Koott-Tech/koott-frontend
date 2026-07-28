@@ -1272,6 +1272,14 @@ export const adminApi = {
     });
   },
 
+  /** Put a platform session on hold WITHOUT refund — frees the slot, keeps it reschedulable. */
+  async cancelOnlySession(sessionId) {
+    return apiRequest(`/admin/sessions/${sessionId}/cancel-only`, {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    });
+  },
+
   /** Finance: mark manual/admin session payment as verified. */
   async verifyPayment(sessionId) {
     return apiRequest(`/admin/sessions/${sessionId}/verify-payment`, {
@@ -2095,6 +2103,13 @@ export const financeApi = {
 
   async getPsychologists() {
     return apiRequest('/finance/psychologists');
+  },
+
+  async sendReceiptEmail(payload) {
+    return apiRequest('/finance/receipts/send-email', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
   async getClients() {

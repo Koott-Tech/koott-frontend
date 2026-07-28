@@ -712,7 +712,9 @@ export default function AdminWixDiscoverPage() {
     if (!cancelOnlyRow) return;
     setActionLoading(true);
     try {
-      const res = await adminApi.cancelOnlyWixBooking(cancelOnlyRow.id);
+      const res = cancelOnlyRow._isPlatform
+        ? await adminApi.cancelOnlySession(cancelOnlyRow.id)
+        : await adminApi.cancelOnlyWixBooking(cancelOnlyRow.id);
       if (!res?.success) throw new Error(res?.error || 'Failed');
       showSuccess('Cancelled without refund and put on hold. The slot is now free — reschedule it when the client confirms a new time.', 'On Hold');
       setCancelOnlyRow(null);
@@ -1283,6 +1285,12 @@ export default function AdminWixDiscoverPage() {
                                   <button onClick={() => { handleNoShow(row); }}
                                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
                                     <AlertCircle className="h-3.5 w-3.5" /> Mark No Show
+                                  </button>
+                                )}
+                                {!['cancelled', 'refunded', 'completed', 'on_hold'].includes(effectiveCompletionStatus(row)) && (
+                                  <button onClick={() => { setOpenMenuId(null); setCancelOnlyRow(row); }}
+                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-amber-700 hover:bg-amber-50">
+                                    <PauseCircle className="h-3.5 w-3.5" /> On Hold
                                   </button>
                                 )}
                                 {!['cancelled', 'refunded', 'completed'].includes(row.status) && (
