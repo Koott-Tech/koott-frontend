@@ -4,13 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   FileText,
+  Briefcase,
   Download,
   Plus,
   Trash2,
   ChevronLeft,
   User,
-  Stethoscope,
-  Briefcase,
   Calendar,
   CheckCircle,
   Loader2,
@@ -25,24 +24,11 @@ import { financeApi } from '@/lib/backendApi';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-function fmt(n) {
-  const num = parseFloat(n) || 0;
-  return num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function fmtReceipt(n, { decimals = true } = {}) {
   const num = parseFloat(n) || 0;
   return num.toLocaleString('en-IN', {
     minimumFractionDigits: decimals ? 2 : 0,
     maximumFractionDigits: decimals ? 2 : 0,
-  });
-}
-
-function todayStr() {
-  return new Date().toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
   });
 }
 
@@ -54,31 +40,35 @@ function payoutReceiptDateStr(date = new Date()) {
   });
 }
 
-function formatReceiptDateStamp(dateRaw) {
-  const d = dateRaw ? new Date(dateRaw) : new Date();
-  if (isNaN(d)) return new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  return d.toISOString().slice(0, 10).replace(/-/g, '');
-}
+function generateReceiptNo(template) {
+  const prefix = template === 'salaryCertificate' ? 'KSC' : 'KTP';
+  const storageKey = 'koott_receipt_short_number_state';
+  const fallback = () => `${prefix}${String(Math.floor(1000 + Math.random() * 9000)).padStart(4, '0')}`;
 
-function initialsFrom(value = '') {
-  const source = String(value || '').split('@')[0];
-  const parts = source.split(/[\s._-]+/).filter(Boolean);
-  const initials = parts.map(part => part[0]).join('').slice(0, 4).toUpperCase();
-  return initials || 'DOC';
-}
+  if (typeof localStorage === 'undefined') return fallback();
 
-function generateReceiptNo(template, data = {}) {
-  const prefix = template === 'payoutReceipt' ? 'KPR' : 'KTS';
-  const stamp = formatReceiptDateStamp(data.dateRaw);
-  const initials = initialsFrom(data.name || data.email || data.recipientEmail);
-  const random = new Uint8Array(3);
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    crypto.getRandomValues(random);
-  } else {
-    random.forEach((_, idx) => { random[idx] = Math.floor(Math.random() * 256); });
+  try {
+    const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const counters = state.counters && typeof state.counters === 'object' ? state.counters : {};
+    const used = Array.isArray(state.used) ? state.used : [];
+    let nextNumber = Math.max(parseInt(counters[prefix] || '122', 10) + 1, 1);
+    let receiptNo = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+
+    while (used.includes(receiptNo)) {
+      nextNumber += 1;
+      receiptNo = `${prefix}${String(nextNumber).padStart(4, '0')}`;
+    }
+
+    const nextState = {
+      counters: { ...counters, [prefix]: nextNumber },
+      used: [receiptNo, ...used].slice(0, 500),
+    };
+    localStorage.setItem(storageKey, JSON.stringify(nextState));
+    return receiptNo;
+  } catch (e) {
+    console.error('Error generating receipt number', e);
+    return fallback();
   }
-  const token = Array.from(random).map(n => n.toString(16).padStart(2, '0')).join('').toUpperCase();
-  return `${prefix}-${stamp}-${initials}-${token}`;
 }
 
 function safeFilePart(value = 'receipt') {
@@ -210,20 +200,6 @@ function buildReceiptRowsFromProfile(profile, template) {
 
 
 
-const DEFAULT_SESSION_ROWS = [
-  { type: 'Initial session', sessions: '', ratePerSession: '', amount: '' },
-  { type: 'Follow Up Session', sessions: '', ratePerSession: '', amount: '' },
-  { type: 'Couple Session', sessions: '', ratePerSession: '', amount: '' },
-  { type: 'Couple Follow Up', sessions: '', ratePerSession: '', amount: '' },
-];
-
-const DEFAULT_SESSION_TYPES = [
-  'Individual First Session',
-  'Individual Follow Up',
-  'Couple First Session',
-  'Couple Follow Up'
-];
-
 const DEFAULT_PAYOUT_RECEIPT_ROWS = [
   { type: 'Individual First Session', number: '1', unitPrice: '1250', amount: '1250' },
   { type: 'Individual Follow Up', number: '2', unitPrice: '900', amount: '1800' },
@@ -253,107 +229,50 @@ const createDefaultPayoutReceiptData = () => ({
   rows: DEFAULT_PAYOUT_RECEIPT_ROWS.map(r => ({ ...r })),
 });
 
+const SALARY_EARNING_LABELS = [
+  'Basic Pay',
+  'House Rent Allowance',
+  'Special Allowance',
+  'Travel Allowance',
+  'Performance Incentive',
+  'Overtime Pay',
+  'Variable Pay',
+  'Statutory Bonus',
+];
+
+const SALARY_DEDUCTION_LABELS = [
+  'PF Contribution',
+  'Voluntary Provident Fund',
+  'Employees State Insurance',
+  'Tax Deducted at Source',
+  'Salary Advance Recovery',
+  'Unpaid Leave Deduction',
+  'Others',
+];
+
+const createDefaultSalaryCertificateData = () => ({
+  payslipId: '',
+  salaryDateRaw: new Date().toISOString().split('T')[0],
+  salaryDate: payoutReceiptDateStr(),
+  salaryPeriod: new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
+  employeeName: 'Demo Developer',
+  employeeLocation: 'Calicut, India',
+  employeeId: 'OPS01',
+  employeeContact: 'developer@koott.in',
+  designation: 'Developer',
+  workingDays: '26',
+  paymentMode: 'Bank Transfer',
+  recipientEmail: 'developer@koott.in',
+  earnings: SALARY_EARNING_LABELS.map((label, idx) => ({
+    label,
+    amount: idx === 0 ? '30000' : '0',
+  })),
+  deductions: SALARY_DEDUCTION_LABELS.map(label => ({ label, amount: '0' })),
+});
+
 // ─── PDF Generation using the actual template ────────────────────────────────
 // Page height: 842.25 pts. pdf-lib uses y from BOTTOM.
 // Coordinates below are y_bottom = page_height - yMax_from_top
-
-async function generateTherapistPDF(data) {
-  const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
-
-  // Fetch the template PDF from public folder
-  const templateUrl = '/therapit salary slip.pdf';
-  const templateBytes = await fetch(templateUrl).then(r => r.arrayBuffer());
-
-  const pdfDoc = await PDFDocument.load(templateBytes);
-  const page = pdfDoc.getPages()[0];
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-  const PAGE_H = 842.25;
-  const BLACK = rgb(0, 0, 0);
-  const WHITE = rgb(1, 1, 1);
-  const textSize = 9;
-  const valueSize = 9;
-
-  const Y_OFFSET = 9.6;
-
-  // Helper: draw text at absolute (x, y_from_top)
-  const put = (text, xLeft, yFromTop, opts = {}) => {
-    const { size = textSize, color = BLACK, f = font, align = 'left' } = opts;
-    const str = String(text || '');
-    if (!str) return;
-    let x = xLeft;
-    if (align === 'right') {
-      const w = f.widthOfTextAtSize(str, size);
-      x = xLeft - w;
-    }
-    
-    // Apply baseline offset to align perfectly with the bounding boxes
-    const adjustedY = yFromTop - Y_OFFSET;
-    
-    page.drawText(str, {
-      x,
-      y: PAGE_H - adjustedY,
-      size,
-      font: f,
-      color,
-    });
-  };
-
-  const { receiptNo, date, name, designation, sessions } = data;
-
-  const gross = sessions.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
-  const tds = gross * 0.1;
-  const totalEarning = gross;
-  const totalDeductions = tds;
-  const netPayout = gross - tds;
-
-  // ── Receipt No (after "No:" label which ends at x≈118, yMax≈184)
-  put(receiptNo, 125, 184, { size: valueSize });
-
-  // ── Date (after "Date:" label which ends at x≈90, yMax≈197)
-  put(date || todayStr(), 95, 197, { size: valueSize });
-
-  // ── Name (after "Name:" label at yMax≈222)
-  put(name, 100, 222, { size: valueSize });
-
-  // ── Designation (after "Designation:" label at yMax≈235)
-  put(designation, 130, 235, { size: valueSize });
-
-  // ── Session rows
-  // Row yMax positions: row1≈284, row2≈299, row3≈313
-  const sessionYTops = [284, 299, 313];
-
-  sessions.forEach((row, idx) => {
-    const y = sessionYTops[idx];
-    if (y === undefined) return;
-    // No. of sessions value (right-aligned in No.of Session column ~x:135)
-    put(row.sessions || '', 135, y, { size: valueSize, align: 'right' });
-    // Amount value (right-aligned, in amount column right edge ~x:448)
-    put(row.amount ? fmt(row.amount) : '', 448, y, { size: valueSize, align: 'right' });
-  });
-
-  // ── Total Gross Amount (right-aligned at x≈448, yMax≈396)
-  put(fmt(gross), 448, 396, { size: valueSize, f: boldFont, align: 'right', color: WHITE });
-
-  // ── TDS deduction value (right-aligned, yMax≈421)
-  put(fmt(tds), 448, 421, { size: valueSize, align: 'right' });
-
-  // ── Total Earning value (right-aligned, yMax≈445)
-  put(fmt(totalEarning), 448, 445, { size: valueSize, align: 'right' });
-
-  // ── Total Deductions value (right-aligned, yMax≈464)
-  put(fmt(totalDeductions), 448, 464, { size: valueSize, align: 'right' });
-
-  // ── Net Payout value (right-aligned, yMax≈480)
-  put(fmt(netPayout), 448, 480, { size: valueSize, f: boldFont, align: 'right', color: WHITE });
-
-  // ── Employee name on signature line (yMax≈537, above Employee Signature)
-  put(name || '', 80, 537, { size: valueSize });
-
-  const pdfBytes = await pdfDoc.save();
-  return pdfBytes;
-}
 
 async function generatePayoutReceiptPDF(data) {
   const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
@@ -438,6 +357,73 @@ async function generatePayoutReceiptPDF(data) {
   return pdfBytes;
 }
 
+async function generateSalaryCertificatePDF(data) {
+  const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
+
+  const templateBytes = await fetch('/Salary Certificate.pdf').then(r => r.arrayBuffer());
+  const pdfDoc = await PDFDocument.load(templateBytes);
+  const page = pdfDoc.getPages()[0];
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+  const PAGE_H = 842.25;
+  const DARK = rgb(0.01, 0.18, 0.12);
+  const HEADER_TEXT = rgb(0.89, 1, 0.89);
+
+  const put = (text, x, yFromTop, opts = {}) => {
+    const { size = 10.5, color = DARK, f = font, align = 'left', maxWidth = null } = opts;
+    let str = String(text ?? '').trim();
+    if (!str) return;
+    if (maxWidth) {
+      while (str.length > 3 && f.widthOfTextAtSize(str, size) > maxWidth) {
+        str = str.slice(0, -1);
+      }
+      if (str !== String(text ?? '').trim()) str = `${str.slice(0, -3)}...`;
+    }
+    let drawX = x;
+    if (align === 'right') drawX = x - f.widthOfTextAtSize(str, size);
+    if (align === 'center') drawX = x - (f.widthOfTextAtSize(str, size) / 2);
+    page.drawText(str, { x: drawX, y: PAGE_H - yFromTop, size, font: f, color });
+  };
+
+  const fmtSalary = (value) => fmtReceipt(value, { decimals: false });
+  const earnings = data.earnings || [];
+  const deductions = data.deductions || [];
+  const totalEarnings = earnings.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const totalDeductions = deductions.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const netPayable = totalEarnings - totalDeductions;
+
+  put(data.payslipId, 428.7, 250, { size: 9.4, color: HEADER_TEXT, maxWidth: 96 });
+  put(data.salaryDate || payoutReceiptDateStr(), 428.7, 271, { size: 9.4, color: HEADER_TEXT, maxWidth: 88 });
+
+  put(data.employeeName, 130, 323, { size: 9.2, maxWidth: 157 });
+  put(data.employeeLocation, 142, 341, { size: 9.2, maxWidth: 145 });
+  put(data.employeeId, 112, 359, { size: 9.2, maxWidth: 100 });
+  put(data.employeeContact, 138, 377, { size: 9.2, maxWidth: 149 });
+
+  put(data.salaryPeriod, 369, 323, { size: 9.2, maxWidth: 137 });
+  put(data.designation, 391, 341, { size: 9.2, maxWidth: 115 });
+  put(data.workingDays, 373, 359, { size: 9.2, maxWidth: 45 });
+  put(data.paymentMode, 391, 377, { size: 9.2, maxWidth: 115 });
+
+  const rowYs = [451, 468, 485, 502, 519, 536, 553, 570];
+  earnings.slice(0, 8).forEach((row, idx) => {
+    put(row.amount === '' ? '' : fmtSalary(row.amount), 260, rowYs[idx], { size: 9.5, align: 'right' });
+  });
+  deductions.slice(0, 7).forEach((row, idx) => {
+    put(row.amount === '' ? '' : fmtSalary(row.amount), 491, rowYs[idx], { size: 9.5, align: 'right' });
+  });
+
+  put(fmtSalary(totalEarnings), 260, 603, { size: 10, f: boldFont, align: 'right' });
+  put(fmtSalary(totalDeductions), 491, 603, { size: 10, f: boldFont, align: 'right' });
+  put(fmtSalary(totalEarnings), 491, 637, { size: 10, align: 'right' });
+  put(fmtSalary(totalDeductions), 491, 654, { size: 10, align: 'right' });
+  put(fmtSalary(netPayable), 491, 672, { size: 10.5, f: boldFont, align: 'right' });
+
+  const pdfBytes = await pdfDoc.save();
+  return pdfBytes;
+}
+
 function RecipientPicker({
   doctors,
   savedRecipients,
@@ -481,7 +467,7 @@ function RecipientPicker({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
       <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
         <Mail className="h-4 w-4 text-[#025545]" /> Send Receipt To
       </div>
@@ -547,260 +533,6 @@ function RecipientPicker({
           <Plus className="h-4 w-4" /> Save
         </button>
       </div>
-    </div>
-  );
-}
-
-// ─── Therapist Form ──────────────────────────────────────────────────────────
-
-function TherapistForm({ data, onChange, doctors, savedRecipients, onSelectRecipient, onAddRecipient, onGenerateReceiptNo, loadingDoctors }) {
-  const [customTypes, setCustomTypes] = useState([]);
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('koott_receipt_session_types') || '[]');
-      if (Array.isArray(saved)) setCustomTypes(saved);
-    } catch (e) {
-      console.error('Error loading custom types', e);
-    }
-  }, []);
-
-  const handleSaveCustomType = (val) => {
-    const trimmed = val.trim();
-    if (!trimmed) return;
-    const allTypes = [...DEFAULT_SESSION_TYPES, ...customTypes];
-    if (!allTypes.includes(trimmed)) {
-      const updated = [...customTypes, trimmed];
-      setCustomTypes(updated);
-      localStorage.setItem('koott_receipt_session_types', JSON.stringify(updated));
-    }
-  };
-
-  const updateField = (key, value) => onChange({ ...data, [key]: value });
-
-  const updateSession = (idx, key, value) => {
-    const updated = data.sessions.map((row, i) => {
-      if (i !== idx) return row;
-      const next = { ...row, [key]: value };
-      if (key === 'sessions' || key === 'ratePerSession') {
-        const s = parseFloat(key === 'sessions' ? value : next.sessions) || 0;
-        const r = parseFloat(key === 'ratePerSession' ? value : next.ratePerSession) || 0;
-        next.amount = s > 0 && r > 0 ? String(s * r) : '';
-      }
-      return next;
-    });
-    onChange({ ...data, sessions: updated });
-  };
-
-  const addSession = () => {
-    onChange({
-      ...data,
-      sessions: [...data.sessions, { type: '', sessions: '', ratePerSession: '', amount: '' }],
-    });
-  };
-
-  const removeSession = (idx) => {
-    onChange({ ...data, sessions: data.sessions.filter((_, i) => i !== idx) });
-  };
-
-  const inputClass =
-    'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30 focus:border-[#025545] transition-all bg-white';
-  const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
-
-  const gross = data.sessions.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  const tds = gross * 0.1;
-  const net = gross - tds;
-
-  return (
-    <div className="space-y-5">
-      {/* Receipt Details */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-[#025545]" /> Receipt Details
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Receipt No</label>
-            <div className="flex gap-2">
-              <input
-                className={inputClass}
-                placeholder="Auto-generated"
-                value={data.receiptNo}
-                onChange={e => updateField('receiptNo', e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={onGenerateReceiptNo}
-                className="px-3 py-2 rounded-lg border border-[#025545]/20 text-[#025545] hover:bg-[#025545]/5 transition-colors"
-                title="Generate receipt number"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className={labelClass}>Date</label>
-            <input
-              type="date"
-              className={inputClass}
-              value={data.dateRaw}
-              onChange={e => {
-                const d = new Date(e.target.value);
-                onChange({
-                  ...data,
-                  dateRaw: e.target.value,
-                  date: isNaN(d) ? '' : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }),
-                });
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <RecipientPicker
-        doctors={doctors}
-        savedRecipients={savedRecipients}
-        selectedEmail={data.recipientEmail}
-        onSelectRecipient={onSelectRecipient}
-        onAddRecipient={onAddRecipient}
-        loadingDoctors={loadingDoctors}
-      />
-
-      {/* Therapist Details */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <User className="h-4 w-4 text-[#025545]" /> Therapist Details
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Name</label>
-            <input
-              className={inputClass}
-              placeholder="Full name"
-              value={data.name}
-              onChange={e => updateField('name', e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Designation</label>
-            <input
-              className={inputClass}
-              placeholder="e.g. Therapist"
-              value={data.designation}
-              onChange={e => updateField('designation', e.target.value)}
-            />
-          </div>
-          <div className="col-span-2">
-            <label className={labelClass}>Email for sending</label>
-            <input
-              className={inputClass}
-              type="email"
-              placeholder="doctor@example.com"
-              value={data.recipientEmail || ''}
-              onChange={e => updateField('recipientEmail', e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Sessions */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-        <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-[#025545]" /> Sessions
-        </div>
-        <div className="space-y-3">
-          {data.sessions.map((row, idx) => (
-            <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-5">
-                <label className={labelClass}>Session Details</label>
-                <input
-                  className={inputClass}
-                  placeholder="Select or type new..."
-                  list="sessionTypes"
-                  value={row.type}
-                  onChange={e => updateSession(idx, 'type', e.target.value)}
-                  onBlur={e => handleSaveCustomType(e.target.value)}
-                />
-              </div>
-              <div className="col-span-2">
-                <label className={labelClass}>Sessions</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={inputClass}
-                  placeholder="0"
-                  value={row.sessions}
-                  onChange={e => updateSession(idx, 'sessions', e.target.value)}
-                />
-              </div>
-              <div className="col-span-2">
-                <label className={labelClass}>Rate (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={inputClass}
-                  placeholder="0"
-                  value={row.ratePerSession}
-                  onChange={e => updateSession(idx, 'ratePerSession', e.target.value)}
-                />
-              </div>
-              <div className="col-span-2">
-                <label className={labelClass}>Amount (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={inputClass}
-                  placeholder="Auto"
-                  value={row.amount}
-                  onChange={e => updateSession(idx, 'amount', e.target.value)}
-                />
-              </div>
-              <div className="col-span-1 flex justify-center pb-1">
-                {data.sessions.length > 1 && (
-                  <button
-                    onClick={() => removeSession(idx)}
-                    className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          <datalist id="sessionTypes">
-            {[...DEFAULT_SESSION_TYPES, ...customTypes].map(t => (
-              <option key={t} value={t} />
-            ))}
-          </datalist>
-        </div>
-        <button
-          onClick={addSession}
-          className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#025545] hover:bg-[#025545]/5 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          <Plus className="h-3.5 w-3.5" /> Add Session Row
-        </button>
-      </div>
-
-      {/* Live Calculated Summary */}
-      {gross > 0 && (
-        <div className="bg-[#025545]/5 rounded-xl border border-[#025545]/20 p-5">
-          <div className="text-sm font-semibold text-[#025545] mb-3">Calculated Summary</div>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total Gross Amount</span>
-              <span className="font-semibold">₹{fmt(gross)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">TDS @ 10%</span>
-              <span className="font-semibold text-red-600">- ₹{fmt(tds)}</span>
-            </div>
-            <div className="flex justify-between border-t border-[#025545]/20 pt-2 mt-2">
-              <span className="font-semibold text-[#025545]">Net Payout</span>
-              <span className="font-bold text-[#025545]">₹{fmt(net)}</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -878,7 +610,7 @@ function PayoutReceiptForm({
 
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <FileText className="h-4 w-4 text-[#025545]" /> Receipt Details
         </div>
@@ -940,7 +672,7 @@ function PayoutReceiptForm({
         loadingDoctors={loadingDoctors}
       />
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <User className="h-4 w-4 text-[#025545]" /> Therapist Details
         </div>
@@ -984,7 +716,7 @@ function PayoutReceiptForm({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
         <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <Calendar className="h-4 w-4 text-[#025545]" /> Session Rows
         </div>
@@ -1063,7 +795,7 @@ function PayoutReceiptForm({
         </div>
       </div>
 
-      <div className="bg-[#025545]/5 rounded-xl border border-[#025545]/20 p-5">
+      <div className="bg-[#025545]/5 rounded-xl border border-[#025545]/20 p-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="text-sm font-semibold text-[#025545]">Calculated Summary</div>
           <button
@@ -1092,6 +824,210 @@ function PayoutReceiptForm({
   );
 }
 
+function SalaryCertificateForm({
+  data,
+  onChange,
+  savedEmployees,
+  onSelectEmployee,
+  onSaveEmployee,
+  onGenerateReceiptNo,
+}) {
+  const inputClass =
+    'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30 focus:border-[#025545] transition-all bg-white';
+  const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
+
+  const updateField = (key, value) => onChange({ ...data, [key]: value });
+  const updateAmount = (group, idx, value) => {
+    const rows = (data[group] || []).map((row, i) => i === idx ? { ...row, amount: value } : row);
+    onChange({ ...data, [group]: rows });
+  };
+
+  const totalEarnings = (data.earnings || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const totalDeductions = (data.deductions || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const netPayable = totalEarnings - totalDeductions;
+  const selectedEmployeeEmail = data.employeeContact || data.recipientEmail || '';
+  const selectedEmployeeIsSaved = (savedEmployees || []).some(employee => employee.email === selectedEmployeeEmail);
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <Briefcase className="h-4 w-4 text-[#025545]" /> Certificate Details
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className={labelClass}>Payslip ID</label>
+            <div className="flex gap-2">
+              <input
+                className={inputClass}
+                placeholder="Auto-generated"
+                value={data.payslipId}
+                onChange={e => updateField('payslipId', e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={onGenerateReceiptNo}
+                className="px-3 py-2 rounded-lg border border-[#025545]/20 text-[#025545] hover:bg-[#025545]/5 transition-colors"
+                title="Generate payslip ID"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Salary Date</label>
+            <input
+              type="date"
+              className={inputClass}
+              value={data.salaryDateRaw}
+              onChange={e => {
+                const d = new Date(e.target.value);
+                onChange({
+                  ...data,
+                  salaryDateRaw: e.target.value,
+                  salaryDate: isNaN(d) ? '' : payoutReceiptDateStr(d),
+                });
+              }}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Salary Period</label>
+            <input
+              className={inputClass}
+              placeholder="Jul 2026"
+              value={data.salaryPeriod}
+              onChange={e => updateField('salaryPeriod', e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <User className="h-4 w-4 text-[#025545]" /> Employee Details
+        </div>
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+          <div className="sm:col-span-4">
+            <label className={labelClass}>Saved Employee</label>
+            <select
+              className={inputClass}
+              value={selectedEmployeeEmail}
+              onChange={e => onSelectEmployee(e.target.value)}
+            >
+              <option value="">Select saved employee email</option>
+              {selectedEmployeeEmail && !selectedEmployeeIsSaved && (
+                <option value={selectedEmployeeEmail}>{selectedEmployeeEmail}</option>
+              )}
+              {(savedEmployees || []).map(employee => (
+                <option key={employee.email} value={employee.email}>
+                  {employee.name || employee.email} — {employee.email}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => onSaveEmployee(data)}
+            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#025545]/20 bg-[#025545]/5 px-3 py-2 text-sm font-semibold text-[#025545] hover:bg-[#025545]/10 transition-colors"
+          >
+            <Save className="h-4 w-4" /> Save Employee
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Employee Name</label>
+            <input className={inputClass} value={data.employeeName} onChange={e => updateField('employeeName', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Designation</label>
+            <input className={inputClass} value={data.designation} onChange={e => updateField('designation', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Employee Location</label>
+            <input className={inputClass} value={data.employeeLocation} onChange={e => updateField('employeeLocation', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Employee ID</label>
+            <input className={inputClass} value={data.employeeId} onChange={e => updateField('employeeId', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Employee Contact</label>
+            <input className={inputClass} value={data.employeeContact} onChange={e => updateField('employeeContact', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Working Days</label>
+            <input className={inputClass} type="number" min="0" value={data.workingDays} onChange={e => updateField('workingDays', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Mode of Payment</label>
+            <input className={inputClass} value={data.paymentMode} onChange={e => updateField('paymentMode', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass}>Email for sending</label>
+            <input className={inputClass} type="email" value={data.recipientEmail} onChange={e => updateField('recipientEmail', e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="text-sm font-semibold text-gray-700 mb-4">Earnings</div>
+          <div className="space-y-3">
+            {(data.earnings || []).map((row, idx) => (
+              <div key={row.label} className="grid grid-cols-5 gap-3 items-center">
+                <div className="col-span-3 text-sm text-gray-700">{row.label}</div>
+                <input
+                  className={`${inputClass} col-span-2`}
+                  type="number"
+                  min="0"
+                  value={row.amount}
+                  onChange={e => updateAmount('earnings', idx, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="text-sm font-semibold text-gray-700 mb-4">Deductions</div>
+          <div className="space-y-3">
+            {(data.deductions || []).map((row, idx) => (
+              <div key={row.label} className="grid grid-cols-5 gap-3 items-center">
+                <div className="col-span-3 text-sm text-gray-700">{row.label}</div>
+                <input
+                  className={`${inputClass} col-span-2`}
+                  type="number"
+                  min="0"
+                  value={row.amount}
+                  onChange={e => updateAmount('deductions', idx, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-[#025545]/5 rounded-xl border border-[#025545]/20 p-4">
+        <div className="text-sm font-semibold text-[#025545] mb-3">Calculated Summary</div>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Gross Earnings</span>
+            <span className="font-semibold">₹{fmtReceipt(totalEarnings)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Total Deductions</span>
+            <span className="font-semibold text-red-600">- ₹{fmtReceipt(totalDeductions)}</span>
+          </div>
+          <div className="flex justify-between border-t border-[#025545]/20 pt-2 mt-2">
+            <span className="font-semibold text-[#025545]">Net Payable Amount</span>
+            <span className="font-bold text-[#025545]">₹{fmtReceipt(netPayable)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ReceiptsPage() {
@@ -1110,18 +1046,11 @@ export default function ReceiptsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [savedRecipients, setSavedRecipients] = useState([]);
+  const [savedEmployees, setSavedEmployees] = useState([]);
   const [autofillingSessions, setAutofillingSessions] = useState(false);
 
-  const [therapistData, setTherapistData] = useState({
-    receiptNo: '',
-    dateRaw: new Date().toISOString().split('T')[0],
-    date: todayStr(),
-    name: '',
-    designation: 'Therapist',
-    recipientEmail: '',
-    sessions: DEFAULT_SESSION_ROWS.map(r => ({ ...r })),
-  });
   const [payoutReceiptData, setPayoutReceiptData] = useState(createDefaultPayoutReceiptData);
+  const [salaryCertificateData, setSalaryCertificateData] = useState(createDefaultSalaryCertificateData);
 
   useEffect(() => {
     if (!authLoading) {
@@ -1135,14 +1064,31 @@ export default function ReceiptsPage() {
       const savedOpsEmails = JSON.parse(localStorage.getItem('koott_receipt_saved_recipients') || '[]');
       if (Array.isArray(savedOpsEmails)) setSavedRecipients(savedOpsEmails);
 
-      const savedDraft = JSON.parse(localStorage.getItem('koott_payout_receipt_draft') || 'null');
-      if (savedDraft && typeof savedDraft === 'object') {
+      const savedSalaryEmployees = JSON.parse(localStorage.getItem('koott_salary_certificate_employees') || '[]');
+      if (Array.isArray(savedSalaryEmployees)) setSavedEmployees(savedSalaryEmployees);
+
+      const savedPayoutDraft = JSON.parse(localStorage.getItem('koott_payout_receipt_draft') || 'null');
+      if (savedPayoutDraft && typeof savedPayoutDraft === 'object') {
         setPayoutReceiptData({
           ...createDefaultPayoutReceiptData(),
-          ...savedDraft,
-          rows: Array.isArray(savedDraft.rows) && savedDraft.rows.length
-            ? savedDraft.rows
+          ...savedPayoutDraft,
+          rows: Array.isArray(savedPayoutDraft.rows) && savedPayoutDraft.rows.length
+            ? savedPayoutDraft.rows
             : createDefaultPayoutReceiptData().rows,
+        });
+      }
+
+      const savedSalaryDraft = JSON.parse(localStorage.getItem('koott_salary_certificate_draft') || 'null');
+      if (savedSalaryDraft && typeof savedSalaryDraft === 'object') {
+        setSalaryCertificateData({
+          ...createDefaultSalaryCertificateData(),
+          ...savedSalaryDraft,
+          earnings: Array.isArray(savedSalaryDraft.earnings) && savedSalaryDraft.earnings.length
+            ? savedSalaryDraft.earnings
+            : createDefaultSalaryCertificateData().earnings,
+          deductions: Array.isArray(savedSalaryDraft.deductions) && savedSalaryDraft.deductions.length
+            ? savedSalaryDraft.deductions
+            : createDefaultSalaryCertificateData().deductions,
         });
       }
     } catch (e) {
@@ -1169,28 +1115,36 @@ export default function ReceiptsPage() {
     return () => { cancelled = true; };
   }, [authLoading, isAuthenticated, hasRole]);
 
-  const selectedData = template === 'payoutReceipt' ? payoutReceiptData : therapistData;
+  const isSalaryCertificate = template === 'salaryCertificate';
+  const selectedData = isSalaryCertificate ? salaryCertificateData : payoutReceiptData;
   const selectedName = selectedData?.name || 'receipt';
-  const selectedReceiptNo = selectedData?.receiptNo || 'draft';
-  const selectedEmail = template === 'payoutReceipt'
-    ? (payoutReceiptData.recipientEmail || payoutReceiptData.email)
-    : therapistData.recipientEmail;
-  const selectedFileName = template === 'payoutReceipt'
-    ? `koott-payout-receipt-${safeFilePart(selectedName)}-${safeFilePart(selectedReceiptNo)}.pdf`
-    : `therapist-salary-slip-${safeFilePart(selectedName)}-${safeFilePart(selectedReceiptNo)}.pdf`;
+  const selectedDisplayName = isSalaryCertificate ? salaryCertificateData.employeeName : selectedName;
+  const selectedReceiptNo = isSalaryCertificate
+    ? (salaryCertificateData.payslipId || 'draft')
+    : (payoutReceiptData.receiptNo || 'draft');
+  const selectedEmail = isSalaryCertificate
+    ? salaryCertificateData.recipientEmail
+    : (payoutReceiptData.recipientEmail || payoutReceiptData.email);
+  const selectedFileName = isSalaryCertificate
+    ? `koott-salary-certificate-${safeFilePart(selectedDisplayName)}-${safeFilePart(selectedReceiptNo)}.pdf`
+    : `koott-payout-receipt-${safeFilePart(selectedDisplayName)}-${safeFilePart(selectedReceiptNo)}.pdf`;
 
   const createPdfBytes = useCallback(async () => {
-    if (template === 'payoutReceipt') {
-      return generatePayoutReceiptPDF(payoutReceiptData);
+    if (template === 'salaryCertificate') {
+      return generateSalaryCertificatePDF(salaryCertificateData);
     }
-    return generateTherapistPDF(therapistData);
-  }, [template, payoutReceiptData, therapistData]);
+    return generatePayoutReceiptPDF(payoutReceiptData);
+  }, [template, payoutReceiptData, salaryCertificateData]);
 
   const savePayoutReceiptDraft = useCallback(() => {
-    localStorage.setItem('koott_payout_receipt_draft', JSON.stringify(payoutReceiptData));
+    const storageKey = template === 'salaryCertificate'
+      ? 'koott_salary_certificate_draft'
+      : 'koott_payout_receipt_draft';
+    const dataToSave = template === 'salaryCertificate' ? salaryCertificateData : payoutReceiptData;
+    localStorage.setItem(storageKey, JSON.stringify(dataToSave));
     setDraftSaved(true);
     setTimeout(() => setDraftSaved(false), 1800);
-  }, [payoutReceiptData]);
+  }, [template, payoutReceiptData, salaryCertificateData]);
 
   const addSavedRecipient = useCallback((recipient) => {
     setSavedRecipients(prev => {
@@ -1205,10 +1159,58 @@ export default function ReceiptsPage() {
     });
   }, []);
 
+  const saveSalaryEmployee = useCallback((employeeData) => {
+    const cleanEmail = String(employeeData.employeeContact || employeeData.recipientEmail || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      alert('Enter a valid employee email/contact before saving.');
+      return;
+    }
+
+    const employee = {
+      name: String(employeeData.employeeName || cleanEmail).trim(),
+      email: cleanEmail,
+      employeeId: String(employeeData.employeeId || '').trim(),
+      location: String(employeeData.employeeLocation || '').trim(),
+      designation: String(employeeData.designation || '').trim(),
+    };
+
+    setSavedEmployees(prev => {
+      const withoutDuplicate = prev.filter(item => String(item.email || '').toLowerCase() !== cleanEmail.toLowerCase());
+      const next = [employee, ...withoutDuplicate].slice(0, 50);
+      localStorage.setItem('koott_salary_certificate_employees', JSON.stringify(next));
+      return next;
+    });
+
+    setSalaryCertificateData(prev => ({
+      ...prev,
+      employeeName: employee.name,
+      employeeContact: employee.email,
+      recipientEmail: employee.email,
+      employeeId: employee.employeeId,
+      employeeLocation: employee.location,
+      designation: employee.designation,
+    }));
+  }, []);
+
+  const applySalaryEmployee = useCallback((email) => {
+    const selected = savedEmployees.find(item => String(item.email || '').toLowerCase() === String(email || '').toLowerCase());
+    if (!selected) return;
+
+    setEmailSent(false);
+    setSalaryCertificateData(prev => ({
+      ...prev,
+      employeeName: selected.name || prev.employeeName,
+      employeeContact: selected.email || prev.employeeContact,
+      recipientEmail: selected.email || prev.recipientEmail,
+      employeeId: selected.employeeId || '',
+      employeeLocation: selected.location || '',
+      designation: selected.designation || '',
+    }));
+  }, [savedEmployees]);
+
   const applyRecipientToCurrentTemplate = useCallback(async (recipient) => {
     setEmailSent(false);
-    const currentTemplate = template;
-    const currentDateRaw = currentTemplate === 'payoutReceipt' ? payoutReceiptData.dateRaw : therapistData.dateRaw;
+    const currentDateRaw = payoutReceiptData.dateRaw;
     let autoRows = null;
 
     if (recipient.type === 'doctor' && recipient.psychologistId) {
@@ -1220,7 +1222,7 @@ export default function ReceiptsPage() {
           dateBasis: 'completed',
         });
         const profile = response?.data || response;
-        autoRows = buildReceiptRowsFromProfile(profile, currentTemplate);
+        autoRows = buildReceiptRowsFromProfile(profile, 'payoutReceipt');
       } catch (e) {
         console.error('Error auto-filling receipt sessions', e);
         alert('Doctor selected, but session auto-fill failed. You can still enter/edit the rows manually.');
@@ -1229,55 +1231,50 @@ export default function ReceiptsPage() {
       }
     }
 
-    if (template === 'payoutReceipt') {
-      setPayoutReceiptData(prev => {
-        const next = {
-          ...prev,
-          name: recipient.name || prev.name,
-          email: recipient.email || prev.email,
-          recipientEmail: recipient.email || prev.recipientEmail,
-          designation: recipient.designation || prev.designation,
-          location: recipient.location || prev.location,
-          ...(autoRows?.length ? { rows: autoRows } : {}),
-        };
-        if (!next.receiptNo) next.receiptNo = generateReceiptNo('payoutReceipt', next);
-        return next;
-      });
-      return;
-    }
-    setTherapistData(prev => {
+    setPayoutReceiptData(prev => {
       const next = {
         ...prev,
         name: recipient.name || prev.name,
+        email: recipient.email || prev.email,
         recipientEmail: recipient.email || prev.recipientEmail,
         designation: recipient.designation || prev.designation,
-        ...(autoRows?.length ? { sessions: autoRows } : {}),
+        location: recipient.location || prev.location,
+        ...(autoRows?.length ? { rows: autoRows } : {}),
       };
-      if (!next.receiptNo) next.receiptNo = generateReceiptNo('therapist', next);
+      if (!next.receiptNo) next.receiptNo = generateReceiptNo('payoutReceipt', next);
       return next;
     });
-  }, [payoutReceiptData.dateRaw, template, therapistData.dateRaw]);
+  }, [payoutReceiptData.dateRaw]);
 
   const generateReceiptNoForCurrentTemplate = useCallback(() => {
     setEmailSent(false);
-    if (template === 'payoutReceipt') {
-      setPayoutReceiptData(prev => ({ ...prev, receiptNo: generateReceiptNo('payoutReceipt', prev) }));
+    if (template === 'salaryCertificate') {
+      setSalaryCertificateData(prev => ({ ...prev, payslipId: generateReceiptNo('salaryCertificate', {
+        dateRaw: prev.salaryDateRaw,
+        name: prev.employeeName,
+        email: prev.employeeContact || prev.recipientEmail,
+      }) }));
       return;
     }
-    setTherapistData(prev => ({ ...prev, receiptNo: generateReceiptNo('therapist', prev) }));
+    setPayoutReceiptData(prev => ({ ...prev, receiptNo: generateReceiptNo('payoutReceipt', prev) }));
   }, [template]);
 
   const openTemplate = useCallback((nextTemplate) => {
+    if (!['payoutReceipt', 'salaryCertificate'].includes(nextTemplate)) return;
     setTemplate(nextTemplate);
     setStep('form');
     setDownloaded(false);
     setPrinted(false);
     setEmailSent(false);
-    if (nextTemplate === 'payoutReceipt') {
-      setPayoutReceiptData(prev => prev.receiptNo ? prev : ({ ...prev, receiptNo: generateReceiptNo('payoutReceipt', prev) }));
+    if (nextTemplate === 'salaryCertificate') {
+      setSalaryCertificateData(prev => prev.payslipId ? prev : ({ ...prev, payslipId: generateReceiptNo('salaryCertificate', {
+        dateRaw: prev.salaryDateRaw,
+        name: prev.employeeName,
+        email: prev.employeeContact || prev.recipientEmail,
+      }) }));
       return;
     }
-    setTherapistData(prev => prev.receiptNo ? prev : ({ ...prev, receiptNo: generateReceiptNo('therapist', prev) }));
+    setPayoutReceiptData(prev => prev.receiptNo ? prev : ({ ...prev, receiptNo: generateReceiptNo('payoutReceipt', prev) }));
   }, []);
 
   const handleDownloadPDF = useCallback(async () => {
@@ -1350,7 +1347,7 @@ export default function ReceiptsPage() {
       const pdfBytes = await createPdfBytes();
       await financeApi.sendReceiptEmail({
         to: cleanEmail,
-        recipientName: selectedName,
+        recipientName: selectedDisplayName,
         template,
         receiptNo: selectedReceiptNo,
         fileName: selectedFileName,
@@ -1363,7 +1360,7 @@ export default function ReceiptsPage() {
     } finally {
       setEmailSending(false);
     }
-  }, [createPdfBytes, downloading, emailSending, selectedEmail, selectedFileName, selectedName, selectedReceiptNo, template]);
+  }, [createPdfBytes, downloading, emailSending, selectedEmail, selectedFileName, selectedDisplayName, selectedReceiptNo, template]);
 
   if (authLoading) {
     return (
@@ -1376,22 +1373,8 @@ export default function ReceiptsPage() {
   // ── Step 1: Template Selector ──────────────────────────────────────────────
   if (step === 'select') {
     return (
-      <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto flex items-center justify-center min-h-[60vh]">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full max-w-5xl">
-          {/* Therapist Template */}
-          <button
-            onClick={() => openTemplate('therapist')}
-            className="group text-left bg-white border border-gray-100 hover:border-[#025545] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#025545]/30 flex items-center gap-3"
-          >
-            <div className="w-8 h-8 rounded-lg bg-[#025545]/10 flex items-center justify-center shrink-0 group-hover:bg-[#025545] transition-colors">
-              <Stethoscope className="h-4 w-4 text-[#025545] group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex-1">
-              <div className="text-sm font-medium text-gray-800">Therapist Salary Slip</div>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-gray-300 rotate-180 group-hover:text-[#025545] transition-colors" />
-          </button>
-
+      <div className="px-3 sm:px-4 py-6 max-w-5xl mx-auto flex items-center justify-center min-h-[60vh]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-4xl">
           {/* Payout Receipt Template */}
           <button
             onClick={() => openTemplate('payoutReceipt')}
@@ -1406,32 +1389,29 @@ export default function ReceiptsPage() {
             </div>
             <ChevronLeft className="h-4 w-4 text-gray-300 rotate-180 group-hover:text-[#025545] transition-colors" />
           </button>
-
-          {/* Operations Template — Coming Soon */}
-          <div className="relative text-left bg-white border border-dashed border-gray-200 rounded-xl p-4 opacity-60 cursor-not-allowed flex items-center gap-3">
-            <div className="absolute -top-2 -right-2 bg-amber-100 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-200 shadow-sm z-10">
-              Soon
-            </div>
-            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-              <Briefcase className="h-4 w-4 text-gray-400" />
+          <button
+            onClick={() => openTemplate('salaryCertificate')}
+            className="group text-left bg-white border border-gray-100 hover:border-[#025545] rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#025545]/30 flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#025545]/10 flex items-center justify-center shrink-0 group-hover:bg-[#025545] transition-colors">
+              <Briefcase className="h-4 w-4 text-[#025545] group-hover:text-white transition-colors" />
             </div>
             <div className="flex-1">
-              <div className="text-sm font-medium text-gray-700">Operations Team Slip</div>
+              <div className="text-sm font-medium text-gray-800">Salary Certificate</div>
+              <div className="text-xs text-gray-400 mt-0.5">Operational staff certificate</div>
             </div>
-          </div>
+            <ChevronLeft className="h-4 w-4 text-gray-300 rotate-180 group-hover:text-[#025545] transition-colors" />
+          </button>
         </div>
       </div>
     );
   }
 
   // ── Step 2: Form ──────────────────────────────────────────────────────────
-  const formTitle = template === 'payoutReceipt' ? 'Payout Receipt - 2026' : 'Therapist Salary Slip';
-  const formDescription = template === 'payoutReceipt'
-    ? 'Fill in the payout details - values will be placed into the new Koott letterhead receipt'
-    : 'Fill in the details — your values will be placed into the official PDF template';
+  const formTitle = isSalaryCertificate ? 'Salary Certificate' : 'Payout Receipt - 2026';
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-3xl mx-auto">
+    <div className="px-3 sm:px-4 py-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -1443,7 +1423,6 @@ export default function ReceiptsPage() {
           </button>
           <div>
             <div className="text-base font-semibold text-gray-900">{formTitle}</div>
-            <p className="text-xs text-gray-500">{formDescription}</p>
           </div>
         </div>
 
@@ -1468,14 +1447,12 @@ export default function ReceiptsPage() {
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Filling sessions
             </span>
           )}
-          {template === 'payoutReceipt' && (
-            <button
-              onClick={savePayoutReceiptDraft}
-              className="flex items-center gap-2 bg-white hover:bg-gray-50 text-[#025545] border border-[#025545]/20 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
-            >
-              <Save className="h-4 w-4" /> {draftSaved ? 'Saved' : 'Save'}
-            </button>
-          )}
+          <button
+            onClick={savePayoutReceiptDraft}
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-[#025545] border border-[#025545]/20 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+          >
+            <Save className="h-4 w-4" /> {draftSaved ? 'Saved' : 'Save'}
+          </button>
           <button
             onClick={handlePrintPDF}
             disabled={downloading}
@@ -1510,23 +1487,21 @@ export default function ReceiptsPage() {
         </div>
       </div>
 
-      {template === 'payoutReceipt' ? (
+      {isSalaryCertificate ? (
+        <SalaryCertificateForm
+          data={salaryCertificateData}
+          onChange={setSalaryCertificateData}
+          savedEmployees={savedEmployees}
+          onSelectEmployee={applySalaryEmployee}
+          onSaveEmployee={saveSalaryEmployee}
+          onGenerateReceiptNo={generateReceiptNoForCurrentTemplate}
+        />
+      ) : (
         <PayoutReceiptForm
           data={payoutReceiptData}
           onChange={setPayoutReceiptData}
           onSaveDraft={savePayoutReceiptDraft}
           saved={draftSaved}
-          doctors={doctors}
-          savedRecipients={savedRecipients}
-          onSelectRecipient={applyRecipientToCurrentTemplate}
-          onAddRecipient={addSavedRecipient}
-          onGenerateReceiptNo={generateReceiptNoForCurrentTemplate}
-          loadingDoctors={loadingDoctors}
-        />
-      ) : (
-        <TherapistForm
-          data={therapistData}
-          onChange={setTherapistData}
           doctors={doctors}
           savedRecipients={savedRecipients}
           onSelectRecipient={applyRecipientToCurrentTemplate}
@@ -1547,10 +1522,10 @@ export default function ReceiptsPage() {
               <div className="font-semibold text-gray-900">Confirm Download</div>
             </div>
             <p className="text-sm text-gray-600 mb-1">
-              Generating {template === 'payoutReceipt' ? 'payout receipt' : 'salary slip'} for:
+              Generating {isSalaryCertificate ? 'salary certificate' : 'payout receipt'} for:
             </p>
             <p className="font-semibold text-[#025545] mb-4">
-              {selectedName || '(No name entered)'}
+              {selectedDisplayName || '(No name entered)'}
             </p>
             <p className="text-xs text-gray-400 mb-5">
               Please verify all details are correct. The PDF will be saved directly to your device using the official template.

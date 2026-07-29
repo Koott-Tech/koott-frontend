@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle } from 'lucide-react';
+import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useAuth } from '@/contexts/AuthContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
 import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
 import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
+import { exportFinanceRowsToExcel } from '@/lib/financeExcelExport';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -306,6 +307,34 @@ export default function FinancePayouts() {
     acc.company += Number((isUsingProfileRows ? session.company_amount : session.company_commission) || 0);
     return acc;
   }, { amount: 0, doctor: 0, company: 0 });
+  const selectedDoctorName = [
+    selectedPayout?.psychologist?.first_name,
+    selectedPayout?.psychologist?.last_name,
+  ].filter(Boolean).join(' ').trim() || selectedPayoutProfile?.doctor?.name || 'Therapist';
+
+  const handleDownloadPayoutExcel = () => {
+    if (!selectedDetailRows.length) return;
+    const dateFrom = hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.from) : null;
+    const dateTo = hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.to) : null;
+    exportFinanceRowsToExcel({
+      rows: selectedDetailRows,
+      doctorName: selectedDoctorName,
+      filePrefix: `${selectedDoctorName}-payout-details`,
+      dateFrom,
+      dateTo,
+      sourceStyleFor,
+      payoutStyles: PAYOUT_STYLES,
+      summary: {
+        status: activeTab === 'pending' ? 'Pending Payout' : 'Paid',
+        total_sessions: selectedSummaryTotalSessions,
+        completed_sessions: selectedSummaryCompletedSessions,
+        company_earnings: Number(selectedSummaryCompanyEarnings || 0),
+        pending_payout: Number(selectedSummaryPendingPayout || 0),
+        not_due_payout: Number(selectedSummaryNotDue || 0),
+      },
+      totals: selectedDetailTotals,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-3 lg:p-4">
@@ -551,16 +580,26 @@ export default function FinancePayouts() {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div role="heading" aria-level="2" style={{ fontSize: '18px', fontWeight: 600, color: '#111827' }}>Payout Details</div>
-                  <button
-                    onClick={() => {
-                      setSelectedPayout(null);
-                      setSelectedPayoutProfile(null);
-                      setSelectedPayoutProfileError(null);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ✕
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDownloadPayoutExcel}
+                      disabled={!selectedDetailRows.length || selectedPayoutProfileLoading}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Download className="h-4 w-4" />
+                      Excel
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedPayout(null);
+                        setSelectedPayoutProfile(null);
+                        setSelectedPayoutProfileError(null);
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="p-6 space-y-6">

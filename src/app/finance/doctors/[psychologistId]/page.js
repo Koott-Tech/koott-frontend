@@ -8,6 +8,7 @@ import { useNotification } from '@/contexts/NotificationContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
 import { hasDateRangeBounds } from '@/lib/dateRangeBounds';
 import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
+import { exportFinanceRowsToExcel } from '@/lib/financeExcelExport';
 
 const inr = (n) =>
   `₹${(Number(n) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -163,6 +164,33 @@ export default function DoctorFinanceProfilePage() {
     URL.revokeObjectURL(url);
   };
 
+  const exportExcel = () => {
+    if (!filtered.length) return;
+    exportFinanceRowsToExcel({
+      rows: filtered,
+      doctorName: data?.doctor?.name || 'Therapist',
+      filePrefix: `${data?.doctor?.name || 'therapist'}-finance`,
+      dateFrom: hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.from) : null,
+      dateTo: hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.to) : null,
+      sourceStyleFor,
+      payoutStyles: PAYOUT_STYLES,
+      summary: {
+        date_basis: dateBasis === 'booked' ? 'Booking date' : 'Session date',
+        status_filter: statusFilter,
+        payout_filter: payoutFilter,
+        total_sessions: s?.total_sessions || 0,
+        completed_sessions: s?.completed_sessions || 0,
+        gross_revenue: Number(s?.gross_revenue || 0),
+        doctor_earnings: Number(s?.doctor_earnings || 0),
+        company_earnings: Number(s?.company_earnings || 0),
+        payout_paid: Number(s?.payout_paid || 0),
+        payout_pending: Number(s?.payout_pending || 0),
+        payout_not_due: Number(s?.payout_not_due || 0),
+      },
+      totals: shown,
+    });
+  };
+
   const s = data?.summary;
 
   return (
@@ -191,6 +219,10 @@ export default function DoctorFinanceProfilePage() {
           <button onClick={exportCsv} disabled={!filtered.length}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50">
             <Download className="h-4 w-4" /> CSV
+          </button>
+          <button onClick={exportExcel} disabled={!filtered.length}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+            <Download className="h-4 w-4" /> Excel
           </button>
         </div>
       </div>
