@@ -153,7 +153,7 @@ function buildReceiptRowsFromProfile(profile, template) {
     const status = String(row?.status || '').toLowerCase();
     const payoutStatus = String(row?.payout_status || '').toLowerCase();
     const doctorAmount = parseFloat(row?.doctor_amount || 0) || 0;
-    return status === 'completed' && payoutStatus !== 'paid' && doctorAmount > 0;
+    return status === 'completed' && payoutStatus === 'pending' && doctorAmount > 0;
   });
 
   const grouped = new Map();
@@ -431,6 +431,7 @@ function RecipientPicker({
   onSelectRecipient,
   onAddRecipient,
   loadingDoctors,
+  calculatingSessions,
 }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -477,9 +478,12 @@ function RecipientPicker({
           <select
             className={inputClass}
             value={selectedEmail || ''}
+            disabled={calculatingSessions}
             onChange={e => handleSelect(e.target.value)}
           >
-            <option value="">{loadingDoctors ? 'Loading doctors…' : 'Select recipient email'}</option>
+            <option value="">
+              {calculatingSessions ? 'Calculating completed sessions…' : (loadingDoctors ? 'Loading doctors…' : 'Select recipient email')}
+            </option>
             {doctorRecipients.length > 0 && (
               <optgroup label="Current doctors">
                 {doctorRecipients.map(r => (
@@ -500,8 +504,13 @@ function RecipientPicker({
             )}
           </select>
         </div>
-        <div className="text-xs text-gray-500 bg-gray-50 rounded-lg border border-gray-100 p-3 flex items-center">
-          Select a doctor to fill the therapist name/email, or save an operations email for repeated use.
+        <div className={`text-xs rounded-lg border p-3 flex items-center gap-2 ${calculatingSessions ? 'text-[#025545] bg-[#025545]/5 border-[#025545]/20' : 'text-gray-500 bg-gray-50 border-gray-100'}`}>
+          {calculatingSessions && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
+          <span>
+            {calculatingSessions
+              ? 'Calculating completed unpaid sessions for this receipt...'
+              : 'Select a doctor to fill the therapist name/email, or save an operations email for repeated use.'}
+          </span>
         </div>
       </div>
 
@@ -548,6 +557,7 @@ function PayoutReceiptForm({
   onAddRecipient,
   onGenerateReceiptNo,
   loadingDoctors,
+  calculatingSessions,
 }) {
   const [customTypes, setCustomTypes] = useState([]);
 
@@ -670,6 +680,7 @@ function PayoutReceiptForm({
         onSelectRecipient={onSelectRecipient}
         onAddRecipient={onAddRecipient}
         loadingDoctors={loadingDoctors}
+        calculatingSessions={calculatingSessions}
       />
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
@@ -1211,7 +1222,7 @@ export default function ReceiptsPage() {
   const applyRecipientToCurrentTemplate = useCallback(async (recipient) => {
     setEmailSent(false);
     const currentDateRaw = payoutReceiptData.dateRaw;
-    let autoRows = null;
+    let autoRows;
 
     if (recipient.type === 'doctor' && recipient.psychologistId) {
       setAutofillingSessions(true);
@@ -1223,6 +1234,9 @@ export default function ReceiptsPage() {
         });
         const profile = response?.data || response;
         autoRows = buildReceiptRowsFromProfile(profile, 'payoutReceipt');
+        if (autoRows.length === 0) {
+          alert('No completed unpaid sessions found for this doctor in the selected receipt month.');
+        }
       } catch (e) {
         console.error('Error auto-filling receipt sessions', e);
         alert('Doctor selected, but session auto-fill failed. You can still enter/edit the rows manually.');
@@ -1239,7 +1253,7 @@ export default function ReceiptsPage() {
         recipientEmail: recipient.email || prev.recipientEmail,
         designation: recipient.designation || prev.designation,
         location: recipient.location || prev.location,
-        ...(autoRows?.length ? { rows: autoRows } : {}),
+        ...(Array.isArray(autoRows) ? { rows: autoRows.length ? autoRows : createDefaultPayoutReceiptData().rows } : {}),
       };
       if (!next.receiptNo) next.receiptNo = generateReceiptNo('payoutReceipt', next);
       return next;
@@ -1508,6 +1522,7 @@ export default function ReceiptsPage() {
           onAddRecipient={addSavedRecipient}
           onGenerateReceiptNo={generateReceiptNoForCurrentTemplate}
           loadingDoctors={loadingDoctors}
+          calculatingSessions={autofillingSessions}
         />
       )}
 
