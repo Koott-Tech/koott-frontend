@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import Image from 'next/image';
 import { 
   BarChart3, 
   Calendar, 
@@ -176,30 +175,8 @@ export default function FinanceLayout({ children }) {
           }}
         >
         <div className="flex flex-col h-full">
-          {/* Logo/Brand - Mobile only */}
-          <div className="lg:hidden p-4 border-b border-gray-200">
-            <a 
-              href="/finance"
-              className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="MyKoott - Go to finance dashboard"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                  setIsSidebarOpen(false);
-                }
-              }}
-            >
-              <img 
-                src="/logo.png"
-                alt="MyKoott - Finance Dashboard"
-                width={120}
-                height={40}
-                className="object-contain"
-              />
-            </a>
-          </div>
-
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -245,25 +222,8 @@ export default function FinanceLayout({ children }) {
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="flex flex-col h-full w-full">
-          {/* Logo/Brand */}
-          <div className="p-6 border-b border-gray-200">
-            <a 
-              href="/finance"
-              className="hover:opacity-80 transition-opacity cursor-pointer"
-              aria-label="MyKoott - Go to finance dashboard"
-            >
-              <img 
-                src="/logo.png"
-                alt="MyKoott - Finance Dashboard"
-                width={120}
-                height={40}
-                className="object-contain"
-              />
-            </a>
-          </div>
-
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -336,4 +296,3 @@ export default function FinanceLayout({ children }) {
     </div>
   );
 }
-
