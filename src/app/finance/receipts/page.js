@@ -117,6 +117,15 @@ function monthRangeFromDateRaw(dateRaw) {
   };
 }
 
+function monthYearFromDateRaw(dateRaw) {
+  const d = dateRaw ? new Date(dateRaw) : new Date();
+  const safe = isNaN(d) ? new Date() : d;
+  return {
+    month: safe.getMonth() + 1,
+    year: safe.getFullYear(),
+  };
+}
+
 function classifySessionForReceipt(row) {
   const raw = `${row?.session_type || ''} ${row?.package_label || ''}`.toLowerCase();
   const isPackage = !!row?.is_package || raw.includes('package');
@@ -149,15 +158,37 @@ function classifySessionForReceipt(row) {
 }
 
 function buildReceiptRowsFromProfile(profile, template) {
+  const payoutPendingTotal = Math.round(parseFloat(profile?.summary?.payout_pending || 0) || 0);
   const completed = (profile?.sessions || []).filter(row => {
     const status = String(row?.status || '').toLowerCase();
     const payoutStatus = String(row?.payout_status || '').toLowerCase();
     const doctorAmount = parseFloat(row?.doctor_amount || 0) || 0;
     return status === 'completed' && payoutStatus === 'pending' && doctorAmount > 0;
   });
+  const completedSubtotal = completed.reduce((sum, row) => sum + Math.round(parseFloat(row?.doctor_amount || 0) || 0), 0);
+  let receiptSessions = completed;
+
+  if (template === 'payoutReceipt' && payoutPendingTotal > 0 && completedSubtotal > payoutPendingTotal) {
+    const overflow = completedSubtotal - payoutPendingTotal;
+    const sums = new Map([[0, []]]);
+    for (let idx = 0; idx < completed.length; idx += 1) {
+      const amount = Math.round(parseFloat(completed[idx]?.doctor_amount || 0) || 0);
+      const existing = [...sums.entries()];
+      for (const [sum, indices] of existing) {
+        const nextSum = sum + amount;
+        if (nextSum > overflow || sums.has(nextSum)) continue;
+        sums.set(nextSum, [...indices, idx]);
+      }
+      if (sums.has(overflow)) break;
+    }
+    const exclude = new Set(sums.get(overflow) || []);
+    if (exclude.size > 0) {
+      receiptSessions = completed.filter((_, idx) => !exclude.has(idx));
+    }
+  }
 
   const grouped = new Map();
-  completed.forEach(row => {
+  receiptSessions.forEach(row => {
     const type = classifySessionForReceipt(row);
     const unitPrice = Math.round(parseFloat(row?.doctor_amount || 0) || 0);
     const label = template === 'payoutReceipt' ? type.payoutType : type.salaryType;
@@ -182,7 +213,8 @@ function buildReceiptRowsFromProfile(profile, template) {
     });
 
   if (template === 'payoutReceipt') {
-    return rows.slice(0, 6).map(row => ({
+    const limitedRows = rows.slice(0, 6);
+    return limitedRows.map(row => ({
       type: row.label,
       number: String(row.count),
       unitPrice: String(row.unitPrice),
@@ -196,6 +228,30 @@ function buildReceiptRowsFromProfile(profile, template) {
     ratePerSession: String(row.unitPrice),
     amount: String(row.amount),
   }));
+}
+
+function capPayoutReceiptRows(rows, capAmount) {
+  const cap = Math.round(parseFloat(capAmount || 0) || 0);
+  if (!cap || cap <= 0) return rows;
+
+  let remaining = cap;
+  return (rows || []).flatMap(row => {
+    const amount = Math.round(parseFloat(row.amount || 0) || 0);
+    if (!amount || remaining <= 0) return [];
+    if (amount <= remaining) {
+      remaining -= amount;
+      return [row];
+    }
+
+    const unitPrice = Math.round(parseFloat(row.unitPrice || 0) || 0);
+    const cappedAmount = remaining;
+    remaining = 0;
+    return [{
+      ...row,
+      number: unitPrice > 0 ? String(Math.max(1, Math.round(cappedAmount / unitPrice))) : row.number,
+      amount: String(cappedAmount),
+    }];
+  });
 }
 
 
@@ -226,6 +282,7 @@ const createDefaultPayoutReceiptData = () => ({
   email: '',
   recipientEmail: '',
   tdsPercent: '10',
+  payoutPendingCap: '',
   rows: DEFAULT_PAYOUT_RECEIPT_ROWS.map(r => ({ ...r })),
 });
 
@@ -320,7 +377,9 @@ async function generatePayoutReceiptPDF(data) {
     String(row.amount || '').trim()
   );
 
-  const subtotal = rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const rawSubtotal = rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
+  const payoutPendingCap = parseFloat(data.payoutPendingCap || 0) || 0;
+  const subtotal = payoutPendingCap > 0 ? Math.min(rawSubtotal, payoutPendingCap) : rawSubtotal;
   const tdsPercent = parseFloat(data.tdsPercent);
   const safeTdsPercent = Number.isFinite(tdsPercent) ? tdsPercent : 10;
   const tds = subtotal * (safeTdsPercent / 100);
@@ -448,9 +507,11 @@ function RecipientPicker({
     designation: r.designation || '',
     location: r.location || '',
   })).filter(r => r.email);
+  const allRecipients = [...doctorRecipients, ...operationalRecipients];
+  const selectedRecipient = allRecipients.find(r => r.email === selectedEmail);
 
   const handleSelect = (value) => {
-    const selected = [...doctorRecipients, ...operationalRecipients].find(r => r.email === value);
+    const selected = allRecipients.find(r => r.email === value);
     if (selected) onSelectRecipient(selected);
   };
 
@@ -475,34 +536,44 @@ function RecipientPicker({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Doctor / saved email</label>
-          <select
-            className={inputClass}
-            value={selectedEmail || ''}
-            disabled={calculatingSessions}
-            onChange={e => handleSelect(e.target.value)}
-          >
-            <option value="">
-              {calculatingSessions ? 'Calculating completed sessions…' : (loadingDoctors ? 'Loading doctors…' : 'Select recipient email')}
-            </option>
-            {doctorRecipients.length > 0 && (
-              <optgroup label="Current doctors">
-                {doctorRecipients.map(r => (
-                  <option key={r.id} value={r.email}>
-                    {r.name} — {r.email}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {operationalRecipients.length > 0 && (
-              <optgroup label="Saved operational emails">
-                {operationalRecipients.map(r => (
-                  <option key={r.id} value={r.email}>
-                    {r.name} — {r.email}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
+          <div className="flex gap-2">
+            <select
+              className={inputClass}
+              value={selectedEmail || ''}
+              disabled={calculatingSessions}
+              onChange={e => handleSelect(e.target.value)}
+            >
+              <option value="">
+                {calculatingSessions ? 'Calculating completed sessions…' : (loadingDoctors ? 'Loading doctors…' : 'Select recipient email')}
+              </option>
+              {doctorRecipients.length > 0 && (
+                <optgroup label="Current doctors">
+                  {doctorRecipients.map(r => (
+                    <option key={r.id} value={r.email}>
+                      {r.name} — {r.email}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {operationalRecipients.length > 0 && (
+                <optgroup label="Saved operational emails">
+                  {operationalRecipients.map(r => (
+                    <option key={r.id} value={r.email}>
+                      {r.name} — {r.email}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            <button
+              type="button"
+              onClick={() => selectedRecipient && onSelectRecipient(selectedRecipient)}
+              disabled={!selectedRecipient || calculatingSessions}
+              className="shrink-0 rounded-lg border border-[#025545]/20 bg-[#025545]/5 px-3 py-2 text-sm font-semibold text-[#025545] hover:bg-[#025545]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Recalculate
+            </button>
+          </div>
         </div>
         <div className={`text-xs rounded-lg border p-3 flex items-center gap-2 ${calculatingSessions ? 'text-[#025545] bg-[#025545]/5 border-[#025545]/20' : 'text-gray-500 bg-gray-50 border-gray-100'}`}>
           {calculatingSessions && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
@@ -612,7 +683,9 @@ function PayoutReceiptForm({
   const inputClass =
     'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30 focus:border-[#025545] transition-all bg-white';
   const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
-  const subtotal = data.rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const rawSubtotal = data.rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const payoutPendingCap = parseFloat(data.payoutPendingCap || 0) || 0;
+  const subtotal = payoutPendingCap > 0 ? Math.min(rawSubtotal, payoutPendingCap) : rawSubtotal;
   const tdsPercent = parseFloat(data.tdsPercent);
   const safeTdsPercent = Number.isFinite(tdsPercent) ? tdsPercent : 10;
   const tds = subtotal * (safeTdsPercent / 100);
@@ -1223,17 +1296,52 @@ export default function ReceiptsPage() {
     setEmailSent(false);
     const currentDateRaw = payoutReceiptData.dateRaw;
     let autoRows;
+    let payoutPendingCap = '';
 
     if (recipient.type === 'doctor' && recipient.psychologistId) {
       setAutofillingSessions(true);
+      setPayoutReceiptData(prev => ({
+        ...prev,
+        name: recipient.name || prev.name,
+        email: recipient.email || prev.email,
+        recipientEmail: recipient.email || prev.recipientEmail,
+        designation: recipient.designation || prev.designation,
+        location: recipient.location || prev.location,
+        payoutPendingCap: '',
+        rows: createDefaultPayoutReceiptData().rows,
+      }));
       try {
         const range = monthRangeFromDateRaw(currentDateRaw);
-        const response = await financeApi.getDoctorFinanceProfile(recipient.psychologistId, {
-          ...range,
-          dateBasis: 'completed',
-        });
+        const payoutMonth = monthYearFromDateRaw(currentDateRaw);
+        const [response, pendingResponse] = await Promise.all([
+          financeApi.getDoctorFinanceProfile(recipient.psychologistId, {
+            ...range,
+            dateBasis: 'scheduled',
+          }),
+          financeApi.getPendingPayouts(payoutMonth),
+        ]);
         const profile = response?.data || response;
+        const pendingPayouts = pendingResponse?.data?.payouts || [];
+        const matchingPendingPayout = pendingPayouts.find(payout => payout.psychologist_id === recipient.psychologistId);
+        payoutPendingCap = matchingPendingPayout?.pending_payout_amount ??
+          matchingPendingPayout?.total_doctor_wallet ??
+          matchingPendingPayout?.net_payout ??
+          profile?.summary?.payout_pending ??
+          '';
         autoRows = buildReceiptRowsFromProfile(profile, 'payoutReceipt');
+        autoRows = capPayoutReceiptRows(autoRows, payoutPendingCap);
+        console.info('[receipt-auto-fill]', {
+          doctor: recipient.email,
+          dateRange: range,
+          payoutMonth,
+          payoutPendingCap,
+          pendingPayoutRow: matchingPendingPayout || null,
+          eligibleRowsTotal: (profile?.sessions || [])
+            .filter(row => String(row?.status || '').toLowerCase() === 'completed' && String(row?.payout_status || '').toLowerCase() === 'pending')
+            .reduce((sum, row) => sum + (Number(row?.doctor_amount) || 0), 0),
+          receiptRowsTotal: autoRows.reduce((sum, row) => sum + (Number(row?.amount) || 0), 0),
+          receiptRows: autoRows,
+        });
         if (autoRows.length === 0) {
           alert('No completed unpaid sessions found for this doctor in the selected receipt month.');
         }
@@ -1253,7 +1361,10 @@ export default function ReceiptsPage() {
         recipientEmail: recipient.email || prev.recipientEmail,
         designation: recipient.designation || prev.designation,
         location: recipient.location || prev.location,
-        ...(Array.isArray(autoRows) ? { rows: autoRows.length ? autoRows : createDefaultPayoutReceiptData().rows } : {}),
+        ...(Array.isArray(autoRows) ? {
+          rows: autoRows.length ? autoRows : createDefaultPayoutReceiptData().rows,
+          payoutPendingCap,
+        } : {}),
       };
       if (!next.receiptNo) next.receiptNo = generateReceiptNo('payoutReceipt', next);
       return next;
