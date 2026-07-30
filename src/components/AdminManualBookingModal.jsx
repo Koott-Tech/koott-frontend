@@ -44,6 +44,19 @@ const MANUAL_BOOKING_HOURS = Array.from({ length: 24 }, (_, hour) => ({
   }),
 }));
 
+const PRESET_COUNTRY_CODES = new Set([
+  '+91', '+1', '+44', '+971', '+966', '+65', '+60', '+61', '+64', '+27',
+  '+33', '+49', '+39', '+34', '+31', '+32', '+41', '+46', '+47', '+45',
+  '+358', '+351', '+353', '+48', '+420', '+36', '+40', '+7', '+81', '+82',
+  '+86', '+852', '+886', '+66', '+62', '+63', '+84', '+880', '+94', '+92',
+  '+977', '+95', '+855', '+856', '+673', '+670',
+]);
+
+const normalizeCountryCode = (value) => {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits ? `+${digits}` : '';
+};
+
 const HOURS_12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 
 const MANUAL_BOOKING_MINUTES = ['00', '15', '30', '45'];
@@ -808,8 +821,8 @@ export default function AdminManualBookingModal({
     if (!recordOnly && isNewClient) {
       // Validate new client data - only email, first_name, and phone_number are required
       // last_name is optional
-      if (!newClientData.email || !newClientData.first_name || !newClientData.phone_number) {
-        setError('Please fill in all required client details: Email, First Name, and Phone Number');
+      if (!newClientData.email || !newClientData.first_name || !normalizeCountryCode(newClientData.country_code) || !newClientData.phone_number) {
+        setError('Please fill in all required client details: Email, First Name, Country Code, and Phone Number');
         isSubmittingRef.current = false;
         return;
       }
@@ -838,7 +851,7 @@ export default function AdminManualBookingModal({
       try {
         // Step 1: Create new client
         console.log('Creating new client...');
-        const fullPhoneNumber = newClientData.country_code + newClientData.phone_number;
+        const fullPhoneNumber = normalizeCountryCode(newClientData.country_code) + newClientData.phone_number;
         const passwordToUse = customPassword || generateRandomPassword();
         
         const clientResponse = await adminApi.createUser({
@@ -1225,10 +1238,11 @@ export default function AdminManualBookingModal({
                       </label>
                       <div className="flex">
                         <select
-                          value={newClientData.country_code}
-                          onChange={(e) => handleNewClientInputChange('country_code', e.target.value)}
+                          value={PRESET_COUNTRY_CODES.has(newClientData.country_code) ? newClientData.country_code : '__custom'}
+                          onChange={(e) => handleNewClientInputChange('country_code', e.target.value === '__custom' ? '' : e.target.value)}
                           className="px-3 py-2 border border-slate-200 rounded-l-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm bg-slate-50 min-w-[7rem]"
                         >
+                          <option value="__custom">Custom</option>
                           <option value="+91">🇮🇳 +91</option>
                           <option value="+1">🇺🇸 +1</option>
                           <option value="+44">🇬🇧 +44</option>
@@ -1276,6 +1290,16 @@ export default function AdminManualBookingModal({
                           <option value="+673">🇧🇳 +673</option>
                           <option value="+670">🇹🇱 +670</option>
                         </select>
+                        {!PRESET_COUNTRY_CODES.has(newClientData.country_code) && (
+                          <input
+                            type="text"
+                            value={newClientData.country_code}
+                            onChange={(e) => handleNewClientInputChange('country_code', normalizeCountryCode(e.target.value))}
+                            className="w-24 px-3 py-2 border border-slate-200 border-l-0 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                            placeholder="+Code"
+                            inputMode="numeric"
+                          />
+                        )}
                         <input
                           type="tel"
                           value={newClientData.phone_number}

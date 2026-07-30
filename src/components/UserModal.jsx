@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, User, Mail, Phone, Lock } from 'lucide-react';
 
 const COUNTRY_CODES = [
+  { value: '__custom', label: 'Custom' },
   { value: '+91', label: '🇮🇳 +91' },
   { value: '+1', label: '🇺🇸 +1' },
   { value: '+44', label: '🇬🇧 +44' },
@@ -52,6 +53,13 @@ const COUNTRY_CODES = [
   { value: '+670', label: '🇹🇱 +670' },
 ];
 
+const PRESET_COUNTRY_CODES = new Set(COUNTRY_CODES.filter(c => c.value !== '__custom').map(c => c.value));
+
+const normalizeCountryCode = (value) => {
+  const digits = String(value || '').replace(/\D/g, '');
+  return digits ? `+${digits}` : '';
+};
+
 function parsePhoneForEdit(fullPhone) {
   const str = (fullPhone || '').trim();
   if (!str) return { country_code: '+91', phone: '' };
@@ -62,6 +70,10 @@ function parsePhoneForEdit(fullPhone) {
       const rest = str.slice(code.length).replace(/\D/g, '');
       return { country_code: code, phone: rest };
     }
+  }
+  const customMatch = str.match(/^(\+\d{1,4})(.*)$/);
+  if (customMatch) {
+    return { country_code: customMatch[1], phone: customMatch[2].replace(/\D/g, '') };
   }
   return { country_code: '+91', phone: str.replace(/\D/g, '') };
 }
@@ -162,7 +174,7 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
       const resolvedRole =
         mode === 'edit' && user && user.role ? user.role : 'client';
 
-      const fullPhone = (formData.country_code || '') + (formData.phone || '').replace(/\D/g, '');
+      const fullPhone = normalizeCountryCode(formData.country_code) + (formData.phone || '').replace(/\D/g, '');
       const userData = {
         firstName: formData.firstName,
         lastName: formData.lastName || '',
@@ -270,14 +282,24 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
             </label>
             <div className="flex">
               <select
-                value={formData.country_code}
-                onChange={(e) => setFormData((prev) => ({ ...prev, country_code: e.target.value }))}
+                value={PRESET_COUNTRY_CODES.has(formData.country_code) ? formData.country_code : '__custom'}
+                onChange={(e) => setFormData((prev) => ({ ...prev, country_code: e.target.value === '__custom' ? '' : e.target.value }))}
                 className="px-3 py-2.5 border border-slate-200 rounded-l-lg text-sm bg-slate-50 focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] min-w-[7rem]"
               >
                 {COUNTRY_CODES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
               </select>
+              {!PRESET_COUNTRY_CODES.has(formData.country_code) && (
+                <input
+                  type="text"
+                  value={formData.country_code}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, country_code: normalizeCountryCode(e.target.value) }))}
+                  placeholder="+Code"
+                  inputMode="numeric"
+                  className="w-24 px-3 py-2.5 border border-slate-200 border-l-0 text-sm focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545]"
+                />
+              )}
               <input
                 type="tel"
                 name="phone"
@@ -415,8 +437,6 @@ export default function UserModal({ isOpen, onClose, onSave, user = null, mode =
     </div>
   );
 }
-
-
 
 
 
