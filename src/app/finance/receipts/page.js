@@ -321,7 +321,7 @@ const DEFAULT_SALARY_EMPLOYEES = [
   { employeeId: 'KT009', name: 'ABHISHEK R', designation: 'DEVELOPER TEAM', email: 'abhishekravi063@gmail.com' },
   { employeeId: 'KT0010', name: 'SIMSARUL HAQUE', designation: 'GROUP ACCOUNTANT', email: 'simsar280108@gmail.com' },
   { employeeId: 'KT0011', name: 'SREERAG BABU', designation: 'CONSULTANT PSYCHOLOGIST', email: 'sreerag.koott@gmail.com' },
-  { employeeId: 'KT0012', name: 'AISWARYA', designation: 'TEAM MARKETING' },
+  { employeeId: 'KT0012', name: 'AISWARYA', designation: 'TEAM MARKETING', email: 'aiswaryasanthosh801@gamil.com' },
   { employeeId: 'KT0013', name: 'SREEDEVI V V', designation: 'TEAM OPERATION', email: 'Sreedevi.koott@gmail.com' },
   { employeeId: 'KT0014', name: 'RAHNAS FATHIMA', designation: 'TEAM OPERATION', email: 'rahnaskoott@gmail.com' },
   { employeeId: 'KT0015', name: 'SREELAKSHMI N', designation: 'CONSULTANT PSYCHOLOGIST', email: 'sreelakshmi.koott@gmail.com' },
