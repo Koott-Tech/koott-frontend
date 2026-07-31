@@ -2112,6 +2112,17 @@ export const financeApi = {
     });
   },
 
+  async getSalaryEmployees() {
+    return apiRequest('/finance/settings/salary-employees');
+  },
+
+  async saveSalaryEmployee(employee) {
+    return apiRequest('/finance/settings/salary-employees', {
+      method: 'POST',
+      body: JSON.stringify(employee),
+    });
+  },
+
   async getClients() {
     return apiRequest('/finance/clients');
   },

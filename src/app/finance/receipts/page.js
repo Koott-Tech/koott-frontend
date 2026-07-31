@@ -18,6 +18,8 @@ import {
   Mail,
   RefreshCw,
   Send,
+  Pencil,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { financeApi } from '@/lib/backendApi';
@@ -306,6 +308,51 @@ const SALARY_DEDUCTION_LABELS = [
   'Unpaid Leave Deduction',
   'Others',
 ];
+
+const DEFAULT_SALARY_EMPLOYEES = [
+  { employeeId: 'KT001', name: 'ATHULYA O', designation: 'CARE MANAGER / PSYCHOLOGIST', email: 'koott.athulya@gmail.com' },
+  { employeeId: 'KT002', name: 'JISHNULAL M', designation: 'TEAM MARKETING', email: 'Jishnulal954@gmail.com' },
+  { employeeId: 'KT003', name: 'DR. ASWATHI PR', designation: 'CHIEF PSYCHOLOGIST', email: 'dr.aswathi.raman.koott@gmail.com' },
+  { employeeId: 'KT004', name: 'IRENE CHERIAN', designation: 'CONSULTANT PSYCHOLOGIST', email: 'irene.Koott@gmail.com' },
+  { employeeId: 'KT005', name: 'SHUHAIMA KATTI', designation: 'CONSULTANT PSYCHOLOGIST', email: 'shuhaima.koott@gmail.com' },
+  { employeeId: 'KT006', name: 'SHINAS KD', designation: 'MARKETING TEAM', email: 'Shinaschungam@mail.com' },
+  { employeeId: 'KT007', name: 'FAISAL VP', designation: 'CEO / FOUNDER', email: 'faisal@koott.in' },
+  { employeeId: 'KT008', name: 'LIANA SAMEER', designation: 'CONSULTANT PSYCHOLOGIST', email: 'liana.koott@gmail.com' },
+  { employeeId: 'KT009', name: 'ABHISHEK R', designation: 'DEVELOPER TEAM', email: 'abhishekravi063@gmail.com' },
+  { employeeId: 'KT0010', name: 'SIMSARUL HAQUE', designation: 'GROUP ACCOUNTANT', email: 'simsar280108@gmail.com' },
+  { employeeId: 'KT0011', name: 'SREERAG BABU', designation: 'CONSULTANT PSYCHOLOGIST', email: 'sreerag.koott@gmail.com' },
+  { employeeId: 'KT0012', name: 'AISWARYA', designation: 'TEAM MARKETING' },
+  { employeeId: 'KT0013', name: 'SREEDEVI V V', designation: 'TEAM OPERATION', email: 'Sreedevi.koott@gmail.com' },
+  { employeeId: 'KT0014', name: 'RAHNAS FATHIMA', designation: 'TEAM OPERATION', email: 'rahnaskoott@gmail.com' },
+  { employeeId: 'KT0015', name: 'SREELAKSHMI N', designation: 'CONSULTANT PSYCHOLOGIST', email: 'sreelakshmi.koott@gmail.com' },
+  { employeeId: 'KT0016', name: 'SIKHA K', designation: 'TEAM OPERATION', email: 'sikha.koott@gmail.com' },
+].map(employee => ({
+  ...employee,
+  email: employee.email || '',
+  location: 'Calicut, India',
+}));
+
+const salaryEmployeeKey = (employee = {}) =>
+  String(employee.employeeId || employee.email || employee.name || '').trim().toLowerCase();
+
+function mergeSalaryEmployees(saved = []) {
+  const merged = new Map();
+  [...DEFAULT_SALARY_EMPLOYEES, ...(Array.isArray(saved) ? saved : [])].forEach(employee => {
+    const key = salaryEmployeeKey(employee);
+    if (!key) return;
+    const existing = merged.get(key) || {};
+    merged.set(key, {
+      ...existing,
+      ...employee,
+      name: employee.name || existing.name || employee.email || '',
+      email: employee.email || existing.email || '',
+      employeeId: employee.employeeId || existing.employeeId || '',
+      location: employee.location || existing.location || 'Calicut, India',
+      designation: employee.designation || existing.designation || '',
+    });
+  });
+  return [...merged.values()];
+}
 
 const createDefaultSalaryCertificateData = () => ({
   payslipId: '',
@@ -916,6 +963,9 @@ function SalaryCertificateForm({
   onSaveEmployee,
   onGenerateReceiptNo,
 }) {
+  const [showEmployeeManager, setShowEmployeeManager] = useState(false);
+  const [employeeEditor, setEmployeeEditor] = useState(null);
+  const [employeeSaving, setEmployeeSaving] = useState(false);
   const inputClass =
     'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30 focus:border-[#025545] transition-all bg-white';
   const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
@@ -929,8 +979,50 @@ function SalaryCertificateForm({
   const totalEarnings = (data.earnings || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
   const totalDeductions = (data.deductions || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
   const netPayable = totalEarnings - totalDeductions;
-  const selectedEmployeeEmail = data.employeeContact || data.recipientEmail || '';
-  const selectedEmployeeIsSaved = (savedEmployees || []).some(employee => employee.email === selectedEmployeeEmail);
+  const selectedEmployeeKey = String(data.employeeId || data.employeeContact || data.recipientEmail || '').trim().toLowerCase();
+  const selectedEmployeeIsSaved = (savedEmployees || []).some(employee => salaryEmployeeKey(employee) === selectedEmployeeKey);
+
+  const openNewEmployee = () => {
+    setEmployeeEditor({
+      employeeName: '',
+      employeeId: '',
+      employeeContact: '',
+      recipientEmail: '',
+      employeeLocation: 'Calicut, India',
+      designation: '',
+    });
+    setShowEmployeeManager(true);
+  };
+
+  const openEditEmployee = (employee) => {
+    setEmployeeEditor({
+      employeeName: employee.name || '',
+      employeeId: employee.employeeId || '',
+      employeeContact: employee.email || '',
+      recipientEmail: employee.email || '',
+      employeeLocation: employee.location || 'Calicut, India',
+      designation: employee.designation || '',
+    });
+    setShowEmployeeManager(true);
+  };
+
+  const updateEmployeeEditor = (key, value) => {
+    setEmployeeEditor(prev => ({ ...(prev || {}), [key]: value }));
+  };
+
+  const saveEmployeeEditor = async () => {
+    if (!employeeEditor) return;
+    setEmployeeSaving(true);
+    try {
+      const saved = await onSaveEmployee(employeeEditor);
+      if (saved) {
+        setEmployeeEditor(null);
+        setShowEmployeeManager(false);
+      }
+    } finally {
+      setEmployeeSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -995,27 +1087,36 @@ function SalaryCertificateForm({
             <label className={labelClass}>Saved Employee</label>
             <select
               className={inputClass}
-              value={selectedEmployeeEmail}
+              value={selectedEmployeeKey}
               onChange={e => onSelectEmployee(e.target.value)}
             >
-              <option value="">Select saved employee email</option>
-              {selectedEmployeeEmail && !selectedEmployeeIsSaved && (
-                <option value={selectedEmployeeEmail}>{selectedEmployeeEmail}</option>
+              <option value="">Select employee</option>
+              {selectedEmployeeKey && !selectedEmployeeIsSaved && (
+                <option value={selectedEmployeeKey}>{data.employeeName || data.employeeContact || data.employeeId}</option>
               )}
               {(savedEmployees || []).map(employee => (
-                <option key={employee.email} value={employee.email}>
-                  {employee.name || employee.email} — {employee.email}
+                <option key={salaryEmployeeKey(employee)} value={salaryEmployeeKey(employee)}>
+                  {[employee.employeeId, employee.name || employee.email, employee.designation].filter(Boolean).join(' — ')}
                 </option>
               ))}
             </select>
           </div>
-          <button
-            type="button"
-            onClick={() => onSaveEmployee(data)}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#025545]/20 bg-[#025545]/5 px-3 py-2 text-sm font-semibold text-[#025545] hover:bg-[#025545]/10 transition-colors"
-          >
-            <Save className="h-4 w-4" /> Save Employee
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onSaveEmployee(data)}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[#025545]/20 bg-[#025545]/5 px-3 py-2 text-sm font-semibold text-[#025545] hover:bg-[#025545]/10 transition-colors"
+            >
+              <Save className="h-4 w-4" /> Save
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEmployeeManager(true)}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <Pencil className="h-4 w-4" /> Manage
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -1108,6 +1209,108 @@ function SalaryCertificateForm({
           </div>
         </div>
       </div>
+
+      {showEmployeeManager && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-3xl max-h-[88vh] overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Manage Salary Employees</div>
+                <div className="text-xs text-gray-500">Add or edit employee details used in salary certificates.</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowEmployeeManager(false); setEmployeeEditor(null); }}
+                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 max-h-[calc(88vh-73px)] overflow-y-auto">
+              <div className="p-4 border-b md:border-b-0 md:border-r border-gray-100">
+                <button
+                  type="button"
+                  onClick={openNewEmployee}
+                  className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#025545] px-3 py-2 text-sm font-semibold text-white hover:bg-[#013d33]"
+                >
+                  <Plus className="h-4 w-4" /> Add New Employee
+                </button>
+                <div className="space-y-2">
+                  {(savedEmployees || []).map(employee => (
+                    <button
+                      type="button"
+                      key={salaryEmployeeKey(employee)}
+                      onClick={() => openEditEmployee(employee)}
+                      className="w-full text-left rounded-lg border border-gray-100 px-3 py-2 hover:border-[#025545]/30 hover:bg-[#025545]/5 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-gray-800">{employee.name || employee.employeeId}</span>
+                        <Pencil className="h-3.5 w-3.5 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {[employee.employeeId, employee.designation].filter(Boolean).join(' | ')}
+                      </div>
+                      {employee.email && <div className="text-xs text-[#025545] mt-0.5">{employee.email}</div>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4">
+                {employeeEditor ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className={labelClass}>Employee ID</label>
+                      <input className={inputClass} value={employeeEditor.employeeId || ''} onChange={e => updateEmployeeEditor('employeeId', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Name</label>
+                      <input className={inputClass} value={employeeEditor.employeeName || ''} onChange={e => updateEmployeeEditor('employeeName', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Email</label>
+                      <input className={inputClass} type="email" value={employeeEditor.employeeContact || ''} onChange={e => {
+                        updateEmployeeEditor('employeeContact', e.target.value);
+                        updateEmployeeEditor('recipientEmail', e.target.value);
+                      }} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Designation</label>
+                      <input className={inputClass} value={employeeEditor.designation || ''} onChange={e => updateEmployeeEditor('designation', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Location</label>
+                      <input className={inputClass} value={employeeEditor.employeeLocation || ''} onChange={e => updateEmployeeEditor('employeeLocation', e.target.value)} />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setEmployeeEditor(null)}
+                        className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={saveEmployeeEditor}
+                        disabled={employeeSaving}
+                        className="flex-1 rounded-lg bg-[#025545] px-3 py-2 text-sm font-semibold text-white hover:bg-[#013d33] disabled:opacity-60"
+                      >
+                        {employeeSaving ? 'Saving...' : 'Save Employee'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full min-h-48 rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+                    Select an employee to edit or add a new one.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1130,7 +1333,7 @@ export default function ReceiptsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [savedRecipients, setSavedRecipients] = useState([]);
-  const [savedEmployees, setSavedEmployees] = useState([]);
+  const [savedEmployees, setSavedEmployees] = useState(() => mergeSalaryEmployees());
   const [autofillingSessions, setAutofillingSessions] = useState(false);
 
   const [payoutReceiptData, setPayoutReceiptData] = useState(createDefaultPayoutReceiptData);
@@ -1147,9 +1350,6 @@ export default function ReceiptsPage() {
     try {
       const savedOpsEmails = JSON.parse(localStorage.getItem('koott_receipt_saved_recipients') || '[]');
       if (Array.isArray(savedOpsEmails)) setSavedRecipients(savedOpsEmails);
-
-      const savedSalaryEmployees = JSON.parse(localStorage.getItem('koott_salary_certificate_employees') || '[]');
-      if (Array.isArray(savedSalaryEmployees)) setSavedEmployees(savedSalaryEmployees);
 
       const savedPayoutDraft = JSON.parse(localStorage.getItem('koott_payout_receipt_draft') || 'null');
       if (savedPayoutDraft && typeof savedPayoutDraft === 'object') {
@@ -1178,6 +1378,7 @@ export default function ReceiptsPage() {
     } catch (e) {
       console.error('Error loading payout receipt draft', e);
     }
+
   }, []);
 
   useEffect(() => {
@@ -1196,6 +1397,23 @@ export default function ReceiptsPage() {
       }
     };
     loadDoctors();
+    return () => { cancelled = true; };
+  }, [authLoading, isAuthenticated, hasRole]);
+
+  useEffect(() => {
+    if (authLoading || !isAuthenticated() || (!hasRole('finance') && !hasRole('admin') && !hasRole('superadmin'))) return;
+    let cancelled = false;
+    const loadSalaryEmployees = async () => {
+      try {
+        const response = await financeApi.getSalaryEmployees();
+        const employees = response?.data?.employees || response?.employees || [];
+        if (!cancelled) setSavedEmployees(mergeSalaryEmployees(employees));
+      } catch (e) {
+        console.error('Error loading salary certificate employees from DB', e);
+        if (!cancelled) setSavedEmployees(mergeSalaryEmployees());
+      }
+    };
+    loadSalaryEmployees();
     return () => { cancelled = true; };
   }, [authLoading, isAuthenticated, hasRole]);
 
@@ -1243,27 +1461,41 @@ export default function ReceiptsPage() {
     });
   }, []);
 
-  const saveSalaryEmployee = useCallback((employeeData) => {
+  const saveSalaryEmployee = useCallback(async (employeeData) => {
     const cleanEmail = String(employeeData.employeeContact || employeeData.recipientEmail || '').trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    const cleanEmployeeId = String(employeeData.employeeId || '').trim();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       alert('Enter a valid employee email/contact before saving.');
-      return;
+      return false;
+    }
+    if (!cleanEmail && !cleanEmployeeId) {
+      alert('Enter an employee ID or email before saving.');
+      return false;
     }
 
     const employee = {
-      name: String(employeeData.employeeName || cleanEmail).trim(),
+      name: String(employeeData.employeeName || cleanEmail || cleanEmployeeId).trim(),
       email: cleanEmail,
-      employeeId: String(employeeData.employeeId || '').trim(),
+      employeeId: cleanEmployeeId,
       location: String(employeeData.employeeLocation || '').trim(),
       designation: String(employeeData.designation || '').trim(),
     };
 
-    setSavedEmployees(prev => {
-      const withoutDuplicate = prev.filter(item => String(item.email || '').toLowerCase() !== cleanEmail.toLowerCase());
-      const next = [employee, ...withoutDuplicate].slice(0, 50);
-      localStorage.setItem('koott_salary_certificate_employees', JSON.stringify(next));
-      return next;
+    const updateLocalEmployees = (savedEmployee) => setSavedEmployees(prev => {
+      const employeeKey = salaryEmployeeKey(employee);
+      const withoutDuplicate = prev.filter(item => salaryEmployeeKey(item) !== employeeKey);
+      return mergeSalaryEmployees([savedEmployee, ...withoutDuplicate]).slice(0, 80);
     });
+
+    try {
+      const response = await financeApi.saveSalaryEmployee(employee);
+      const savedEmployee = response?.data?.employee || response?.employee || employee;
+      updateLocalEmployees(savedEmployee);
+    } catch (e) {
+      console.error('Error saving salary employee to DB', e);
+      alert(e?.message || 'Failed to save employee to database.');
+      return false;
+    }
 
     setSalaryCertificateData(prev => ({
       ...prev,
@@ -1274,10 +1506,11 @@ export default function ReceiptsPage() {
       employeeLocation: employee.location,
       designation: employee.designation,
     }));
+    return true;
   }, []);
 
-  const applySalaryEmployee = useCallback((email) => {
-    const selected = savedEmployees.find(item => String(item.email || '').toLowerCase() === String(email || '').toLowerCase());
+  const applySalaryEmployee = useCallback((employeeKey) => {
+    const selected = savedEmployees.find(item => salaryEmployeeKey(item) === String(employeeKey || '').toLowerCase());
     if (!selected) return;
 
     setEmailSent(false);
