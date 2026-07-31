@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download } from 'lucide-react';
+import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download, Pencil, Save, X } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useAuth } from '@/contexts/AuthContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -49,6 +49,20 @@ const fmtTime = (t) => {
   if (Number.isNaN(h)) return t;
   const ampm = h >= 12 ? 'PM' : 'AM';
   return `${h % 12 === 0 ? 12 : h % 12}:${mm || '00'} ${ampm}`;
+};
+
+const fmtBookedDate = (d) => {
+  if (!d) return '—';
+  try {
+    return new Date(d).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata',
+    });
+  } catch {
+    return d;
+  }
 };
 
 const STATUS_STYLES = {
@@ -106,6 +120,9 @@ export default function FinancePayouts() {
   const [completedTabCount, setCompletedTabCount] = useState(0);
   const [pendingTabAmount, setPendingTabAmount] = useState(0);
   const [completedTabAmount, setCompletedTabAmount] = useState(0);
+  const [editingDetailRowId, setEditingDetailRowId] = useState(null);
+  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '' });
+  const [savingDetailRowId, setSavingDetailRowId] = useState(null);
   
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
 
@@ -205,6 +222,72 @@ export default function FinancePayouts() {
       setSelectedPayoutProfileError(err?.message || 'Failed to load full session breakdown');
     } finally {
       setSelectedPayoutProfileLoading(false);
+    }
+  };
+
+  const reloadSelectedPayoutProfile = async () => {
+    if (!selectedPayout?.psychologist_id) return;
+    const params = { dateBasis: 'scheduled' };
+    if (hasDateRangeBounds(dateRange)) {
+      params.dateFrom = formatIstCalendarYmd(dateRange.from);
+      params.dateTo = formatIstCalendarYmd(dateRange.to);
+    }
+    const response = await financeApi.getDoctorFinanceProfile(selectedPayout.psychologist_id, params);
+    if (!response?.success) {
+      throw new Error(response?.message || 'Failed to reload payout details');
+    }
+    setSelectedPayoutProfile(response.data || null);
+  };
+
+  const startEditDetailRow = (row) => {
+    const rowId = row.session_id || row.id;
+    const doctorAmount = row.doctor_amount ?? row.doctor_wallet ?? 0;
+    const companyAmount = row.company_amount ?? row.company_commission ?? 0;
+    setEditingDetailRowId(rowId);
+    setDetailEditValues({
+      session_amount: String(Number(row.session_amount || 0)),
+      doctor_amount: String(Number(doctorAmount || 0)),
+      company_amount: String(Number(companyAmount || 0)),
+    });
+  };
+
+  const cancelEditDetailRow = () => {
+    setEditingDetailRowId(null);
+    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '' });
+  };
+
+  const updateDetailEditValue = (field, value) => {
+    const next = { ...detailEditValues, [field]: value };
+    const sessionAmount = Number(field === 'session_amount' ? value : next.session_amount) || 0;
+    if (field === 'doctor_amount') {
+      next.company_amount = String(sessionAmount - (Number(value) || 0));
+    } else if (field === 'company_amount' || field === 'session_amount') {
+      next.doctor_amount = String(sessionAmount - (Number(next.company_amount) || 0));
+    }
+    setDetailEditValues(next);
+  };
+
+  const saveDetailRow = async (row) => {
+    const rowId = row.session_id || row.id;
+    const sessionAmount = Number(detailEditValues.session_amount);
+    const companyAmount = Number(detailEditValues.company_amount);
+
+    if (!rowId || !Number.isFinite(sessionAmount) || sessionAmount < 0 || !Number.isFinite(companyAmount)) {
+      alert('Enter valid amount values before saving');
+      return;
+    }
+
+    try {
+      setSavingDetailRowId(rowId);
+      await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount);
+      cancelEditDetailRow();
+      await reloadSelectedPayoutProfile();
+      await loadPayoutPageData(activeTab);
+    } catch (error) {
+      console.error('Failed to update payout detail row:', error);
+      alert(error?.message || 'Failed to update session finance values');
+    } finally {
+      setSavingDetailRowId(null);
     }
   };
 
@@ -669,16 +752,6 @@ export default function FinancePayouts() {
 
                 {selectedDetailRows.length > 0 && (
                   <div>
-                    <div className="mb-3">
-                      <label className="text-sm font-medium text-gray-700">
-                        Session Breakdown ({selectedDetailCount})
-                      </label>
-                      {isUsingProfileRows && (
-                        <p className="mt-1 text-xs text-gray-500">
-                          Showing the same full doctor-profile breakdown for this date range.
-                        </p>
-                      )}
-                    </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-sm">
                         <thead className="bg-gray-50">
@@ -691,7 +764,9 @@ export default function FinancePayouts() {
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Session Amount</th>
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Doctor</th>
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Company</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Booked Date</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payout</th>
+                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Edit</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -706,14 +781,20 @@ export default function FinancePayouts() {
                             const companyAmount = (isProfileRow ? session.company_amount : session.company_commission) || 0;
                             const doctorAmount = (isProfileRow ? session.doctor_amount : session.doctor_wallet) || 0;
                             const source = sourceStyleFor(session.source);
+                            const rowId = session.session_id || session.id || idx;
+                            const isEditing = editingDetailRowId === rowId;
+                            const isSaving = savingDetailRowId === rowId;
                             return (
-                              <tr key={session.session_id || session.id || idx} className="hover:bg-slate-50/60">
+                              <tr key={rowId} className="hover:bg-slate-50/60">
                                 <td className="px-4 py-2.5 whitespace-nowrap">
                                   <div className="text-slate-900">{fmtDate(session.session_date)}</div>
                                   <div className="text-xs text-slate-400">{fmtTime(session.session_time)}</div>
                                 </td>
-                                <td className="px-4 py-2.5 text-slate-700 max-w-[180px] truncate" title={session.client_name}>
-                                  {session.client_name || '—'}
+                                <td className="px-4 py-2.5 text-slate-700 max-w-[210px]" title={session.client_name}>
+                                  <div className="truncate">{session.client_name || '—'}</div>
+                                  <div className="mt-0.5 truncate text-xs text-slate-400">
+                                    {session.client_email || '—'}
+                                  </div>
                                 </td>
                                 <td className="px-4 py-2.5 text-slate-600 capitalize">
                                   {session.package_label || session.session_type_label || session.session_type?.replace(/_/g, ' ') || '-'}
@@ -728,15 +809,59 @@ export default function FinancePayouts() {
                                     {String(status || '-').replace(/_/g, ' ')}
                                   </span>
                                 </td>
-                                <td className="px-4 py-2.5 text-right text-slate-700">{inr(session.session_amount)}</td>
-                                <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">{inr(doctorAmount)}</td>
+                                <td className="px-4 py-2.5 text-right text-slate-700">
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      value={detailEditValues.session_amount}
+                                      onChange={(e) => updateDetailEditValue('session_amount', e.target.value)}
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                    />
+                                  ) : inr(session.session_amount)}
+                                </td>
+                                <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      value={detailEditValues.doctor_amount}
+                                      onChange={(e) => updateDetailEditValue('doctor_amount', e.target.value)}
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                    />
+                                  ) : inr(doctorAmount)}
+                                </td>
                                 <td className={`px-4 py-2.5 text-right ${Number(companyAmount) < 0 ? 'text-slate-400' : 'text-indigo-700'}`}>
-                                  {inr(companyAmount)}
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      value={detailEditValues.company_amount}
+                                      onChange={(e) => updateDetailEditValue('company_amount', e.target.value)}
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                    />
+                                  ) : inr(companyAmount)}
+                                </td>
+                                <td className="px-4 py-2.5 whitespace-nowrap text-xs text-slate-500">
+                                  {fmtBookedDate(session.booked_at || session.booking_created_at || session.created_at)}
                                 </td>
                                 <td className="px-4 py-2.5">
                                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${payoutStyle.cls}`}>
                                     {payoutStyle.label}
                                   </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-center">
+                                  {isEditing ? (
+                                    <div className="flex justify-center gap-1">
+                                      <button onClick={() => saveDetailRow(session)} disabled={isSaving} className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50" title="Save">
+                                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                      </button>
+                                      <button onClick={cancelEditDetailRow} disabled={isSaving} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-50" title="Cancel">
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button onClick={() => startEditDetailRow(session)} className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" title="Edit finance values">
+                                      <Pencil className="h-4 w-4" />
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             );
@@ -745,11 +870,11 @@ export default function FinancePayouts() {
                         {selectedDetailRows.length > 0 && (
                           <tfoot className="bg-slate-50 font-semibold">
                             <tr>
-                              <td colSpan={5} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
+                              <td colSpan={6} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
                               <td className="px-4 py-2.5 text-right text-slate-900">{inr(selectedDetailTotals.amount)}</td>
                               <td className="px-4 py-2.5 text-right text-emerald-700">{inr(selectedDetailTotals.doctor)}</td>
                               <td className="px-4 py-2.5 text-right text-indigo-700">{inr(selectedDetailTotals.company)}</td>
-                              <td />
+                              <td colSpan={2} />
                             </tr>
                           </tfoot>
                         )}

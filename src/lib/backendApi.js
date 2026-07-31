@@ -896,6 +896,17 @@ export const adminApi = {
     return apiRequest(`/admin/psychologists?${queryParams}`);
   },
 
+  // Lazily fetch sessions/bookings for a single psychologist from the doctors action menu
+  async getPsychologistBookingDetails(psychologistId, params = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') queryParams.append(key, value);
+    });
+
+    const queryString = queryParams.toString();
+    return apiRequest(`/admin/psychologists/${psychologistId}/booking-details${queryString ? `?${queryString}` : ''}`);
+  },
+
   // Get user details
   async getUserDetails(userId) {
     return apiRequest(`/admin/users/${userId}`);
@@ -2094,10 +2105,13 @@ export const financeApi = {
     });
   },
 
-  async updateSessionCommission(sessionId, commissionAmount) {
+  async updateSessionCommission(sessionId, commissionAmount, sessionAmount) {
     return apiRequest(`/finance/sessions/${sessionId}/commission`, {
       method: 'PUT',
-      body: JSON.stringify({ commission_amount: commissionAmount }),
+      body: JSON.stringify({
+        commission_amount: commissionAmount,
+        ...(sessionAmount !== undefined ? { session_amount: sessionAmount } : {}),
+      }),
     });
   },
 

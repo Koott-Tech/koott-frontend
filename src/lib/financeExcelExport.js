@@ -28,6 +28,20 @@ const autosizeColumns = (rows) => {
   });
 };
 
+const formatBookedDate = (value) => {
+  if (!value) return '';
+  try {
+    return new Date(value).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata',
+    });
+  } catch {
+    return value;
+  }
+};
+
 const addSheet = (workbook, name, rows) => {
   const sheetRows = rows.length ? rows : [{ Note: 'No rows for this export' }];
   const worksheet = XLSX.utils.json_to_sheet(sheetRows);
@@ -62,6 +76,7 @@ export function exportFinanceRowsToExcel({
       'Session Amount': Number(row.session_amount || 0),
       'Doctor Commission': Number((isProfileRow ? row.doctor_amount : row.doctor_wallet) || 0),
       'Company Commission': Number((isProfileRow ? row.company_amount : row.company_commission) || 0),
+      'Booked Date': formatBookedDate(row.booked_at || row.booking_created_at || row.created_at),
       'Payout Status': labelFromMap(payoutStyles, payoutStatus, payoutStatus),
       'Order ID': row.order_id || '',
       'Session ID': row.session_id || row.id || '',

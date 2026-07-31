@@ -451,6 +451,8 @@ export default function FinanceSessionsPage() {
 
   const derivePaymentMethod = (booking) => {
     const p = wixPayload(booking) || {};
+    // Admin-created booking (Wix admin-manual mirror or platform manual) → "Admin".
+    if (p.isAdminManual === true || String(booking.source || '').toLowerCase() === 'admin_manual') return 'Admin';
     const vendors = p.paymentDetails?.wixPayMultipleDetails;
     if (Array.isArray(vendors) && vendors.length > 0) {
       const v = vendors[0]?.paymentVendorName;
@@ -459,9 +461,15 @@ export default function FinanceSessionsPage() {
       if (v) return v;
     }
     if (p.paymentState === 'FREE') return 'Free';
-    if (p.paymentState === 'COMPLETE') return null;
+    // A completed online Wix payment collapses the vendor breakdown to [] and only reports
+    // paymentState:'COMPLETE' — for Koott the only online gateway is Razorpay.
+    if (p.paymentState === 'COMPLETE') return 'Razorpay';
+    // ₹0 package follow-ups aren't "Free": the whole package price sits on session #1 and the
+    // follow-ups inherit its method. A non-admin Wix package (admin handled above) = Razorpay.
+    if (deriveSessionTypeKey(booking) === 'package') return 'Razorpay';
     if (getPriceDisplayAmount(booking) === 0) return 'Free';
-    return null;
+    // A real-priced Wix booking with no explicit vendor/state is an online Razorpay payment.
+    return 'Razorpay';
   };
 
   const formatBookedAt = (isoString) => {
@@ -796,13 +804,15 @@ export default function FinanceSessionsPage() {
                       : typeLabel === 'Discovery'  ? 'bg-sky-50 text-sky-700'
                       : 'bg-indigo-50 text-indigo-700';
                   const paymentLabel = derivePaymentMethod(booking);
-                  const paymentColour = paymentLabel === 'Manual'
+                  const paymentColour = paymentLabel === 'Manual' || paymentLabel === 'Admin'
                     ? 'bg-orange-50 text-orange-700'
                     : paymentLabel === 'Free'
                       ? 'bg-sky-50 text-sky-700'
                       : 'bg-emerald-50 text-emerald-700';
-                  const clientEmail = booking.client?.user?.email || booking.client_email || null;
-                  const clientPhone = booking.client?.phone_number || booking.client_phone || null;
+                  const _wp = wixPayload(booking) || {};
+                  const _wpContact = _wp.client || _wp.formInfo?.contactDetails || _wp.contactDetails || {};
+                  const clientEmail = booking.client?.user?.email || booking.client?.email || booking.client_email || _wpContact.email || null;
+                  const clientPhone = booking.client?.phone_number || booking.client_phone || _wpContact.phone || _wpContact.phoneNumber || null;
 
                   const isManual = isManualSession(booking);
                   const isVerified = booking.payment_verified === true;
@@ -822,19 +832,19 @@ export default function FinanceSessionsPage() {
                           {paymentLabel && <span className={`inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium ${paymentColour}`}>{paymentLabel}</span>}
                           {isManual && (
                             isVerified
-                              ? <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
-                                  <CheckCircle className="h-2.5 w-2.5" />Verified
+                              ? <span title="Payment verified" className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-green-50 text-green-700 border border-green-200">
+                                  <CheckCircle className="h-2.5 w-2.5" />
                                 </span>
-                              : <span className="inline-flex rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                                  Pending verification
+                              : <span title="Pending verification" className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                  <Clock className="h-2.5 w-2.5" />
                                 </span>
                           )}
                         </div>
                       </td>
                       {/* Client */}
                       <td className="px-4 py-3">
-                        <p className="text-gray-900">{getClientDisplayName(booking)}</p>
-                        {clientEmail && <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Mail className="h-3 w-3 shrink-0" />{clientEmail}</div>}
+                        {(() => { const nm = getClientDisplayName(booking); return <p className="text-gray-900 font-medium truncate max-w-[180px]" title={nm}>{nm}</p>; })()}
+                        {clientEmail && <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5 max-w-[200px]"><Mail className="h-3 w-3 shrink-0" /><span className="truncate" title={clientEmail}>{clientEmail}</span></div>}
                         {clientPhone && <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5"><Phone className="h-3 w-3 shrink-0" />{clientPhone}</div>}
                       </td>
                       {/* Therapist */}

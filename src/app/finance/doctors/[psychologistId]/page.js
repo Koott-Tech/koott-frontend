@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Wallet, TrendingUp, Calendar, User, Download, Loader2, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, Wallet, TrendingUp, Calendar, User, Download, Loader2, CheckCircle2, Clock, XCircle, Pencil, Save, X } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -29,6 +29,20 @@ const fmtTime = (t) => {
   if (Number.isNaN(h)) return t;
   const ampm = h >= 12 ? 'PM' : 'AM';
   return `${h % 12 === 0 ? 12 : h % 12}:${mm || '00'} ${ampm}`;
+};
+
+const fmtBookedDate = (d) => {
+  if (!d) return '—';
+  try {
+    return new Date(d).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Kolkata',
+    });
+  } catch {
+    return d;
+  }
 };
 
 const parseYmdToLocalDate = (ymd) => {
@@ -94,7 +108,7 @@ export default function DoctorFinanceProfilePage() {
   const { psychologistId } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { showError } = useNotification();
+  const { showError, showSuccess } = useNotification();
 
   const initialDateRange = (() => {
     const fromParam = searchParams.get('dateFrom');
@@ -112,6 +126,9 @@ export default function DoctorFinanceProfilePage() {
   const [dateBasis, setDateBasis] = useState(initialDateBasis);
   const [statusFilter, setStatusFilter] = useState('all');
   const [payoutFilter, setPayoutFilter] = useState('all');
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editValues, setEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '' });
+  const [savingRowId, setSavingRowId] = useState(null);
 
   const load = useCallback(async () => {
     if (!psychologistId) return;
@@ -135,6 +152,53 @@ export default function DoctorFinanceProfilePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const startEditRow = (row) => {
+    setEditingRowId(row.session_id);
+    setEditValues({
+      session_amount: String(Number(row.session_amount || 0)),
+      doctor_amount: String(Number(row.doctor_amount || 0)),
+      company_amount: String(Number(row.company_amount || 0)),
+    });
+  };
+
+  const cancelEditRow = () => {
+    setEditingRowId(null);
+    setEditValues({ session_amount: '', doctor_amount: '', company_amount: '' });
+  };
+
+  const updateEditValue = (field, value) => {
+    const next = { ...editValues, [field]: value };
+    const sessionAmount = Number(field === 'session_amount' ? value : next.session_amount) || 0;
+    if (field === 'doctor_amount') {
+      next.company_amount = String(sessionAmount - (Number(value) || 0));
+    } else if (field === 'company_amount' || field === 'session_amount') {
+      next.doctor_amount = String(sessionAmount - (Number(next.company_amount) || 0));
+    }
+    setEditValues(next);
+  };
+
+  const saveEditRow = async (row) => {
+    const sessionAmount = Number(editValues.session_amount);
+    const companyAmount = Number(editValues.company_amount);
+
+    if (!Number.isFinite(sessionAmount) || sessionAmount < 0 || !Number.isFinite(companyAmount)) {
+      showError('Enter valid amount values before saving');
+      return;
+    }
+
+    try {
+      setSavingRowId(row.session_id);
+      await financeApi.updateSessionCommission(row.session_id, companyAmount, sessionAmount);
+      showSuccess('Session finance values updated');
+      cancelEditRow();
+      await load();
+    } catch (error) {
+      showError(error?.message || 'Failed to update session finance values');
+    } finally {
+      setSavingRowId(null);
+    }
+  };
+
   const sessions = useMemo(() => data?.sessions || [], [data?.sessions]);
   const filtered = useMemo(() => sessions.filter((r) => {
     if (statusFilter !== 'all' && String(r.status).toLowerCase() !== statusFilter) return false;
@@ -150,10 +214,10 @@ export default function DoctorFinanceProfilePage() {
   }), { amount: 0, doctor: 0, company: 0 }), [filtered]);
 
   const exportCsv = () => {
-    const head = ['Date', 'Time', 'Client', 'Type', 'Source', 'Payment Proof', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Payout', 'Order'];
+    const head = ['Date', 'Time', 'Client', 'Type', 'Source', 'Payment Proof', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Booked At', 'Payout', 'Order'];
     const lines = filtered.map((r) => [
       r.session_date, r.session_time, r.client_name, r.package_label, sourceStyleFor(r.source).label, r.payment_proof_url || '', r.status,
-      r.session_amount, r.doctor_amount, r.company_amount, r.payout_status, r.order_id || '',
+      r.session_amount, r.doctor_amount, r.company_amount, fmtBookedDate(r.booked_at), r.payout_status, r.order_id || '',
     ].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
     const csv = [head.join(','), ...lines].join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
@@ -285,17 +349,19 @@ export default function DoctorFinanceProfilePage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    {['Date', 'Client', 'Type', 'Source', 'Proof', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Payout'].map((h, i) => (
-                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 6 && i <= 8 ? 'text-right' : 'text-left'}`}>{h}</th>
+                    {['Date', 'Client', 'Type', 'Source', 'Proof', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Booked Date', 'Payout', 'Edit'].map((h, i) => (
+                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 6 && i <= 8 ? 'text-right' : i === 11 ? 'text-center' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={10} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
+                    <tr><td colSpan={12} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
                   ) : filtered.map((r) => {
                     const po = PAYOUT_STYLES[r.payout_status] || PAYOUT_STYLES.not_due;
                     const source = sourceStyleFor(r.source);
+                    const isEditing = editingRowId === r.session_id;
+                    const isSaving = savingRowId === r.session_id;
                     return (
                       <tr key={r.session_id} className="hover:bg-slate-50/60">
                         <td className="px-4 py-2.5 whitespace-nowrap">
@@ -321,11 +387,43 @@ export default function DoctorFinanceProfilePage() {
                             {r.status}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-right text-slate-700">{inr(r.session_amount)}</td>
-                        <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">{inr(r.doctor_amount)}</td>
-                        <td className={`px-4 py-2.5 text-right ${Number(r.company_amount) < 0 ? 'text-slate-400' : 'text-indigo-700'}`}>{inr(r.company_amount)}</td>
+                        <td className="px-4 py-2.5 text-right text-slate-700">
+                          {isEditing ? (
+                            <input type="number" value={editValues.session_amount} onChange={(e) => updateEditValue('session_amount', e.target.value)}
+                              className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs" />
+                          ) : inr(r.session_amount)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">
+                          {isEditing ? (
+                            <input type="number" value={editValues.doctor_amount} onChange={(e) => updateEditValue('doctor_amount', e.target.value)}
+                              className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs" />
+                          ) : inr(r.doctor_amount)}
+                        </td>
+                        <td className={`px-4 py-2.5 text-right ${Number(r.company_amount) < 0 ? 'text-slate-400' : 'text-indigo-700'}`}>
+                          {isEditing ? (
+                            <input type="number" value={editValues.company_amount} onChange={(e) => updateEditValue('company_amount', e.target.value)}
+                              className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs" />
+                          ) : inr(r.company_amount)}
+                        </td>
+                        <td className="px-4 py-2.5 whitespace-nowrap text-xs text-slate-500">{fmtBookedDate(r.booked_at)}</td>
                         <td className="px-4 py-2.5">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${po.cls}`}>{po.label}</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-center">
+                          {isEditing ? (
+                            <div className="flex justify-center gap-1">
+                              <button onClick={() => saveEditRow(r)} disabled={isSaving} className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50" title="Save">
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                              </button>
+                              <button onClick={cancelEditRow} disabled={isSaving} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-50" title="Cancel">
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button onClick={() => startEditRow(r)} className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" title="Edit finance values">
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -338,7 +436,7 @@ export default function DoctorFinanceProfilePage() {
                       <td className="px-4 py-2.5 text-right text-slate-900">{inr(shown.amount)}</td>
                       <td className="px-4 py-2.5 text-right text-emerald-700">{inr(shown.doctor)}</td>
                       <td className="px-4 py-2.5 text-right text-indigo-700">{inr(shown.company)}</td>
-                      <td />
+                      <td colSpan={3} />
                     </tr>
                   </tfoot>
                 )}

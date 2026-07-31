@@ -14,7 +14,8 @@ import {
   Calendar,
   GripVertical,
   MoreVertical,
-  Check
+  Check,
+  ClipboardList
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -101,6 +102,52 @@ const sortTimeSlotsChronologically = (slots = []) => {
     .map(formatTimeSlotLabel);
 };
 
+const formatCurrency = (value) => {
+  const number = Number(value || 0);
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: Number.isInteger(number) ? 0 : 2,
+  }).format(Number.isFinite(number) ? number : 0);
+};
+
+const formatDisplayDate = (value) => {
+  if (!value) return 'Not scheduled';
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '—';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const titleCase = (value) => String(value || '—')
+  .replace(/[_-]+/g, ' ')
+  .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const statusBadgeClass = (status) => {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'completed') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  if (['booked', 'scheduled', 'confirmed', 'rescheduled', 'reschedule_requested'].includes(normalized)) {
+    return 'bg-blue-50 text-blue-700 border-blue-200';
+  }
+  if (['cancelled', 'canceled', 'deleted', 'refunded'].includes(normalized)) {
+    return 'bg-red-50 text-red-700 border-red-200';
+  }
+  if (['no_show', 'no-show'].includes(normalized)) return 'bg-amber-50 text-amber-700 border-amber-200';
+  return 'bg-slate-50 text-slate-700 border-slate-200';
+};
+
 export default function DoctorsPage() {
   const { showError, showSuccess } = useNotification();
   const { user, isAuthenticated, hasRole, isLoading: authLoading } = useAuth();
@@ -115,6 +162,11 @@ export default function DoctorsPage() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+  const [isBookingDetailsOpen, setIsBookingDetailsOpen] = useState(false);
+  const [bookingDetailsDoctor, setBookingDetailsDoctor] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
+  const [isBookingDetailsLoading, setIsBookingDetailsLoading] = useState(false);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
 
   useEffect(() => {
     // Check authentication and role
@@ -225,6 +277,58 @@ export default function DoctorsPage() {
   const openFullProfile = (doctor) => {
     setSelectedDoctor(doctor);
     setIsFullProfileOpen(true);
+  };
+
+  const loadBookingDetails = async (doctor, status = bookingStatusFilter) => {
+    if (!doctor) return;
+
+    const doctorId = doctor.psychologist_id || doctor.id;
+    if (!doctorId) {
+      showError('Doctor ID is missing', 'Booking Details Error');
+      return;
+    }
+
+    try {
+      setIsBookingDetailsLoading(true);
+      const response = await adminApi.getPsychologistBookingDetails(doctorId, {
+        page: 1,
+        limit: 100,
+        status,
+      });
+
+      if (response?.success) {
+        setBookingDetails(response.data || null);
+      } else {
+        setBookingDetails(null);
+        showError(response?.message || 'Failed to load booking details', 'Booking Details Error');
+      }
+    } catch (error) {
+      console.error('Failed to load booking details:', error);
+      setBookingDetails(null);
+      showError(error?.message || 'Failed to load booking details', 'Booking Details Error');
+    } finally {
+      setIsBookingDetailsLoading(false);
+    }
+  };
+
+  const openBookingDetails = (doctor) => {
+    setBookingDetailsDoctor(doctor);
+    setBookingDetails(null);
+    setBookingStatusFilter('all');
+    setIsBookingDetailsOpen(true);
+    loadBookingDetails(doctor, 'all');
+  };
+
+  const closeBookingDetails = () => {
+    setIsBookingDetailsOpen(false);
+    setBookingDetailsDoctor(null);
+    setBookingDetails(null);
+    setBookingStatusFilter('all');
+  };
+
+  const handleBookingStatusChange = (status) => {
+    setBookingStatusFilter(status);
+    loadBookingDetails(bookingDetailsDoctor, status);
   };
 
   const handleDoctorModalClose = () => {
@@ -343,12 +447,6 @@ export default function DoctorsPage() {
     
     return matchesSearch && matchesSpecialty;
   });
-
-  // Debug logging
-  console.log('Current doctors state:', doctors);
-  console.log('Filtered doctors:', filteredDoctors);
-  console.log('Search term:', searchTerm);
-  console.log('Filter specialty:', filterSpecialty);
 
   const specialties = [...new Set(doctors.flatMap(d => d.area_of_expertise || []).filter(Boolean))];
 
@@ -580,6 +678,10 @@ export default function DoctorsPage() {
                     <Eye className="h-4 w-4 mr-2" />
                     View Profile
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openBookingDetails(doctor); }} className="cursor-pointer">
+                    <ClipboardList className="h-4 w-4 mr-2" />
+                    View Booking Details
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditDoctor(doctor); }} className="cursor-pointer">
                     <Edit className="h-4 w-4 mr-2" />
@@ -636,6 +738,182 @@ export default function DoctorsPage() {
           doctor={editingDoctor}
           mode={editingDoctor ? 'edit' : 'add'}
         />
+      )}
+
+      {/* Booking Details Modal - loaded only from the action menu */}
+      {isBookingDetailsOpen && bookingDetailsDoctor && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#025545]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {getDoctorImageUrl(bookingDetailsDoctor) ? (
+                    <img
+                      src={getDoctorImageUrl(bookingDetailsDoctor)}
+                      alt={bookingDetailsDoctor.name || bookingDetailsDoctor.email}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ClipboardList className="w-5 h-5 text-[#025545]" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-slate-800 tracking-tight" role="heading" aria-level={1}>
+                    Booking Details — {bookingDetails?.psychologist?.name || bookingDetailsDoctor.name || bookingDetailsDoctor.email}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">
+                    {bookingDetails?.psychologist?.email || bookingDetailsDoctor.email || 'No email'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeBookingDetails}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-200/80"
+                aria-label="Close booking details"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 overflow-y-auto">
+              {isBookingDetailsLoading && !bookingDetails ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#025545]"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+                    {[
+                      ['Total Sessions', bookingDetails?.summary?.total ?? 0, 'text-slate-900'],
+                      ['Completed', bookingDetails?.summary?.completed ?? 0, 'text-emerald-700'],
+                      ['Upcoming / Active', bookingDetails?.summary?.upcoming ?? 0, 'text-blue-700'],
+                      ['Cancelled / Refunded', bookingDetails?.summary?.void ?? 0, 'text-red-700'],
+                      ['Package Rows', bookingDetails?.summary?.package_sessions ?? 0, 'text-purple-700'],
+                      ['Completed Amount', formatCurrency(bookingDetails?.summary?.completed_amount ?? 0), 'text-[#025545]'],
+                    ].map(([label, value, color]) => (
+                      <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+                        <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">{label}</p>
+                        <p className={`mt-1 text-lg font-bold ${color}`}>{value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-800">Therapist sessions</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Loaded only for this selected therapist. Showing {bookingDetails?.bookings?.length || 0}
+                        {bookingDetails?.pagination?.total ? ` of ${bookingDetails.pagination.total}` : ''} rows.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                      <select
+                        value={bookingStatusFilter}
+                        onChange={(e) => handleBookingStatusChange(e.target.value)}
+                        disabled={isBookingDetailsLoading}
+                        className="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#025545] focus:border-transparent disabled:bg-slate-100"
+                      >
+                        <option value="all">All</option>
+                        <option value="booked">Booked</option>
+                        <option value="rescheduled">Rescheduled</option>
+                        <option value="completed">Completed</option>
+                        <option value="no_show">No show</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="refunded">Refunded</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {isBookingDetailsLoading && (
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                      Refreshing booking details…
+                    </div>
+                  )}
+
+                  {bookingDetails?.bookings?.length > 0 ? (
+                    <div className="rounded-xl border border-slate-200 overflow-hidden">
+                      <div className="hidden lg:grid grid-cols-[1.2fr_1.3fr_1fr_1fr_0.8fr_1fr] gap-3 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <div>Session</div>
+                        <div>Client</div>
+                        <div>Type / Package</div>
+                        <div>Status</div>
+                        <div>Amount</div>
+                        <div>Booked At</div>
+                      </div>
+                      <div className="divide-y divide-slate-100">
+                        {bookingDetails.bookings.map((session) => {
+                          const client = session.client || {};
+                          const clientName = `${client.first_name || ''} ${client.last_name || ''}`.trim()
+                            || client.child_name
+                            || 'Unknown client';
+                          const clientEmail = client.user?.email || client.email || 'No email';
+                          const packageNumber = session.package_session_number || null;
+                          const packageTotal = session.session_count || null;
+                          const amount = session.amount ?? session.price ?? 0;
+
+                          return (
+                            <div key={session.id} className="grid grid-cols-1 lg:grid-cols-[1.2fr_1.3fr_1fr_1fr_0.8fr_1fr] gap-3 px-4 py-4 text-sm">
+                              <div>
+                                <p className="font-semibold text-slate-900">
+                                  {formatDisplayDate(session.scheduled_date)}
+                                </p>
+                                <p className="text-xs text-slate-500 mt-0.5">{session.scheduled_time || 'No time'}</p>
+                                <p className="text-[11px] text-slate-400 mt-1 font-mono">ID: {session.id}</p>
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-800">{clientName}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{clientEmail}</p>
+                                {client.phone_number ? (
+                                  <p className="text-xs text-slate-400 mt-0.5">{client.phone_number}</p>
+                                ) : null}
+                              </div>
+                              <div>
+                                <p className="font-medium text-slate-800">{titleCase(session.session_type)}</p>
+                                {packageNumber || Number(packageTotal) > 1 ? (
+                                  <p className="inline-flex mt-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-semibold">
+                                    Package {packageNumber || '—'} / {packageTotal || '—'}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-slate-500 mt-1">Single session</p>
+                                )}
+                                {session.source ? (
+                                  <p className="text-[11px] text-slate-400 mt-1">Source: {titleCase(session.source)}</p>
+                                ) : null}
+                              </div>
+                              <div>
+                                <span className={`inline-flex px-2.5 py-1 rounded-full border text-xs font-semibold ${statusBadgeClass(session.status)}`}>
+                                  {titleCase(session.status)}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900">{formatCurrency(amount)}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-700">{formatDateTime(session.booking_created_at || session.created_at)}</p>
+                                {session.wix_order_number ? (
+                                  <p className="text-xs text-slate-400 mt-1">Order: {session.wix_order_number}</p>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 rounded-xl border border-dashed border-slate-300 bg-slate-50/70">
+                      <ClipboardList className="mx-auto h-10 w-10 text-slate-400" />
+                      <p className="mt-3 text-sm font-semibold text-slate-700">No booking details found</p>
+                      <p className="mt-1 text-xs text-slate-500">Try another status filter or check this therapist later.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Full Profile Modal (View) - matches Users page design */}
