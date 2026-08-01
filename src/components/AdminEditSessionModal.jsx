@@ -302,8 +302,6 @@ export default function AdminEditSessionModal({
         client_id: clientId,
         scheduled_date: scheduledDate,
         scheduled_time: scheduledTime,
-        // Send original_scheduled_date explicitly - if empty, backend will use scheduled_date as fallback
-        original_scheduled_date: originalScheduledDate || scheduledDate, // Use edited original_scheduled_date or fallback to scheduled_date
         status: status,
         price: price ? parseFloat(price) : null,
         therapist_commission: therapistCommission ? parseFloat(therapistCommission) : null,
@@ -323,6 +321,13 @@ export default function AdminEditSessionModal({
         session_summary: sessionSummary.trim() || null,
         report: report.trim() || null
       };
+
+      const existingOriginalDate = session.original_scheduled_date
+        ? String(session.original_scheduled_date).slice(0, 10)
+        : '';
+      if (originalScheduledDate && originalScheduledDate !== existingOriginalDate) {
+        updateData.original_scheduled_date = originalScheduledDate;
+      }
       
       console.log('Updating session with original_scheduled_date:', updateData.original_scheduled_date);
 

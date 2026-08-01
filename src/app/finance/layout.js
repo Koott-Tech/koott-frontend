@@ -72,7 +72,8 @@ export default function FinanceLayout({ children }) {
         const dates = { from: formatIstCalendarYmd(b.from), to: formatIstCalendarYmd(b.to) };
         const response = await financeApi.getDashboard({
           dateFrom: dates.from,
-          dateTo: dates.to
+          dateTo: dates.to,
+          includeCharts: false,
         });
         if (response.success && response.data?.summary) {
           const stats = response.data.summary;
@@ -89,10 +90,10 @@ export default function FinanceLayout({ children }) {
       // Always load fresh data (no cache)
       loadHeaderStats();
       
-      // Refresh every 30 seconds to keep data fresh
+      // Header numbers do not need heavy polling; detail pages refresh their own data.
       const interval = setInterval(() => {
         loadHeaderStats();
-      }, 30 * 1000);
+      }, 5 * 60 * 1000);
       
       return () => clearInterval(interval);
     }

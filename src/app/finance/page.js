@@ -224,7 +224,7 @@ export default function FinanceDashboard() {
           </div>
           <p className="text-red-700 mb-4">{error}</p>
           <button
-            onClick={loadDashboardData}
+            onClick={() => loadDashboardData(false)}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Retry
@@ -1255,4 +1255,3 @@ export default function FinanceDashboard() {
     </div>
   );
 }
-

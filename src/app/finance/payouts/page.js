@@ -123,6 +123,7 @@ export default function FinancePayouts() {
   const [editingDetailRowId, setEditingDetailRowId] = useState(null);
   const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '' });
   const [savingDetailRowId, setSavingDetailRowId] = useState(null);
+  const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
   
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
 
@@ -144,6 +145,14 @@ export default function FinancePayouts() {
   // Reload data when date range changes
   useEffect(() => {
     if (!authLoading && (hasRole('finance') || hasRole('admin') || hasRole('superadmin')) && dateRange) {
+      setPendingPayoutRows([]);
+      setCompletedPayoutRows([]);
+      setDoctorPayouts([]);
+      setPendingTabCount(0);
+      setCompletedTabCount(0);
+      setPendingTabAmount(0);
+      setCompletedTabAmount(0);
+      setLoadedTabs({ pending: false, completed: false });
       loadPayoutPageData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +160,7 @@ export default function FinancePayouts() {
 
   useEffect(() => {
     setDoctorPayouts(activeTab === 'pending' ? pendingPayoutRows : completedPayoutRows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, pendingPayoutRows, completedPayoutRows]);
 
   const getDateParams = () => {
@@ -171,30 +181,39 @@ export default function FinancePayouts() {
       const { dateFrom, dateTo } = getDateParams();
       const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
 
-      const [pendingRes, completedRes] = await Promise.all([
-        financeApi.getPendingPayouts({
+      if (displayTab === 'completed') {
+        const completedRes = await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+        const completedPayouts = completedRes?.data?.payouts || [];
+        setCompletedPayoutRows(completedPayouts);
+        setDoctorPayouts(completedPayouts);
+        setCompletedTabCount(completedPayouts.length);
+        setCompletedTabAmount(completedPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
+        setLoadedTabs(prev => ({ ...prev, completed: true }));
+      } else {
+        const pendingRes = await financeApi.getPendingPayouts({
           month: pendingMy.month,
           year: pendingMy.year,
-        }),
-        financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' }),
-      ]);
-
-      const pendingPayouts = pendingRes?.data?.payouts || [];
-      const completedPayouts = completedRes?.data?.payouts || [];
-
-      setPendingPayoutRows(pendingPayouts);
-      setCompletedPayoutRows(completedPayouts);
-      setDoctorPayouts(displayTab === 'pending' ? pendingPayouts : completedPayouts);
-
-      setPendingTabCount(pendingPayouts.length);
-      setCompletedTabCount(completedPayouts.length);
-      setPendingTabAmount(pendingPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
-      setCompletedTabAmount(completedPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
+        });
+        const pendingPayouts = pendingRes?.data?.payouts || [];
+        setPendingPayoutRows(pendingPayouts);
+        setDoctorPayouts(pendingPayouts);
+        setPendingTabCount(pendingPayouts.length);
+        setPendingTabAmount(pendingPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
+        setLoadedTabs(prev => ({ ...prev, pending: true }));
+      }
     } catch (err) {
       console.error('Failed to load payout page data:', err);
       setError('Failed to load payout data. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setDoctorPayouts(tab === 'pending' ? pendingPayoutRows : completedPayoutRows);
+    if (!loadedTabs[tab]) {
+      loadPayoutPageData(tab);
     }
   };
 
@@ -279,10 +298,98 @@ export default function FinancePayouts() {
 
     try {
       setSavingDetailRowId(rowId);
-      await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount);
+      const response = await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount);
+      const updated = response?.data || {};
+      const nextSessionAmount = Number(updated.session_amount ?? sessionAmount) || 0;
+      const nextCompanyAmount = Number(updated.commission_amount ?? companyAmount) || 0;
+      const nextDoctorAmount = Number(updated.doctor_wallet ?? (nextSessionAmount - nextCompanyAmount)) || 0;
+
+      const patchSessionRows = (rows) => (rows || []).map((session) => {
+        const currentRowId = session.session_id || session.id;
+        if (currentRowId !== rowId) return session;
+        return {
+          ...session,
+          session_amount: nextSessionAmount,
+          doctor_amount: nextDoctorAmount,
+          doctor_wallet: nextDoctorAmount,
+          company_amount: nextCompanyAmount,
+          company_commission: nextCompanyAmount,
+        };
+      });
+
+      const patchPayoutRows = (rows) => (rows || []).map((payout) => {
+        if (payout.psychologist_id !== selectedPayout?.psychologist_id) return payout;
+        let doctorDelta = 0;
+        let companyDelta = 0;
+        let touched = false;
+        const sessionDetails = (payout.session_details || []).map((session) => {
+          const currentRowId = session.session_id || session.id;
+          if (currentRowId !== rowId) return session;
+          const oldDoctor = Number(session.doctor_wallet ?? session.doctor_amount ?? 0) || 0;
+          const oldCompany = Number(session.company_commission ?? session.company_amount ?? 0) || 0;
+          doctorDelta = nextDoctorAmount - oldDoctor;
+          companyDelta = nextCompanyAmount - oldCompany;
+          touched = true;
+          return {
+            ...session,
+            session_amount: nextSessionAmount,
+            doctor_wallet: nextDoctorAmount,
+            doctor_amount: nextDoctorAmount,
+            company_commission: nextCompanyAmount,
+            company_amount: nextCompanyAmount,
+          };
+        });
+        if (!touched) return payout;
+        const totalDoctorWallet = Math.round(((Number(payout.total_doctor_wallet ?? payout.pending_payout_amount ?? 0) || 0) + doctorDelta) * 100) / 100;
+        const totalCompanyCommission = Math.round(((Number(payout.total_company_commission ?? 0) || 0) + companyDelta) * 100) / 100;
+        return {
+          ...payout,
+          session_details: sessionDetails,
+          total_doctor_wallet: totalDoctorWallet,
+          pending_payout_amount: activeTab === 'pending' ? totalDoctorWallet : payout.pending_payout_amount,
+          net_payout: totalDoctorWallet,
+          total_company_commission: totalCompanyCommission,
+          total_commission: totalCompanyCommission,
+          profile_company_earnings: totalCompanyCommission,
+          profile_doctor_earnings: totalDoctorWallet,
+          profile_gross_revenue: totalDoctorWallet + totalCompanyCommission,
+        };
+      });
+
+      setSelectedPayoutProfile(prev => {
+        if (!prev) return prev;
+        const oldRow = (prev.sessions || []).find((session) => (session.session_id || session.id) === rowId);
+        const oldDoctor = Number(oldRow?.doctor_amount ?? oldRow?.doctor_wallet ?? 0) || 0;
+        const oldCompany = Number(oldRow?.company_amount ?? oldRow?.company_commission ?? 0) || 0;
+        const doctorDelta = nextDoctorAmount - oldDoctor;
+        const companyDelta = nextCompanyAmount - oldCompany;
+        return {
+          ...prev,
+          sessions: patchSessionRows(prev.sessions),
+          summary: prev.summary ? {
+            ...prev.summary,
+            doctor_earnings: Math.round(((Number(prev.summary.doctor_earnings || 0) || 0) + doctorDelta) * 100) / 100,
+            company_earnings: Math.round(((Number(prev.summary.company_earnings || 0) || 0) + companyDelta) * 100) / 100,
+            payout_pending: Math.round(((Number(prev.summary.payout_pending || 0) || 0) + doctorDelta) * 100) / 100,
+          } : prev.summary,
+        };
+      });
+      setSelectedPayout(prev => {
+        if (!prev) return prev;
+        return patchPayoutRows([prev])[0];
+      });
+      setPendingPayoutRows(prev => {
+        const next = patchPayoutRows(prev);
+        setPendingTabAmount(next.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
+        return next;
+      });
+      setCompletedPayoutRows(prev => {
+        const next = patchPayoutRows(prev);
+        setCompletedTabAmount(next.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
+        return next;
+      });
+      setDoctorPayouts(prev => patchPayoutRows(prev));
       cancelEditDetailRow();
-      await reloadSelectedPayoutProfile();
-      await loadPayoutPageData(activeTab);
     } catch (error) {
       console.error('Failed to update payout detail row:', error);
       alert(error?.message || 'Failed to update session finance values');
@@ -445,7 +552,7 @@ export default function FinancePayouts() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
           <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setActiveTab('pending')}
+              onClick={() => handleTabChange('pending')}
               className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium ${
                 activeTab === 'pending'
                   ? 'text-[#025545] border-b-2 border-[#025545]'
@@ -455,7 +562,7 @@ export default function FinancePayouts() {
               Pending Payouts ({pendingTabCount})
             </button>
             <button
-              onClick={() => setActiveTab('completed')}
+              onClick={() => handleTabChange('completed')}
               className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium ${
                 activeTab === 'completed'
                   ? 'text-[#025545] border-b-2 border-[#025545]'
