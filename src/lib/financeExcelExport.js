@@ -70,6 +70,7 @@ export function exportFinanceRowsToExcel({
       Time: row.session_time || '',
       Client: row.client_name || '',
       Type: row.package_label || row.session_type_label || String(row.session_type || '').replace(/_/g, ' '),
+      'First / Follow-up': row.session_sequence_label || (row.is_first_session || row.is_package_first_for_client ? 'First' : 'Follow-up'),
       Source: source?.label || row.source || '',
       'Payment Proof': row.payment_proof_url || '',
       'Session Status': String(row.status || '').replace(/_/g, ' '),

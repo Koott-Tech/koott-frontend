@@ -866,6 +866,7 @@ export default function FinancePayouts() {
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">First / Follow-up</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Session Amount</th>
@@ -905,6 +906,9 @@ export default function FinancePayouts() {
                                 </td>
                                 <td className="px-4 py-2.5 text-slate-600 capitalize">
                                   {session.package_label || session.session_type_label || session.session_type?.replace(/_/g, ' ') || '-'}
+                                </td>
+                                <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">
+                                  {session.session_sequence_label || (session.is_first_session || session.is_package_first_for_client ? 'First' : 'Follow-up')}
                                 </td>
                                 <td className="px-4 py-2.5">
                                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${source.cls}`}>
@@ -977,7 +981,7 @@ export default function FinancePayouts() {
                         {selectedDetailRows.length > 0 && (
                           <tfoot className="bg-slate-50 font-semibold">
                             <tr>
-                              <td colSpan={6} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
+                              <td colSpan={7} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
                               <td className="px-4 py-2.5 text-right text-slate-900">{inr(selectedDetailTotals.amount)}</td>
                               <td className="px-4 py-2.5 text-right text-emerald-700">{inr(selectedDetailTotals.doctor)}</td>
                               <td className="px-4 py-2.5 text-right text-indigo-700">{inr(selectedDetailTotals.company)}</td>

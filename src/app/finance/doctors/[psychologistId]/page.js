@@ -214,9 +214,9 @@ export default function DoctorFinanceProfilePage() {
   }), { amount: 0, doctor: 0, company: 0 }), [filtered]);
 
   const exportCsv = () => {
-    const head = ['Date', 'Time', 'Client', 'Type', 'Source', 'Payment Proof', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Booked At', 'Payout', 'Order'];
+    const head = ['Date', 'Time', 'Client', 'Type', 'First / Follow-up', 'Source', 'Payment Proof', 'Status', 'Session Amount', 'Doctor Commission', 'Company Commission', 'Booked At', 'Payout', 'Order'];
     const lines = filtered.map((r) => [
-      r.session_date, r.session_time, r.client_name, r.package_label, sourceStyleFor(r.source).label, r.payment_proof_url || '', r.status,
+      r.session_date, r.session_time, r.client_name, r.package_label, r.session_sequence_label || (r.is_first_session || r.is_package_first_for_client ? 'First' : 'Follow-up'), sourceStyleFor(r.source).label, r.payment_proof_url || '', r.status,
       r.session_amount, r.doctor_amount, r.company_amount, fmtBookedDate(r.booked_at), r.payout_status, r.order_id || '',
     ].map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
     const csv = [head.join(','), ...lines].join('\n');
@@ -349,14 +349,14 @@ export default function DoctorFinanceProfilePage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
                   <tr>
-                    {['Date', 'Client', 'Type', 'Source', 'Proof', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Booked Date', 'Payout', 'Edit'].map((h, i) => (
-                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 6 && i <= 8 ? 'text-right' : i === 11 ? 'text-center' : 'text-left'}`}>{h}</th>
+                    {['Date', 'Client', 'Type', 'First / Follow-up', 'Source', 'Proof', 'Status', 'Session ₹', 'Doctor ₹', 'Company ₹', 'Booked Date', 'Payout', 'Edit'].map((h, i) => (
+                      <th key={h} className={`px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500 ${i >= 7 && i <= 9 ? 'text-right' : i === 12 ? 'text-center' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={12} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
+                    <tr><td colSpan={13} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
                   ) : filtered.map((r) => {
                     const po = PAYOUT_STYLES[r.payout_status] || PAYOUT_STYLES.not_due;
                     const source = sourceStyleFor(r.source);
@@ -370,6 +370,9 @@ export default function DoctorFinanceProfilePage() {
                         </td>
                         <td className="px-4 py-2.5 text-slate-700 max-w-[180px] truncate" title={r.client_name}>{r.client_name}</td>
                         <td className="px-4 py-2.5 text-slate-600 capitalize">{r.package_label}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">
+                          {r.session_sequence_label || (r.is_first_session || r.is_package_first_for_client ? 'First' : 'Follow-up')}
+                        </td>
                         <td className="px-4 py-2.5">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${source.cls}`}>{source.label}</span>
                         </td>
@@ -432,7 +435,7 @@ export default function DoctorFinanceProfilePage() {
                 {filtered.length > 0 && (
                   <tfoot className="bg-slate-50 font-semibold">
                     <tr>
-                      <td colSpan={6} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
+                      <td colSpan={7} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>
                       <td className="px-4 py-2.5 text-right text-slate-900">{inr(shown.amount)}</td>
                       <td className="px-4 py-2.5 text-right text-emerald-700">{inr(shown.doctor)}</td>
                       <td className="px-4 py-2.5 text-right text-indigo-700">{inr(shown.company)}</td>

@@ -73,6 +73,16 @@ function generateReceiptNo(template) {
   }
 }
 
+function compactReceiptNo(value, template = 'payoutReceipt') {
+  const prefix = template === 'salaryCertificate' ? 'KSC' : 'KTP';
+  const cleaned = String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!cleaned) return '';
+  if (/^(KTP|KSC)\d{1,6}$/.test(cleaned)) return cleaned;
+  const digits = cleaned.replace(/\D/g, '').slice(-6);
+  if (digits) return `${prefix}${digits.padStart(4, '0')}`;
+  return `${prefix}${cleaned.replace(/^(KTP|KSC)/, '').slice(0, 6)}`;
+}
+
 function safeFilePart(value = 'receipt') {
   return String(value || 'receipt')
     .trim()
@@ -424,9 +434,7 @@ async function generatePayoutReceiptPDF(data) {
     String(row.amount || '').trim()
   );
 
-  const rawSubtotal = rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
-  const payoutPendingCap = parseFloat(data.payoutPendingCap || 0) || 0;
-  const subtotal = payoutPendingCap > 0 ? Math.min(rawSubtotal, payoutPendingCap) : rawSubtotal;
+  const subtotal = rows.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
   const tdsPercent = parseFloat(data.tdsPercent);
   const safeTdsPercent = Number.isFinite(tdsPercent) ? tdsPercent : 10;
   const tds = subtotal * (safeTdsPercent / 100);
@@ -437,7 +445,7 @@ async function generatePayoutReceiptPDF(data) {
   put(data.designation, 78, 289, { size: 13, color: HEADER_HEADING_COLOR, maxWidth: 275 });
   put(data.location, 78, 310, { size: 13, color: HEADER_HEADING_COLOR, maxWidth: 275 });
   put(data.email, 78, 337, { size: 12, color: WHITE, maxWidth: 285 });
-  put(data.receiptNo, 435, 261, { size: 10.5, color: HEADER_HEADING_COLOR, maxWidth: 135 });
+  put(compactReceiptNo(data.receiptNo, 'payoutReceipt') || data.receiptNo, 435, 261, { size: 10.5, color: HEADER_HEADING_COLOR, maxWidth: 96 });
   put(data.date || payoutReceiptDateStr(), 435, 282, { size: 12.5, color: HEADER_HEADING_COLOR, maxWidth: 100 });
 
   // Session table
@@ -730,9 +738,7 @@ function PayoutReceiptForm({
   const inputClass =
     'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#025545]/30 focus:border-[#025545] transition-all bg-white';
   const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
-  const rawSubtotal = data.rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  const payoutPendingCap = parseFloat(data.payoutPendingCap || 0) || 0;
-  const subtotal = payoutPendingCap > 0 ? Math.min(rawSubtotal, payoutPendingCap) : rawSubtotal;
+  const subtotal = data.rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
   const tdsPercent = parseFloat(data.tdsPercent);
   const safeTdsPercent = Number.isFinite(tdsPercent) ? tdsPercent : 10;
   const tds = subtotal * (safeTdsPercent / 100);
