@@ -357,13 +357,14 @@ export default function DoctorFinanceProfilePage() {
                 <tbody className="divide-y divide-slate-50">
                   {filtered.length === 0 ? (
                     <tr><td colSpan={13} className="px-4 py-12 text-center text-slate-400">No sessions for these filters.</td></tr>
-                  ) : filtered.map((r) => {
+                  ) : filtered.map((r, idx) => {
                     const po = PAYOUT_STYLES[r.payout_status] || PAYOUT_STYLES.not_due;
                     const source = sourceStyleFor(r.source);
                     const isEditing = editingRowId === r.session_id;
                     const isSaving = savingRowId === r.session_id;
+                    const rowTone = idx % 2 === 0 ? 'bg-white' : 'bg-slate-100/70';
                     return (
-                      <tr key={r.session_id} className="hover:bg-slate-50/60">
+                      <tr key={r.session_id} className={`${rowTone} transition-colors hover:bg-sky-50/80`}>
                         <td className="px-4 py-2.5 whitespace-nowrap">
                           <div className="text-slate-900">{fmtDate(r.session_date)}</div>
                           <div className="text-xs text-slate-400">{fmtTime(r.session_time)}</div>

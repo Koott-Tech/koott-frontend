@@ -892,8 +892,9 @@ export default function FinancePayouts() {
                             const rowId = session.session_id || session.id || idx;
                             const isEditing = editingDetailRowId === rowId;
                             const isSaving = savingDetailRowId === rowId;
+                            const rowTone = idx % 2 === 0 ? 'bg-white' : 'bg-slate-100/70';
                             return (
-                              <tr key={rowId} className="hover:bg-slate-50/60">
+                              <tr key={rowId} className={`${rowTone} transition-colors hover:bg-sky-50/80`}>
                                 <td className="px-4 py-2.5 whitespace-nowrap">
                                   <div className="text-slate-900">{fmtDate(session.session_date)}</div>
                                   <div className="text-xs text-slate-400">{fmtTime(session.session_time)}</div>
