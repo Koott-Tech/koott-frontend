@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Wallet, TrendingUp, Calendar, User, Download, Loader2, CheckCircle2, Clock, XCircle, Pencil, Save, X } from 'lucide-react';
+import { ArrowLeft, Wallet, TrendingUp, Calendar, User, Download, Loader2, CheckCircle2, Clock, XCircle, Pencil, Save, X, Search } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -77,6 +77,16 @@ const SOURCE_STYLES = {
   koott: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
 };
 
+const EDITABLE_SESSION_STATUSES = [
+  { value: 'completed', label: 'Completed' },
+  { value: 'booked', label: 'Booked' },
+  { value: 'rescheduled', label: 'Rescheduled' },
+  { value: 'reschedule_requested', label: 'Reschedule Requested' },
+  { value: 'no_show', label: 'No Show' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
+];
+
 const sourceStyleFor = (source) => {
   const key = String(source || 'razorpay').toLowerCase();
   return SOURCE_STYLES[key] || {
@@ -126,8 +136,9 @@ export default function DoctorFinanceProfilePage() {
   const [dateBasis, setDateBasis] = useState(initialDateBasis);
   const [statusFilter, setStatusFilter] = useState('all');
   const [payoutFilter, setPayoutFilter] = useState('all');
+  const [clientSearch, setClientSearch] = useState('');
   const [editingRowId, setEditingRowId] = useState(null);
-  const [editValues, setEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '' });
+  const [editValues, setEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   const [savingRowId, setSavingRowId] = useState(null);
 
   const load = useCallback(async () => {
@@ -158,12 +169,13 @@ export default function DoctorFinanceProfilePage() {
       session_amount: String(Number(row.session_amount || 0)),
       doctor_amount: String(Number(row.doctor_amount || 0)),
       company_amount: String(Number(row.company_amount || 0)),
+      status: String(row.status || 'booked').toLowerCase(),
     });
   };
 
   const cancelEditRow = () => {
     setEditingRowId(null);
-    setEditValues({ session_amount: '', doctor_amount: '', company_amount: '' });
+    setEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   };
 
   const updateEditValue = (field, value) => {
@@ -189,6 +201,9 @@ export default function DoctorFinanceProfilePage() {
     try {
       setSavingRowId(row.session_id);
       await financeApi.updateSessionCommission(row.session_id, companyAmount, sessionAmount);
+      if (editValues.status && editValues.status !== String(row.status || '').toLowerCase()) {
+        await financeApi.updateSession(row.session_id, { status: editValues.status });
+      }
       showSuccess('Session finance values updated');
       cancelEditRow();
       await load();
@@ -201,10 +216,16 @@ export default function DoctorFinanceProfilePage() {
 
   const sessions = useMemo(() => data?.sessions || [], [data?.sessions]);
   const filtered = useMemo(() => sessions.filter((r) => {
+    const searchTerm = clientSearch.trim().toLowerCase();
+    if (searchTerm) {
+      const clientName = String(r.client_name || '').toLowerCase();
+      const clientEmail = String(r.client_email || '').toLowerCase();
+      if (!clientName.includes(searchTerm) && !clientEmail.includes(searchTerm)) return false;
+    }
     if (statusFilter !== 'all' && String(r.status).toLowerCase() !== statusFilter) return false;
     if (payoutFilter !== 'all' && r.payout_status !== payoutFilter) return false;
     return true;
-  }), [sessions, statusFilter, payoutFilter]);
+  }), [sessions, clientSearch, statusFilter, payoutFilter]);
 
   // Totals for exactly what's on screen, so the table foots to the filters applied.
   const shown = useMemo(() => filtered.reduce((t, r) => ({
@@ -325,6 +346,16 @@ export default function DoctorFinanceProfilePage() {
                 Session breakdown <span className="text-slate-400 font-normal">({filtered.length})</span>
               </div>
               <div className="flex flex-wrap gap-2">
+                <div className="relative w-full sm:w-72">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="search"
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    placeholder="Search client name or email"
+                    className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-xs text-slate-900 outline-none transition focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/20"
+                  />
+                </div>
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-white">
                   <option value="all">All statuses</option>
@@ -369,7 +400,10 @@ export default function DoctorFinanceProfilePage() {
                           <div className="text-slate-900">{fmtDate(r.session_date)}</div>
                           <div className="text-xs text-slate-400">{fmtTime(r.session_time)}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-slate-700 max-w-[180px] truncate" title={r.client_name}>{r.client_name}</td>
+                        <td className="px-4 py-2.5 text-slate-700 max-w-[210px]" title={`${r.client_name || ''} ${r.client_email || ''}`.trim()}>
+                          <div className="truncate">{r.client_name || '—'}</div>
+                          <div className="mt-0.5 truncate text-xs text-slate-400">{r.client_email || '—'}</div>
+                        </td>
                         <td className="px-4 py-2.5 text-slate-600 capitalize">{r.package_label}</td>
                         <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">
                           {r.session_sequence_label || (r.is_first_session || r.is_package_first_for_client ? 'First' : 'Follow-up')}
@@ -387,9 +421,21 @@ export default function DoctorFinanceProfilePage() {
                           )}
                         </td>
                         <td className="px-4 py-2.5">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[String(r.status).toLowerCase()] || 'bg-slate-100 text-slate-700'}`}>
-                            {r.status}
-                          </span>
+                          {isEditing ? (
+                            <select
+                              value={editValues.status}
+                              onChange={(e) => setEditValues(prev => ({ ...prev, status: e.target.value }))}
+                              className="w-36 rounded border border-slate-200 px-2 py-1 text-xs bg-white"
+                            >
+                              {EDITABLE_SESSION_STATUSES.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[String(r.status).toLowerCase()] || 'bg-slate-100 text-slate-700'}`}>
+                              {r.status}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-2.5 text-right text-slate-700">
                           {isEditing ? (

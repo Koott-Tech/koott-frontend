@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download, Pencil, Save, X } from 'lucide-react';
+import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download, Pencil, Save, X, Search } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useAuth } from '@/contexts/AuthContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -92,6 +92,16 @@ const SOURCE_STYLES = {
   koott: { cls: 'bg-violet-100 text-violet-800', label: 'Razorpay' },
 };
 
+const EDITABLE_SESSION_STATUSES = [
+  { value: 'completed', label: 'Completed' },
+  { value: 'booked', label: 'Booked' },
+  { value: 'rescheduled', label: 'Rescheduled' },
+  { value: 'reschedule_requested', label: 'Reschedule Requested' },
+  { value: 'no_show', label: 'No Show' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
+];
+
 const sourceStyleFor = (source) => {
   const key = String(source || 'razorpay').toLowerCase();
   return SOURCE_STYLES[key] || {
@@ -121,9 +131,11 @@ export default function FinancePayouts() {
   const [pendingTabAmount, setPendingTabAmount] = useState(0);
   const [completedTabAmount, setCompletedTabAmount] = useState(0);
   const [editingDetailRowId, setEditingDetailRowId] = useState(null);
-  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '' });
+  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   const [savingDetailRowId, setSavingDetailRowId] = useState(null);
   const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
+  const [doctorSearch, setDoctorSearch] = useState('');
+  const [detailClientSearch, setDetailClientSearch] = useState('');
   
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
 
@@ -221,6 +233,7 @@ export default function FinancePayouts() {
     setSelectedPayout(payout);
     setSelectedPayoutProfile(null);
     setSelectedPayoutProfileError(null);
+    setDetailClientSearch('');
 
     if (!payout?.psychologist_id) return;
 
@@ -267,12 +280,13 @@ export default function FinancePayouts() {
       session_amount: String(Number(row.session_amount || 0)),
       doctor_amount: String(Number(doctorAmount || 0)),
       company_amount: String(Number(companyAmount || 0)),
+      status: String(row.status || 'booked').toLowerCase(),
     });
   };
 
   const cancelEditDetailRow = () => {
     setEditingDetailRowId(null);
-    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '' });
+    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   };
 
   const updateDetailEditValue = (field, value) => {
@@ -299,6 +313,9 @@ export default function FinancePayouts() {
     try {
       setSavingDetailRowId(rowId);
       const response = await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount);
+      if (detailEditValues.status && detailEditValues.status !== String(row.status || '').toLowerCase()) {
+        await financeApi.updateSession(rowId, { status: detailEditValues.status });
+      }
       const updated = response?.data || {};
       const nextSessionAmount = Number(updated.session_amount ?? sessionAmount) || 0;
       const nextCompanyAmount = Number(updated.commission_amount ?? companyAmount) || 0;
@@ -314,6 +331,7 @@ export default function FinancePayouts() {
           doctor_wallet: nextDoctorAmount,
           company_amount: nextCompanyAmount,
           company_commission: nextCompanyAmount,
+          status: detailEditValues.status || session.status,
         };
       });
 
@@ -337,6 +355,7 @@ export default function FinancePayouts() {
             doctor_amount: nextDoctorAmount,
             company_commission: nextCompanyAmount,
             company_amount: nextCompanyAmount,
+            status: detailEditValues.status || session.status,
           };
         });
         if (!touched) return payout;
@@ -390,6 +409,8 @@ export default function FinancePayouts() {
       });
       setDoctorPayouts(prev => patchPayoutRows(prev));
       cancelEditDetailRow();
+      await reloadSelectedPayoutProfile();
+      await loadPayoutPageData(activeTab);
     } catch (error) {
       console.error('Failed to update payout detail row:', error);
       alert(error?.message || 'Failed to update session finance values');
@@ -421,6 +442,7 @@ export default function FinancePayouts() {
       const response = await financeApi.markPayoutAsPaid({
         psychologist_id: payoutToMark.psychologist_id,
         sessionIds: (payoutToMark.session_details || [])
+          .filter((session) => (session.payout_status || session.payment_status || 'pending') === 'pending')
           .map((session) => session.session_id)
           .filter(Boolean),
         dateFrom,
@@ -466,6 +488,18 @@ export default function FinancePayouts() {
     ) || 0;
   };
 
+  const getPayoutState = (payout, tab = activeTab) => {
+    if (tab === 'completed') return 'paid';
+    const explicitState = String(payout?.payout_state || payout?.payment_status || '').toLowerCase();
+    if (explicitState) return explicitState;
+    return getPayoutDisplayAmount(payout, tab) > 0 ? 'pending' : 'not_due';
+  };
+
+  const canMarkPayoutAsPaid = (payout) =>
+    activeTab === 'pending' &&
+    getPayoutState(payout, 'pending') === 'pending' &&
+    getPayoutDisplayAmount(payout, 'pending') > 0;
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -481,17 +515,36 @@ export default function FinancePayouts() {
   const totalSessions = activeTab === 'pending' 
     ? pendingSessions
     : completedSessions;
+  const doctorSearchTerm = doctorSearch.trim().toLowerCase();
+  const visibleDoctorPayouts = doctorSearchTerm
+    ? doctorPayouts.filter((payout) => {
+      const doctorName = [
+        payout.psychologist?.first_name,
+        payout.psychologist?.last_name,
+      ].filter(Boolean).join(' ').toLowerCase();
+      const doctorEmail = String(payout.psychologist?.email || '').toLowerCase();
+      return doctorName.includes(doctorSearchTerm) || doctorEmail.includes(doctorSearchTerm);
+    })
+    : doctorPayouts;
   const selectedProfileSessions = selectedPayoutProfile?.sessions || null;
   const selectedProfileSummary = selectedPayoutProfile?.summary || null;
   const selectedDetailRows = selectedProfileSessions || selectedPayout?.session_details || [];
-  const selectedDetailCount = selectedProfileSessions?.length ?? selectedPayout?.session_details?.length ?? 0;
+  const detailClientSearchTerm = detailClientSearch.trim().toLowerCase();
+  const visibleSelectedDetailRows = detailClientSearchTerm
+    ? selectedDetailRows.filter((session) => {
+      const clientName = String(session.client_name || '').toLowerCase();
+      const clientEmail = String(session.client_email || '').toLowerCase();
+      return clientName.includes(detailClientSearchTerm) || clientEmail.includes(detailClientSearchTerm);
+    })
+    : selectedDetailRows;
+  const selectedDetailCount = visibleSelectedDetailRows.length;
   const isUsingProfileRows = Array.isArray(selectedProfileSessions);
   const selectedSummaryTotalSessions = selectedProfileSummary?.total_sessions ?? selectedPayout?.profile_total_sessions ?? selectedPayout?.total_sessions ?? 0;
   const selectedSummaryCompletedSessions = selectedProfileSummary?.completed_sessions ?? selectedPayout?.completed_sessions ?? selectedPayout?.total_sessions ?? 0;
   const selectedSummaryCompanyEarnings = selectedProfileSummary?.company_earnings ?? selectedPayout?.profile_company_earnings ?? selectedPayout?.total_company_commission ?? 0;
   const selectedSummaryPendingPayout = selectedProfileSummary?.payout_pending ?? getPayoutDisplayAmount(selectedPayout, activeTab);
   const selectedSummaryNotDue = selectedProfileSummary?.payout_not_due ?? selectedPayout?.profile_payout_not_due ?? 0;
-  const selectedDetailTotals = selectedDetailRows.reduce((acc, session) => {
+  const selectedDetailTotals = visibleSelectedDetailRows.reduce((acc, session) => {
     acc.amount += Number(session.session_amount || 0);
     acc.doctor += Number((isUsingProfileRows ? session.doctor_amount : session.doctor_wallet) || 0);
     acc.company += Number((isUsingProfileRows ? session.company_amount : session.company_commission) || 0);
@@ -503,11 +556,11 @@ export default function FinancePayouts() {
   ].filter(Boolean).join(' ').trim() || selectedPayoutProfile?.doctor?.name || 'Therapist';
 
   const handleDownloadPayoutExcel = () => {
-    if (!selectedDetailRows.length) return;
+    if (!visibleSelectedDetailRows.length) return;
     const dateFrom = hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.from) : null;
     const dateTo = hasDateRangeBounds(dateRange) ? formatIstCalendarYmd(dateRange.to) : null;
     exportFinanceRowsToExcel({
-      rows: selectedDetailRows,
+      rows: visibleSelectedDetailRows,
       doctorName: selectedDoctorName,
       filePrefix: `${selectedDoctorName}-payout-details`,
       dateFrom,
@@ -622,13 +675,33 @@ export default function FinancePayouts() {
           <div className="grid grid-cols-1 gap-6">
             {doctorPayouts.length > 0 ? (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <div className="flex flex-col gap-2 border-b border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {activeTab === 'pending' ? 'Pending payout therapists' : 'Completed payout therapists'}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Showing {visibleDoctorPayouts.length} of {doctorPayouts.length}
+                    </p>
+                  </div>
+                  <div className="relative w-full sm:w-80">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="search"
+                      value={doctorSearch}
+                      onChange={(e) => setDoctorSearch(e.target.value)}
+                      placeholder="Search doctor name or email"
+                      className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/20"
+                    />
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor Name</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          {activeTab === 'pending' ? 'Completed Sessions' : 'Paid Sessions'}
+                          {activeTab === 'pending' ? 'Sessions' : 'Paid Sessions'}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Earnings</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -639,7 +712,16 @@ export default function FinancePayouts() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {doctorPayouts.map((payout) => (
+                      {visibleDoctorPayouts.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                            No therapists match this search.
+                          </td>
+                        </tr>
+                      ) : visibleDoctorPayouts.map((payout) => {
+                        const payoutState = getPayoutState(payout, activeTab);
+                        const payoutStyle = PAYOUT_STYLES[payoutState] || PAYOUT_STYLES.pending;
+                        return (
                         <tr key={payout.psychologist_id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
@@ -656,12 +738,8 @@ export default function FinancePayouts() {
                             ₹{getPayoutDisplayAmount(payout, activeTab).toLocaleString('en-IN')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              activeTab === 'pending' 
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {activeTab === 'pending' ? 'Pending Payout' : 'Paid'}
+                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${payoutStyle.cls}`}>
+                              {payoutState === 'pending' ? 'Pending Payout' : payoutStyle.label}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -676,7 +754,7 @@ export default function FinancePayouts() {
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                {activeTab === 'pending' && (
+                                {canMarkPayoutAsPaid(payout) && (
                                   <>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
@@ -702,7 +780,8 @@ export default function FinancePayouts() {
                             </DropdownMenu>
                           </td>
                         </tr>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -773,7 +852,7 @@ export default function FinancePayouts() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleDownloadPayoutExcel}
-                      disabled={!selectedDetailRows.length || selectedPayoutProfileLoading}
+                      disabled={!visibleSelectedDetailRows.length || selectedPayoutProfileLoading}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Download className="h-4 w-4" />
@@ -784,6 +863,7 @@ export default function FinancePayouts() {
                         setSelectedPayout(null);
                         setSelectedPayoutProfile(null);
                         setSelectedPayoutProfileError(null);
+                        setDetailClientSearch('');
                       }}
                       className="text-gray-400 hover:text-gray-600"
                     >
@@ -859,6 +939,21 @@ export default function FinancePayouts() {
 
                 {selectedDetailRows.length > 0 && (
                   <div>
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="text-sm font-semibold text-gray-900">
+                        Session Details <span className="font-normal text-gray-400">({selectedDetailCount} shown)</span>
+                      </div>
+                      <div className="relative w-full sm:w-80">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="search"
+                          value={detailClientSearch}
+                          onChange={(e) => setDetailClientSearch(e.target.value)}
+                          placeholder="Search client name or email"
+                          className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/20"
+                        />
+                      </div>
+                    </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-sm">
                         <thead className="bg-gray-50">
@@ -878,7 +973,13 @@ export default function FinancePayouts() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                          {selectedDetailRows.map((session, idx) => {
+                          {visibleSelectedDetailRows.length === 0 ? (
+                            <tr>
+                              <td colSpan={12} className="px-4 py-10 text-center text-sm text-gray-500">
+                                No client sessions match this search.
+                              </td>
+                            </tr>
+                          ) : visibleSelectedDetailRows.map((session, idx) => {
                             const isProfileRow = isUsingProfileRows;
                             const status = session.status || (activeTab === 'pending' ? 'completed' : 'paid');
                             const statusKey = String(status || '').toLowerCase();
@@ -917,9 +1018,21 @@ export default function FinancePayouts() {
                                   </span>
                                 </td>
                                 <td className="px-4 py-2.5">
-                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[statusKey] || 'bg-slate-100 text-slate-700'}`}>
-                                    {String(status || '-').replace(/_/g, ' ')}
-                                  </span>
+                                  {isEditing ? (
+                                    <select
+                                      value={detailEditValues.status}
+                                      onChange={(e) => setDetailEditValues(prev => ({ ...prev, status: e.target.value }))}
+                                      className="w-36 rounded border border-slate-200 px-2 py-1 text-xs bg-white"
+                                    >
+                                      {EDITABLE_SESSION_STATUSES.map(option => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[statusKey] || 'bg-slate-100 text-slate-700'}`}>
+                                      {String(status || '-').replace(/_/g, ' ')}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2.5 text-right text-slate-700">
                                   {isEditing ? (
@@ -979,7 +1092,7 @@ export default function FinancePayouts() {
                             );
                           })}
                         </tbody>
-                        {selectedDetailRows.length > 0 && (
+                        {visibleSelectedDetailRows.length > 0 && (
                           <tfoot className="bg-slate-50 font-semibold">
                             <tr>
                               <td colSpan={7} className="px-4 py-2.5 text-right text-slate-600">Totals shown</td>

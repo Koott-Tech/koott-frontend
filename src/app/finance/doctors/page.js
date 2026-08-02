@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Edit, Save, X, TrendingUp, Calendar, Wallet, Eye, User, MoreVertical, Filter } from 'lucide-react';
+import { Edit, Save, X, TrendingUp, Calendar, Wallet, Eye, User, MoreVertical, Filter, Search } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import { normalizeImageUrl } from '@/utils/urlNormalizer';
@@ -87,6 +87,7 @@ export default function FinanceDoctors() {
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [expandedCards, setExpandedCards] = useState(new Set());
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
+  const [doctorSearch, setDoctorSearch] = useState('');
 
   useEffect(() => {
     loadDoctors();
@@ -428,20 +429,43 @@ export default function FinanceDoctors() {
     );
   }
 
+  const doctorSearchTerm = doctorSearch.trim().toLowerCase();
+  const visibleDoctors = doctorSearchTerm
+    ? doctors.filter((doctor) => {
+      const doctorName = [
+        doctor.psychologist?.first_name,
+        doctor.psychologist?.last_name,
+      ].filter(Boolean).join(' ').toLowerCase();
+      const doctorEmail = String(doctor.psychologist?.email || '').toLowerCase();
+      return doctorName.includes(doctorSearchTerm) || doctorEmail.includes(doctorSearchTerm);
+    })
+    : doctors;
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6">
       <div className="space-y-6">
         {/* Date Range Filter */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap items-start md:items-center">
+          <div className="flex flex-col gap-4 md:flex-row md:flex-wrap items-start md:items-center md:justify-between">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <span className="text-sm font-medium text-gray-700">Date Range:</span>
+              <DateRangePicker
+                selectedRange={dateRange}
+                onSelect={setDateRange}
+              />
             </div>
-            <DateRangePicker
-              selectedRange={dateRange}
-              onSelect={setDateRange}
-            />
+            <div className="relative w-full md:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="search"
+                value={doctorSearch}
+                onChange={(e) => setDoctorSearch(e.target.value)}
+                placeholder="Search doctor name or email"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition focus:border-[#025545] focus:ring-2 focus:ring-[#025545]/20"
+              />
+              <p className="mt-1 text-xs text-gray-400">Showing {visibleDoctors.length} of {doctors.length}</p>
+            </div>
           </div>
         </div>
 
@@ -452,7 +476,7 @@ export default function FinanceDoctors() {
         ) : (
           <div className="flex flex-col gap-4">
             {doctors.length > 0 ? (
-              doctors.map((doctor) => (
+              visibleDoctors.length > 0 ? visibleDoctors.map((doctor) => (
                 <div
                   key={doctor.psychologist_id}
                   className="bg-white border-2 border-gray-200 shadow-sm hover:shadow-md transition-all p-6 w-full rounded-lg"
@@ -769,7 +793,11 @@ export default function FinanceDoctors() {
                     </div>
                   )}
                 </div>
-              ))
+              )) : (
+                <div className="rounded-lg border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+                  No doctors match this search.
+                </div>
+              )
             ) : (
               <div className="text-center py-12 bg-white rounded-lg">
                 <p className="text-gray-500">No doctors found</p>
