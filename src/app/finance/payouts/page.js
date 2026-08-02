@@ -205,6 +205,8 @@ export default function FinancePayouts() {
         const pendingRes = await financeApi.getPendingPayouts({
           month: pendingMy.month,
           year: pendingMy.year,
+          includeDetails: 'false',
+          listOnly: 'true',
         });
         const pendingPayouts = pendingRes?.data?.payouts || [];
         setPendingPayoutRows(pendingPayouts);
@@ -498,7 +500,7 @@ export default function FinancePayouts() {
   const canMarkPayoutAsPaid = (payout) =>
     activeTab === 'pending' &&
     getPayoutState(payout, 'pending') === 'pending' &&
-    getPayoutDisplayAmount(payout, 'pending') > 0;
+    (payout?.can_mark_paid === true || getPayoutDisplayAmount(payout, 'pending') > 0);
 
   if (authLoading || isLoading) {
     return (
@@ -515,6 +517,7 @@ export default function FinancePayouts() {
   const totalSessions = activeTab === 'pending' 
     ? pendingSessions
     : completedSessions;
+  const isPendingFastList = activeTab === 'pending';
   const doctorSearchTerm = doctorSearch.trim().toLowerCase();
   const visibleDoctorPayouts = doctorSearchTerm
     ? doctorPayouts.filter((payout) => {
@@ -628,7 +631,7 @@ export default function FinancePayouts() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+        {!isPendingFastList && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
           <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 ${activeTab === 'pending' ? 'border-orange-200 bg-orange-50' : ''}`}>
             <div className="flex items-center justify-between">
               <div>
@@ -665,7 +668,7 @@ export default function FinancePayouts() {
               <CheckCircle className="h-8 w-8 text-blue-600" />
             </div>
           </div>
-        </div>
+        </div>}
 
         {error ? (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
@@ -700,13 +703,13 @@ export default function FinancePayouts() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          {activeTab === 'pending' ? 'Sessions' : 'Paid Sessions'}
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Earnings</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          {activeTab === 'pending' ? 'Pending Payout' : 'Doctor Wallet'}
-                        </th>
+                        {!isPendingFastList && (
+                          <>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paid Sessions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company Earnings</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Doctor Wallet</th>
+                          </>
+                        )}
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
@@ -714,7 +717,7 @@ export default function FinancePayouts() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {visibleDoctorPayouts.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                          <td colSpan={isPendingFastList ? 3 : 6} className="px-6 py-10 text-center text-sm text-gray-500">
                             No therapists match this search.
                           </td>
                         </tr>
@@ -727,16 +730,21 @@ export default function FinancePayouts() {
                             <div className="text-sm font-medium text-gray-900">
                               {payout.psychologist?.first_name} {payout.psychologist?.last_name}
                             </div>
+                            <div className="mt-0.5 text-xs text-gray-500">{payout.psychologist?.email || '—'}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {payout.total_sessions || 0}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                            ₹{(payout.total_company_commission || 0).toLocaleString('en-IN')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                            ₹{getPayoutDisplayAmount(payout, activeTab).toLocaleString('en-IN')}
-                          </td>
+                          {!isPendingFastList && (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {payout.total_sessions || 0}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                ₹{(payout.total_company_commission || 0).toLocaleString('en-IN')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                                ₹{getPayoutDisplayAmount(payout, activeTab).toLocaleString('en-IN')}
+                              </td>
+                            </>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${payoutStyle.cls}`}>
                               {payoutState === 'pending' ? 'Pending Payout' : payoutStyle.label}

@@ -53,6 +53,14 @@ const getTimeoutForRequest = (endpoint) => {
   if (endpoint.includes('/availability/psychologist/') && endpoint.includes('/range')) {
     return 60000;
   }
+  // Finance month views can touch large historical ranges and Render cold starts.
+  if (
+    endpoint.includes('/finance/payouts') ||
+    endpoint.includes('/finance/commissions') ||
+    endpoint.includes('/finance/doctors/')
+  ) {
+    return 60000;
+  }
   
   // High-latency regions get 25s, others get 15s
   return region === 'high-latency' ? 25000 : 15000;
