@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download, Pencil, Save, X, Search } from 'lucide-react';
+import { CreditCard, Eye, Check, Clock, Calendar, User, Loader2, MoreVertical, Filter, Receipt, CheckCircle, Download, Pencil, Save, X, Search, Trash2 } from 'lucide-react';
 import { financeApi } from '@/lib/backendApi';
 import { useAuth } from '@/contexts/AuthContext';
 import DateRangePicker from '@/components/ui/date-range-picker';
@@ -133,6 +133,7 @@ export default function FinancePayouts() {
   const [editingDetailRowId, setEditingDetailRowId] = useState(null);
   const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   const [savingDetailRowId, setSavingDetailRowId] = useState(null);
+  const [deletingDetailRowId, setDeletingDetailRowId] = useState(null);
   const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
   const [doctorSearch, setDoctorSearch] = useState('');
   const [detailClientSearch, setDetailClientSearch] = useState('');
@@ -418,6 +419,49 @@ export default function FinancePayouts() {
       alert(error?.message || 'Failed to update session finance values');
     } finally {
       setSavingDetailRowId(null);
+    }
+  };
+
+  const deleteDetailRow = async (row) => {
+    const rowId = row.session_id || row.id;
+    if (!rowId) return;
+
+    const clientLabel = row.client_name ? ` for ${row.client_name}` : '';
+    const confirmed = window.confirm(`Delete this session${clientLabel}? This cannot be undone from this screen.`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingDetailRowId(rowId);
+      await financeApi.deleteSession(rowId);
+
+      const removeRow = (rows) => (rows || []).filter((session) => (session.session_id || session.id) !== rowId);
+      const removeFromPayoutRows = (rows) => (rows || []).map((payout) => {
+        if (payout.psychologist_id !== selectedPayout?.psychologist_id) return payout;
+        return {
+          ...payout,
+          session_details: removeRow(payout.session_details),
+          total_sessions: Math.max(0, Number(payout.total_sessions || 0) - 1),
+        };
+      });
+
+      setSelectedPayoutProfile(prev => prev ? { ...prev, sessions: removeRow(prev.sessions) } : prev);
+      setSelectedPayout(prev => prev ? {
+        ...prev,
+        session_details: removeRow(prev.session_details),
+        total_sessions: Math.max(0, Number(prev.total_sessions || 0) - 1),
+      } : prev);
+      setPendingPayoutRows(prev => removeFromPayoutRows(prev));
+      setCompletedPayoutRows(prev => removeFromPayoutRows(prev));
+      setDoctorPayouts(prev => removeFromPayoutRows(prev));
+      if (editingDetailRowId === rowId) cancelEditDetailRow();
+
+      await reloadSelectedPayoutProfile();
+      await loadPayoutPageData(activeTab);
+    } catch (error) {
+      console.error('Failed to delete payout detail row:', error);
+      alert(error?.message || 'Failed to delete session');
+    } finally {
+      setDeletingDetailRowId(null);
     }
   };
 
@@ -977,7 +1021,7 @@ export default function FinancePayouts() {
                             <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Company</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Booked Date</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payout</th>
-                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Edit</th>
+                            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -1001,6 +1045,7 @@ export default function FinancePayouts() {
                             const rowId = session.session_id || session.id || idx;
                             const isEditing = editingDetailRowId === rowId;
                             const isSaving = savingDetailRowId === rowId;
+                            const isDeleting = deletingDetailRowId === rowId;
                             const rowTone = idx % 2 === 0 ? 'bg-white' : 'bg-slate-100/70';
                             return (
                               <tr key={rowId} className={`${rowTone} transition-colors hover:bg-sky-50/80`}>
@@ -1083,17 +1128,32 @@ export default function FinancePayouts() {
                                 <td className="px-4 py-2.5 text-center">
                                   {isEditing ? (
                                     <div className="flex justify-center gap-1">
-                                      <button onClick={() => saveDetailRow(session)} disabled={isSaving} className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50" title="Save">
+                                      <button onClick={() => saveDetailRow(session)} disabled={isSaving || isDeleting} className="rounded p-1 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50" title="Save">
                                         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                       </button>
-                                      <button onClick={cancelEditDetailRow} disabled={isSaving} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-50" title="Cancel">
+                                      <button onClick={cancelEditDetailRow} disabled={isSaving || isDeleting} className="rounded p-1 text-slate-500 hover:bg-slate-100 disabled:opacity-50" title="Cancel">
                                         <X className="h-4 w-4" />
                                       </button>
                                     </div>
                                   ) : (
-                                    <button onClick={() => startEditDetailRow(session)} className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" title="Edit finance values">
-                                      <Pencil className="h-4 w-4" />
-                                    </button>
+                                    <div className="flex justify-center gap-1">
+                                      <button
+                                        onClick={() => startEditDetailRow(session)}
+                                        disabled={isDeleting}
+                                        className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
+                                        title="Edit finance values"
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteDetailRow(session)}
+                                        disabled={isDeleting}
+                                        className="rounded p-1 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50"
+                                        title="Delete session"
+                                      >
+                                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                      </button>
+                                    </div>
                                   )}
                                 </td>
                               </tr>
