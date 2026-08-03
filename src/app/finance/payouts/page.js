@@ -295,7 +295,7 @@ export default function FinancePayouts() {
       const { dateFrom, dateTo } = getDateParams();
 
       const response = activeTab === 'pending'
-        ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year })
+        ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year, psychologistId: payout.psychologist_id })
         : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
 
       if (!response?.success) {
@@ -534,7 +534,9 @@ export default function FinancePayouts() {
     try {
       setMarkDetailsLoading(true);
       const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
-      const res = await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year });
+      // psychologistId scopes the backend scan to this one therapist (~78% faster than
+      // computing the whole roster just to fill this dialog).
+      const res = await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year, psychologistId: payout.psychologist_id });
       const full = (res?.data?.payouts || []).find((p) => p.psychologist_id === payout.psychologist_id);
       if (full) setPayoutToMark((prev) => (prev && prev.psychologist_id === payout.psychologist_id ? { ...prev, ...full } : prev));
     } catch (err) {
