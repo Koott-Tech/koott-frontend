@@ -106,6 +106,7 @@ export default function FinanceDoctors() {
 
       /** Filter by scheduled_date — shows all sessions scheduled within the selected month */
       params.dateBasis = 'scheduled';
+      params.listOnly = 'true';
 
       const response = await financeApi.getCommissions(params);
       
@@ -486,26 +487,32 @@ export default function FinanceDoctors() {
                       <div className="w-40 shrink-0 text-sm font-semibold text-gray-900">
                         {doctor.psychologist?.first_name} {doctor.psychologist?.last_name}
                       </div>
-                      <div className="flex flex-wrap items-stretch gap-y-3 text-sm min-w-0">
-                        {[
-                          { label: 'Total Sessions', value: doctor.total_sessions_finance ?? doctor.total_sessions ?? 0, valueClass: 'text-gray-900' },
-                          { label: 'Upcoming', value: doctor.upcoming_sessions ?? doctor.pending_sessions ?? 0, valueClass: 'text-amber-700' },
-                          { label: 'Completed', value: doctor.completed_sessions || 0, valueClass: 'text-emerald-700' },
-                          { label: 'Company Earnings', value: formatAmount(doctor.total_commission_to_company), valueClass: 'text-sky-700' },
-                          { label: 'Pending Payout', value: formatAmount(doctor.pending_payout), valueClass: 'text-orange-700' },
-                          { label: 'Not Yet Due', value: formatAmount(doctor.not_due_payout ?? doctor.payout_not_due), valueClass: 'text-green-700' },
-                        ].map((item, index, arr) => (
-                          <div key={item.label} className="flex items-stretch">
-                            <div className="min-w-[110px] pr-4">
-                              <div className="text-[11px] uppercase tracking-wide text-gray-500">{item.label}</div>
-                              <div className={`mt-1 text-base font-semibold ${item.valueClass}`}>{item.value}</div>
+                      {doctor.is_fast_list ? (
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                          Fast list mode. Open <span className="font-semibold text-slate-800">Profile</span> or <span className="font-semibold text-slate-800">View Details</span> to calculate finance totals for this therapist.
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-stretch gap-y-3 text-sm min-w-0">
+                          {[
+                            { label: 'Total Sessions', value: doctor.total_sessions_finance ?? doctor.total_sessions ?? 0, valueClass: 'text-gray-900' },
+                            { label: 'Upcoming', value: doctor.upcoming_sessions ?? doctor.pending_sessions ?? 0, valueClass: 'text-amber-700' },
+                            { label: 'Completed', value: doctor.completed_sessions || 0, valueClass: 'text-emerald-700' },
+                            { label: 'Company Earnings', value: formatAmount(doctor.total_commission_to_company), valueClass: 'text-sky-700' },
+                            { label: 'Pending Payout', value: formatAmount(doctor.pending_payout), valueClass: 'text-orange-700' },
+                            { label: 'Not Yet Due', value: formatAmount(doctor.not_due_payout ?? doctor.payout_not_due), valueClass: 'text-green-700' },
+                          ].map((item, index, arr) => (
+                            <div key={item.label} className="flex items-stretch">
+                              <div className="min-w-[110px] pr-4">
+                                <div className="text-[11px] uppercase tracking-wide text-gray-500">{item.label}</div>
+                                <div className={`mt-1 text-base font-semibold ${item.valueClass}`}>{item.value}</div>
+                              </div>
+                              {index < arr.length - 1 ? (
+                                <div className="px-1 pr-4 flex items-center text-gray-300 text-lg font-light">|</div>
+                              ) : null}
                             </div>
-                            {index < arr.length - 1 ? (
-                              <div className="px-1 pr-4 flex items-center text-gray-300 text-lg font-light">|</div>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Right: Actions */}

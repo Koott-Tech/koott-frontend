@@ -114,11 +114,24 @@ function StatCard({ icon: Icon, label, value, sub, tone = 'default' }) {
   );
 }
 
+function FinanceToast({ message, onClose }) {
+  if (!message) return null;
+  return (
+    <div className="fixed right-4 top-4 z-[70] flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg shadow-emerald-900/10">
+      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-1 rounded p-0.5 text-emerald-600 hover:bg-emerald-50" aria-label="Close notification">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export default function DoctorFinanceProfilePage() {
   const { psychologistId } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { showError, showSuccess } = useNotification();
+  const { showError } = useNotification();
 
   const initialDateRange = (() => {
     const fromParam = searchParams.get('dateFrom');
@@ -140,10 +153,11 @@ export default function DoctorFinanceProfilePage() {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editValues, setEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
   const [savingRowId, setSavingRowId] = useState(null);
+  const [financeToast, setFinanceToast] = useState('');
 
-  const load = useCallback(async () => {
+  const load = useCallback(async ({ silent = false } = {}) => {
     if (!psychologistId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const params = { dateBasis };
       if (hasDateRangeBounds(dateRange)) {
@@ -157,11 +171,17 @@ export default function DoctorFinanceProfilePage() {
       showError(e?.message || 'Failed to load therapist profile');
       setData(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [psychologistId, dateRange, dateBasis, showError]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!financeToast) return undefined;
+    const timeout = setTimeout(() => setFinanceToast(''), 1800);
+    return () => clearTimeout(timeout);
+  }, [financeToast]);
 
   const startEditRow = (row) => {
     setEditingRowId(row.session_id);
@@ -204,9 +224,9 @@ export default function DoctorFinanceProfilePage() {
       if (editValues.status && editValues.status !== String(row.status || '').toLowerCase()) {
         await financeApi.updateSession(row.session_id, { status: editValues.status });
       }
-      showSuccess('Session finance values updated');
+      setFinanceToast('Session finance values updated');
       cancelEditRow();
-      await load();
+      load({ silent: true }).catch((err) => console.error('Background doctor profile reload failed:', err));
     } catch (error) {
       showError(error?.message || 'Failed to update session finance values');
     } finally {
@@ -280,6 +300,7 @@ export default function DoctorFinanceProfilePage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-5">
+      <FinanceToast message={financeToast} onClose={() => setFinanceToast('')} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50">

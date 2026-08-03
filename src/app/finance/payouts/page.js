@@ -110,6 +110,19 @@ const sourceStyleFor = (source) => {
   };
 };
 
+function FinanceToast({ message, onClose }) {
+  if (!message) return null;
+  return (
+    <div className="fixed right-4 top-4 z-[70] flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-800 shadow-lg shadow-emerald-900/10">
+      <CheckCircle className="h-4 w-4 text-emerald-600" />
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-1 rounded p-0.5 text-emerald-600 hover:bg-emerald-50" aria-label="Close notification">
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export default function FinancePayouts() {
   const { user, isAuthenticated, hasRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -137,6 +150,7 @@ export default function FinancePayouts() {
   const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
   const [doctorSearch, setDoctorSearch] = useState('');
   const [detailClientSearch, setDetailClientSearch] = useState('');
+  const [financeToast, setFinanceToast] = useState('');
   
   const [dateRange, setDateRange] = useState(() => istCalendarMonthBounds(new Date()));
 
@@ -176,6 +190,12 @@ export default function FinancePayouts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, pendingPayoutRows, completedPayoutRows]);
 
+  useEffect(() => {
+    if (!financeToast) return undefined;
+    const timeout = setTimeout(() => setFinanceToast(''), 1800);
+    return () => clearTimeout(timeout);
+  }, [financeToast]);
+
   const getDateParams = () => {
     let dateFrom = null;
     let dateTo = null;
@@ -186,9 +206,9 @@ export default function FinancePayouts() {
     return { dateFrom, dateTo };
   };
 
-  const loadPayoutPageData = async (displayTab = activeTab) => {
+  const loadPayoutPageData = async (displayTab = activeTab, { silent = false } = {}) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       setError(null);
 
       const { dateFrom, dateTo } = getDateParams();
@@ -220,7 +240,7 @@ export default function FinancePayouts() {
       console.error('Failed to load payout page data:', err);
       setError('Failed to load payout data. Please try again.');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -412,8 +432,9 @@ export default function FinancePayouts() {
       });
       setDoctorPayouts(prev => patchPayoutRows(prev));
       cancelEditDetailRow();
-      await reloadSelectedPayoutProfile();
-      await loadPayoutPageData(activeTab);
+      setFinanceToast('Session finance values updated');
+      reloadSelectedPayoutProfile().catch((err) => console.error('Background payout profile reload failed:', err));
+      loadPayoutPageData(activeTab, { silent: true }).catch((err) => console.error('Background payout list reload failed:', err));
     } catch (error) {
       console.error('Failed to update payout detail row:', error);
       alert(error?.message || 'Failed to update session finance values');
@@ -455,8 +476,9 @@ export default function FinancePayouts() {
       setDoctorPayouts(prev => removeFromPayoutRows(prev));
       if (editingDetailRowId === rowId) cancelEditDetailRow();
 
-      await reloadSelectedPayoutProfile();
-      await loadPayoutPageData(activeTab);
+      setFinanceToast('Session deleted');
+      reloadSelectedPayoutProfile().catch((err) => console.error('Background payout profile reload failed:', err));
+      loadPayoutPageData(activeTab, { silent: true }).catch((err) => console.error('Background payout list reload failed:', err));
     } catch (error) {
       console.error('Failed to delete payout detail row:', error);
       alert(error?.message || 'Failed to delete session');
@@ -628,6 +650,7 @@ export default function FinancePayouts() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-2 sm:p-3 lg:p-4">
+      <FinanceToast message={financeToast} onClose={() => setFinanceToast('')} />
       <div className="max-w-7xl mx-auto">
         <div className="mb-2 sm:mb-3">
           <div role="heading" aria-level="2" className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-1">Payouts & Payments</div>
