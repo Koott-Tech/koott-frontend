@@ -282,20 +282,31 @@ export default function FinancePayouts() {
 
     if (!payout?.psychologist_id) return;
 
+    // Drive this popup from the SAME payout endpoint that feeds the table and the
+    // Mark-as-Paid dialog. It used to load getDoctorFinanceProfile on a `scheduled` date
+    // basis, while payouts are computed on COMPLETION date — so the two screens answered
+    // different questions and disagreed for most doctors (e.g. Prijitha ₹99,600 vs ₹105,600).
+    // Using the payout's own session_details makes them agree by construction.
+    if ((payout.session_details || []).length) return;
+
     try {
       setSelectedPayoutProfileLoading(true);
-      const params = { dateBasis: 'scheduled' };
-      if (hasDateRangeBounds(dateRange)) {
-        params.dateFrom = formatIstCalendarYmd(dateRange.from);
-        params.dateTo = formatIstCalendarYmd(dateRange.to);
-      }
-      const response = await financeApi.getDoctorFinanceProfile(payout.psychologist_id, params);
+      const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+      const { dateFrom, dateTo } = getDateParams();
+
+      const response = activeTab === 'pending'
+        ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year })
+        : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+
       if (!response?.success) {
         throw new Error(response?.message || 'Failed to load full session breakdown');
       }
-      setSelectedPayoutProfile(response.data || null);
+      const full = (response.data?.payouts || []).find((p) => p.psychologist_id === payout.psychologist_id);
+      if (full) {
+        setSelectedPayout((prev) => (prev && prev.psychologist_id === payout.psychologist_id ? { ...prev, ...full } : prev));
+      }
     } catch (err) {
-      console.error('Failed to load payout doctor profile:', err);
+      console.error('Failed to load payout session breakdown:', err);
       setSelectedPayoutProfileError(err?.message || 'Failed to load full session breakdown');
     } finally {
       setSelectedPayoutProfileLoading(false);
@@ -655,7 +666,11 @@ export default function FinancePayouts() {
   // 'void' rows are excluded from both: a cancelled session is owed to nobody and was never
   // paid, and including it made the list stop footing to the amount in the header.
   const selectedDetailRows = selectedDetailRowsAll.filter((session) => {
-    const st = String(session.payout_status || session.payment_status || 'pending').toLowerCase();
+    const raw = session.payout_status ?? session.payment_status;
+    // Payout rows carry no status field — the endpoint already scoped them to this tab
+    // (pending returns only unpaid, completed only paid), so keep them as-is.
+    if (raw == null || raw === '') return true;
+    const st = String(raw).toLowerCase();
     return activeTab === 'pending' ? (st === 'pending' || st === 'not_due') : st === 'paid';
   });
   const detailClientSearchTerm = detailClientSearch.trim().toLowerCase();
