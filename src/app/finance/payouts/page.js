@@ -139,6 +139,9 @@ export default function FinancePayouts() {
   const [markingAsPaid, setMarkingAsPaid] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [payoutToMark, setPayoutToMark] = useState(null);
+  // True while the confirm dialog is fetching this doctor's real totals (Pending tab loads a
+  // listOnly payload whose amounts are null).
+  const [markDetailsLoading, setMarkDetailsLoading] = useState(false);
   const [pendingTabCount, setPendingTabCount] = useState(0);
   const [completedTabCount, setCompletedTabCount] = useState(0);
   const [pendingTabAmount, setPendingTabAmount] = useState(0);
@@ -206,36 +209,55 @@ export default function FinancePayouts() {
     return { dateFrom, dateTo };
   };
 
+  /**
+   * Fetch one tab's rows and update its state. `isActive` also swaps the visible table.
+   * Returns the rows so callers can await a specific tab.
+   */
+  const fetchTabRows = async (tab, { isActive = false } = {}) => {
+    const { dateFrom, dateTo } = getDateParams();
+    const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+
+    if (tab === 'completed') {
+      const completedRes = await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+      const completedPayouts = completedRes?.data?.payouts || [];
+      setCompletedPayoutRows(completedPayouts);
+      if (isActive) setDoctorPayouts(completedPayouts);
+      setCompletedTabCount(completedPayouts.length);
+      setCompletedTabAmount(completedPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
+      setLoadedTabs(prev => ({ ...prev, completed: true }));
+      return completedPayouts;
+    }
+
+    const pendingRes = await financeApi.getPendingPayouts({
+      month: pendingMy.month,
+      year: pendingMy.year,
+      includeDetails: 'false',
+      listOnly: 'true',
+    });
+    const pendingPayouts = pendingRes?.data?.payouts || [];
+    setPendingPayoutRows(pendingPayouts);
+    if (isActive) setDoctorPayouts(pendingPayouts);
+    setPendingTabCount(pendingPayouts.length);
+    setPendingTabAmount(pendingPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
+    setLoadedTabs(prev => ({ ...prev, pending: true }));
+    return pendingPayouts;
+  };
+
   const loadPayoutPageData = async (displayTab = activeTab, { silent = false } = {}) => {
     try {
       if (!silent) setIsLoading(true);
       setError(null);
 
-      const { dateFrom, dateTo } = getDateParams();
-      const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+      await fetchTabRows(displayTab, { isActive: true });
 
-      if (displayTab === 'completed') {
-        const completedRes = await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
-        const completedPayouts = completedRes?.data?.payouts || [];
-        setCompletedPayoutRows(completedPayouts);
-        setDoctorPayouts(completedPayouts);
-        setCompletedTabCount(completedPayouts.length);
-        setCompletedTabAmount(completedPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'completed'), 0));
-        setLoadedTabs(prev => ({ ...prev, completed: true }));
-      } else {
-        const pendingRes = await financeApi.getPendingPayouts({
-          month: pendingMy.month,
-          year: pendingMy.year,
-          includeDetails: 'false',
-          listOnly: 'true',
-        });
-        const pendingPayouts = pendingRes?.data?.payouts || [];
-        setPendingPayoutRows(pendingPayouts);
-        setDoctorPayouts(pendingPayouts);
-        setPendingTabCount(pendingPayouts.length);
-        setPendingTabAmount(pendingPayouts.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
-        setLoadedTabs(prev => ({ ...prev, pending: true }));
-      }
+      // Prefetch the OTHER tab in the background so its "(n)" badge is correct straight away.
+      // Previously only the active tab was fetched, so the inactive tab's count sat at 0 until
+      // you clicked it (the date-change effect resets both counts to 0 first). Fire-and-forget:
+      // it must never block the visible tab or surface an error over it.
+      const otherTab = displayTab === 'completed' ? 'pending' : 'completed';
+      fetchTabRows(otherTab).catch((err) => {
+        console.error(`Background load of "${otherTab}" payouts failed:`, err);
+      });
     } catch (err) {
       console.error('Failed to load payout page data:', err);
       setError('Failed to load payout data. Please try again.');
@@ -487,9 +509,28 @@ export default function FinancePayouts() {
     }
   };
 
-  const handleMarkAsPaidClick = (payout) => {
+  const handleMarkAsPaidClick = async (payout) => {
     setPayoutToMark(payout);
     setShowConfirmModal(true);
+
+    // The Pending tab loads a lightweight list (listOnly=true), where the backend returns
+    // every amount as null for speed. The table hides those columns, but this dialog shows
+    // them — so they rendered as "0 sessions / ₹0". It also leaves session_details empty,
+    // which the confirm step needs. Pull the real figures for this one doctor on open.
+    const needsDetails = payout && (payout.total_sessions == null || !(payout.session_details || []).length);
+    if (activeTab !== 'pending' || !needsDetails) return;
+
+    try {
+      setMarkDetailsLoading(true);
+      const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+      const res = await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year });
+      const full = (res?.data?.payouts || []).find((p) => p.psychologist_id === payout.psychologist_id);
+      if (full) setPayoutToMark((prev) => (prev && prev.psychologist_id === payout.psychologist_id ? { ...prev, ...full } : prev));
+    } catch (err) {
+      console.error('Failed to load payout details for confirmation:', err);
+    } finally {
+      setMarkDetailsLoading(false);
+    }
   };
 
   const handleConfirmMarkAsPaid = async () => {
@@ -507,6 +548,12 @@ export default function FinancePayouts() {
         dateTo = formatIstCalendarYmd(dateRange.to) || null;
       }
 
+      // month/year is sent as a fallback: the backend needs sessionIds OR dateFrom/dateTo OR
+      // month/year. On the Pending tab session_details can be empty (listOnly payload), and
+      // if no date range is picked dateFrom/dateTo are null too — without this the request
+      // failed with "Either sessionIds, month/year, or dateFrom/dateTo are required".
+      const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+
       const response = await financeApi.markPayoutAsPaid({
         psychologist_id: payoutToMark.psychologist_id,
         sessionIds: (payoutToMark.session_details || [])
@@ -514,7 +561,9 @@ export default function FinancePayouts() {
           .map((session) => session.session_id)
           .filter(Boolean),
         dateFrom,
-        dateTo
+        dateTo,
+        month: pendingMy.month,
+        year: pendingMy.year
       });
 
       if (response.success) {
@@ -597,7 +646,18 @@ export default function FinancePayouts() {
     : doctorPayouts;
   const selectedProfileSessions = selectedPayoutProfile?.sessions || null;
   const selectedProfileSummary = selectedPayoutProfile?.summary || null;
-  const selectedDetailRows = selectedProfileSessions || selectedPayout?.session_details || [];
+  const selectedDetailRowsAll = selectedProfileSessions || selectedPayout?.session_details || [];
+  // Each tab's breakdown must show only ITS OWN rows. The profile endpoint returns every
+  // session in the range — paid, unpaid and 'void' (cancelled/refunded) alike — so without
+  // this both popups showed the same full list:
+  //   • Pending tab   → only what is STILL OWED  ('pending' / 'not_due')
+  //   • Completed tab → only what was ACTUALLY PAID ('paid')
+  // 'void' rows are excluded from both: a cancelled session is owed to nobody and was never
+  // paid, and including it made the list stop footing to the amount in the header.
+  const selectedDetailRows = selectedDetailRowsAll.filter((session) => {
+    const st = String(session.payout_status || session.payment_status || 'pending').toLowerCase();
+    return activeTab === 'pending' ? (st === 'pending' || st === 'not_due') : st === 'paid';
+  });
   const detailClientSearchTerm = detailClientSearch.trim().toLowerCase();
   const visibleSelectedDetailRows = detailClientSearchTerm
     ? selectedDetailRows.filter((session) => {
@@ -613,6 +673,11 @@ export default function FinancePayouts() {
   const selectedSummaryCompanyEarnings = selectedProfileSummary?.company_earnings ?? selectedPayout?.profile_company_earnings ?? selectedPayout?.total_company_commission ?? 0;
   const selectedSummaryPendingPayout = selectedProfileSummary?.payout_pending ?? getPayoutDisplayAmount(selectedPayout, activeTab);
   const selectedSummaryNotDue = selectedProfileSummary?.payout_not_due ?? selectedPayout?.profile_payout_not_due ?? 0;
+  // On the Completed tab the headline figure is what was PAID, not what is pending — showing
+  // "Pending Payout ₹6,750" above a list of ₹1,43,000 of settled sessions made no sense.
+  const selectedSummaryPaidPayout = selectedProfileSummary?.payout_paid
+    ?? selectedPayout?.profile_payout_paid
+    ?? getPayoutDisplayAmount(selectedPayout, 'completed');
   const selectedDetailTotals = visibleSelectedDetailRows.reduce((acc, session) => {
     acc.amount += Number(session.session_amount || 0);
     acc.doctor += Number((isUsingProfileRows ? session.doctor_amount : session.doctor_wallet) || 0);
@@ -872,7 +937,7 @@ export default function FinancePayouts() {
         {/* Confirm Mark as Paid Modal */}
         {showConfirmModal && payoutToMark && (
           <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+            <div className="bg-white rounded-lg max-w-xl w-full shadow-xl">
               <div className="p-6 border-b border-gray-200">
                 <div role="heading" aria-level="2" className="text-lg font-semibold text-gray-900">Confirm Mark as Paid</div>
               </div>
@@ -887,12 +952,14 @@ export default function FinancePayouts() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">{activeTab === 'pending' ? 'Completed Sessions:' : 'Paid Sessions:'}</span>
-                      <span className="ml-2 font-semibold text-gray-900">{payoutToMark.total_sessions || 0}</span>
+                      <span className="ml-2 font-semibold text-gray-900">
+                        {markDetailsLoading ? '…' : (payoutToMark.total_sessions ?? 0)}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-600">{activeTab === 'pending' ? 'Pending Payout:' : 'Doctor Wallet:'}</span>
                       <span className="ml-2 font-semibold text-green-600">
-                        ₹{getPayoutDisplayAmount(payoutToMark, activeTab).toLocaleString('en-IN')}
+                        {markDetailsLoading ? '…' : `₹${getPayoutDisplayAmount(payoutToMark, activeTab).toLocaleString('en-IN')}`}
                       </span>
                     </div>
                   </div>
@@ -906,10 +973,12 @@ export default function FinancePayouts() {
                   </button>
                   <button
                     onClick={handleConfirmMarkAsPaid}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    disabled={markDetailsLoading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Check className="h-4 w-4" />
-                    Mark as Paid
+                    {markDetailsLoading
+                      ? <><Loader2 className="h-4 w-4 animate-spin" />Loading…</>
+                      : <><Check className="h-4 w-4" />Mark as Paid</>}
                   </button>
                 </div>
               </div>
@@ -980,11 +1049,15 @@ export default function FinancePayouts() {
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Pending Payout</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      {activeTab === 'pending' ? 'Pending Payout' : 'Paid Payout'}
+                    </label>
                     <p className="mt-1 text-lg font-semibold text-green-600">
-                      ₹{Number(selectedSummaryPendingPayout || 0).toLocaleString('en-IN')}
+                      ₹{Number((activeTab === 'pending' ? selectedSummaryPendingPayout : selectedSummaryPaidPayout) || 0).toLocaleString('en-IN')}
                     </p>
-                    <p className="mt-0.5 text-xs text-gray-500">Not yet due: ₹{Number(selectedSummaryNotDue || 0).toLocaleString('en-IN')}</p>
+                    {activeTab === 'pending' && (
+                      <p className="mt-0.5 text-xs text-gray-500">Not yet due: ₹{Number(selectedSummaryNotDue || 0).toLocaleString('en-IN')}</p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Status</label>
