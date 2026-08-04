@@ -147,7 +147,7 @@ export default function FinancePayouts() {
   const [pendingTabAmount, setPendingTabAmount] = useState(0);
   const [completedTabAmount, setCompletedTabAmount] = useState(0);
   const [editingDetailRowId, setEditingDetailRowId] = useState(null);
-  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
+  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '' });
   const [savingDetailRowId, setSavingDetailRowId] = useState(null);
   const [deletingDetailRowId, setDeletingDetailRowId] = useState(null);
   const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
@@ -337,12 +337,13 @@ export default function FinancePayouts() {
       doctor_amount: String(Number(doctorAmount || 0)),
       company_amount: String(Number(companyAmount || 0)),
       status: String(row.status || 'booked').toLowerCase(),
+      payout_status: String(row.payout_status || row.payment_status || 'pending').toLowerCase() === 'paid' ? 'paid' : 'pending',
     });
   };
 
   const cancelEditDetailRow = () => {
     setEditingDetailRowId(null);
-    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '' });
+    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '' });
   };
 
   const updateDetailEditValue = (field, value) => {
@@ -368,9 +369,20 @@ export default function FinancePayouts() {
 
     try {
       setSavingDetailRowId(rowId);
-      const response = await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount);
+      const originalPayoutStatus = String(row.payout_status || row.payment_status || 'pending').toLowerCase() === 'paid' ? 'paid' : 'pending';
+      const nextPayoutStatus = detailEditValues.payout_status || originalPayoutStatus;
+      const payoutStatusChanged = nextPayoutStatus !== originalPayoutStatus;
+      const response = await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount, payoutStatusChanged ? nextPayoutStatus : undefined);
+      // The response was previously never checked, so a rejected save still patched the table
+      // and looked "saved" — until a refresh showed the old value. Fail loudly instead.
+      if (!response?.success) {
+        throw new Error(response?.message || response?.error || 'Server rejected the commission update');
+      }
       if (detailEditValues.status && detailEditValues.status !== String(row.status || '').toLowerCase()) {
-        await financeApi.updateSession(rowId, { status: detailEditValues.status });
+        const statusRes = await financeApi.updateSession(rowId, { status: detailEditValues.status });
+        if (statusRes && statusRes.success === false) {
+          throw new Error(statusRes.message || 'Commission saved, but the status change failed');
+        }
       }
       const updated = response?.data || {};
       const nextSessionAmount = Number(updated.session_amount ?? sessionAmount) || 0;
@@ -465,6 +477,26 @@ export default function FinancePayouts() {
       });
       setDoctorPayouts(prev => patchPayoutRows(prev));
       cancelEditDetailRow();
+
+      if (payoutStatusChanged) {
+        // The session has moved between Pending and Completed. Local patching can only edit a
+        // row in place, so re-fetch both tabs (and this doctor's breakdown) from the server —
+        // otherwise the row lingers in the tab it just left.
+        setFinanceToast(nextPayoutStatus === 'paid'
+          ? 'Session marked as paid — moved to Completed'
+          : 'Session moved back to Pending');
+        setSelectedPayout(prev => (prev ? { ...prev, session_details: [] } : prev));
+        await Promise.all([
+          fetchTabRows('pending', { isActive: activeTab === 'pending' }),
+          fetchTabRows('completed', { isActive: activeTab === 'completed' }),
+        ]).catch((err) => console.error('Tab reload after payout-status change failed:', err));
+        if (selectedPayout?.psychologist_id) {
+          await handleViewDetails({ psychologist_id: selectedPayout.psychologist_id, psychologist: selectedPayout.psychologist })
+            .catch((err) => console.error('Breakdown reload failed:', err));
+        }
+        return;
+      }
+
       setFinanceToast('Session finance values updated');
       reloadSelectedPayoutProfile().catch((err) => console.error('Background payout profile reload failed:', err));
       loadPayoutPageData(activeTab, { silent: true }).catch((err) => console.error('Background payout list reload failed:', err));
@@ -1234,9 +1266,21 @@ export default function FinancePayouts() {
                                   {fmtBookedDate(session.booked_at || session.booking_created_at || session.created_at)}
                                 </td>
                                 <td className="px-4 py-2.5">
-                                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${payoutStyle.cls}`}>
-                                    {payoutStyle.label}
-                                  </span>
+                                  {isEditing ? (
+                                    <select
+                                      value={detailEditValues.payout_status}
+                                      onChange={(e) => setDetailEditValues(prev => ({ ...prev, payout_status: e.target.value }))}
+                                      className="w-28 rounded border border-slate-200 px-2 py-1 text-xs bg-white"
+                                      title="Setting Paid settles only this session"
+                                    >
+                                      <option value="pending">Pending</option>
+                                      <option value="paid">Paid</option>
+                                    </select>
+                                  ) : (
+                                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${payoutStyle.cls}`}>
+                                      {payoutStyle.label}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2.5 text-center">
                                   {isEditing ? (

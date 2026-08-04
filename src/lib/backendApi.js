@@ -2113,12 +2113,14 @@ export const financeApi = {
     });
   },
 
-  async updateSessionCommission(sessionId, commissionAmount, sessionAmount) {
+  async updateSessionCommission(sessionId, commissionAmount, sessionAmount, payoutStatus) {
     return apiRequest(`/finance/sessions/${sessionId}/commission`, {
       method: 'PUT',
       body: JSON.stringify({
         commission_amount: commissionAmount,
         ...(sessionAmount !== undefined ? { session_amount: sessionAmount } : {}),
+        // 'paid' settles this one session only — it moves to the Completed tab on its own.
+        ...(payoutStatus ? { payout_status: payoutStatus } : {}),
       }),
     });
   },
