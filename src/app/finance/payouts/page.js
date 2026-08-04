@@ -65,8 +65,26 @@ const fmtBookedDate = (d) => {
   }
 };
 
+/**
+ * Status to SHOW. A session whose scheduled time has passed but that the therapist hasn't
+ * marked completed reads as "pending" (awaiting completion) rather than "booked" — the same
+ * rule the admin Wix Discovery page applies, so both screens agree. Display-only.
+ */
+function displaySessionStatus(row) {
+  const st = String(row?.status || '').toLowerCase();
+  if (!['booked', 'scheduled', 'confirmed', 'rescheduled', 'reschedule_requested'].includes(st)) return st;
+  const date = row?.session_date || row?.scheduled_date;
+  if (!date) return st;
+  const [y, m, d] = String(date).split('-').map(Number);
+  const [hh = 0, mm = 0, ss = 0] = String(row?.session_time || row?.scheduled_time || '0:0:0').split(':').map(Number);
+  if (!y || !m || !d) return st;
+  const startMs = Date.UTC(y, m - 1, d, hh, mm, ss) - 5.5 * 3600 * 1000; // IST wall-clock → UTC
+  return startMs <= Date.now() ? 'pending' : st;
+}
+
 const STATUS_STYLES = {
   completed: 'bg-green-100 text-green-800',
+  pending: 'bg-amber-100 text-amber-900',
   booked: 'bg-emerald-100 text-emerald-800',
   rescheduled: 'bg-slate-100 text-slate-700',
   no_show: 'bg-amber-100 text-amber-900',
@@ -715,6 +733,14 @@ export default function FinancePayouts() {
       return clientName.includes(detailClientSearchTerm) || clientEmail.includes(detailClientSearchTerm);
     })
     : selectedDetailRows;
+  // Order the breakdown chronologically — the payout endpoints return rows grouped by the
+  // query that produced them (completed, then not-due), which read as random dates on screen.
+  visibleSelectedDetailRows.sort((a, b) => {
+    const da = String(a.session_date || a.scheduled_date || '');
+    const db = String(b.session_date || b.scheduled_date || '');
+    if (da !== db) return da < db ? -1 : 1;
+    return String(a.scheduled_time || '').localeCompare(String(b.scheduled_time || ''));
+  });
   const selectedDetailCount = visibleSelectedDetailRows.length;
   const isUsingProfileRows = Array.isArray(selectedProfileSessions);
   const selectedSummaryTotalSessions = selectedProfileSummary?.total_sessions ?? selectedPayout?.profile_total_sessions ?? selectedPayout?.total_sessions ?? 0;
@@ -1155,6 +1181,7 @@ export default function FinancePayouts() {
                       <table className="min-w-full text-sm">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sl. No.</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
                             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -1172,13 +1199,15 @@ export default function FinancePayouts() {
                         <tbody className="divide-y divide-gray-200">
                           {visibleSelectedDetailRows.length === 0 ? (
                             <tr>
-                              <td colSpan={12} className="px-4 py-10 text-center text-sm text-gray-500">
+                              <td colSpan={13} className="px-4 py-10 text-center text-sm text-gray-500">
                                 No client sessions match this search.
                               </td>
                             </tr>
                           ) : visibleSelectedDetailRows.map((session, idx) => {
                             const isProfileRow = isUsingProfileRows;
-                            const status = session.status || (activeTab === 'pending' ? 'completed' : 'paid');
+                            const rawStatus = session.status || (activeTab === 'pending' ? 'completed' : 'paid');
+                            // Show past-due "booked" as "pending", matching the admin dashboard.
+                            const status = displaySessionStatus({ ...session, status: rawStatus }) || rawStatus;
                             const statusKey = String(status || '').toLowerCase();
                             const payoutStatus = isProfileRow
                               ? session.payout_status
@@ -1194,6 +1223,7 @@ export default function FinancePayouts() {
                             const rowTone = idx % 2 === 0 ? 'bg-white' : 'bg-slate-100/70';
                             return (
                               <tr key={rowId} className={`${rowTone} transition-colors hover:bg-sky-50/80`}>
+                                <td className="px-4 py-2.5 whitespace-nowrap text-slate-500 tabular-nums">{idx + 1}</td>
                                 <td className="px-4 py-2.5 whitespace-nowrap">
                                   <div className="text-slate-900">{fmtDate(session.session_date)}</div>
                                   <div className="text-xs text-slate-400">{fmtTime(session.session_time)}</div>
