@@ -59,24 +59,32 @@ export function exportFinanceRowsToExcel({
   payoutStyles,
   summary,
   totals,
+  statusLabelFor,
 }) {
   const workbook = XLSX.utils.book_new();
-  const normalizedRows = (rows || []).map((row) => {
+  const normalizedRows = (rows || []).map((row, index) => {
     const isProfileRow = Object.prototype.hasOwnProperty.call(row, 'doctor_amount');
     const source = sourceStyleFor?.(row.source);
     const payoutStatus = row.payout_status || row.payoutStatus || 'not_due';
     return {
+      'Sl. No.': index + 1,
       Date: row.session_date || '',
       Time: row.session_time || '',
       Client: row.client_name || '',
+      'Client Email': row.client_email || '',
       Type: row.package_label || row.session_type_label || String(row.session_type || '').replace(/_/g, ' '),
       'First / Follow-up': row.session_sequence_label || (row.is_first_session || row.is_package_first_for_client ? 'First' : 'Follow-up'),
       Source: source?.label || row.source || '',
       'Payment Proof': row.payment_proof_url || '',
-      'Session Status': String(row.status || '').replace(/_/g, ' '),
+      // Use the SAME label the popup shows (a past-due "booked" session reads as "pending"),
+      // otherwise the sheet disagreed with the screen it was exported from.
+      'Session Status': String((statusLabelFor ? statusLabelFor(row) : row.status) || '').replace(/_/g, ' '),
       'Session Amount': Number(row.session_amount || 0),
-      'Doctor Commission': Number((isProfileRow ? row.doctor_amount : row.doctor_wallet) || 0),
-      'Company Commission': Number((isProfileRow ? row.company_amount : row.company_commission) || 0),
+      // Resolve by presence, not by row "shape": a row patched after an inline edit carries
+      // BOTH field names, and the old isProfileRow guess could then read a different field
+      // than the popup did — which is how the sheet ended up with different doctor amounts.
+      'Doctor Commission': Number(row.doctor_wallet ?? row.doctor_amount ?? 0),
+      'Company Commission': Number(row.company_commission ?? row.company_amount ?? 0),
       'Booked Date': formatBookedDate(row.booked_at || row.booking_created_at || row.created_at),
       'Payout Status': labelFromMap(payoutStyles, payoutStatus, payoutStatus),
       'Order ID': row.order_id || '',

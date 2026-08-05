@@ -2113,7 +2113,7 @@ export const financeApi = {
     });
   },
 
-  async updateSessionCommission(sessionId, commissionAmount, sessionAmount, payoutStatus) {
+  async updateSessionCommission(sessionId, commissionAmount, sessionAmount, payoutStatus, sessionSequence) {
     return apiRequest(`/finance/sessions/${sessionId}/commission`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -2121,6 +2121,8 @@ export const financeApi = {
         ...(sessionAmount !== undefined ? { session_amount: sessionAmount } : {}),
         // 'paid' settles this one session only — it moves to the Completed tab on its own.
         ...(payoutStatus ? { payout_status: payoutStatus } : {}),
+        // 'first' | 'followup' — the server re-derives the doctor amount from the rate card.
+        ...(sessionSequence ? { session_sequence: sessionSequence } : {}),
       }),
     });
   },

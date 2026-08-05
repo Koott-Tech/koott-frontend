@@ -113,6 +113,10 @@ const SOURCE_STYLES = {
 const EDITABLE_SESSION_STATUSES = [
   { value: 'completed', label: 'Completed' },
   { value: 'booked', label: 'Booked' },
+  // Some rows carry a literal 'pending' status. Without an option for it the <select> fell
+  // back to its first entry ("Completed") when such a row was edited, so saving any other
+  // field silently marked the session complete.
+  { value: 'pending', label: 'Pending' },
   { value: 'rescheduled', label: 'Rescheduled' },
   { value: 'reschedule_requested', label: 'Reschedule Requested' },
   { value: 'no_show', label: 'No Show' },
@@ -165,7 +169,7 @@ export default function FinancePayouts() {
   const [pendingTabAmount, setPendingTabAmount] = useState(0);
   const [completedTabAmount, setCompletedTabAmount] = useState(0);
   const [editingDetailRowId, setEditingDetailRowId] = useState(null);
-  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '' });
+  const [detailEditValues, setDetailEditValues] = useState({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '', session_sequence: '' });
   const [savingDetailRowId, setSavingDetailRowId] = useState(null);
   const [deletingDetailRowId, setDeletingDetailRowId] = useState(null);
   const [loadedTabs, setLoadedTabs] = useState({ pending: false, completed: false });
@@ -331,18 +335,27 @@ export default function FinancePayouts() {
     }
   };
 
+  /**
+   * Refresh the open breakdown from the SAME payout endpoint that produced it.
+   * This used to reload getDoctorFinanceProfile (a scheduled-date view), which silently
+   * swapped the popup onto a different dataset after every save — so the table, the header
+   * and the Excel export could each show different doctor amounts.
+   */
   const reloadSelectedPayoutProfile = async () => {
     if (!selectedPayout?.psychologist_id) return;
-    const params = { dateBasis: 'scheduled' };
-    if (hasDateRangeBounds(dateRange)) {
-      params.dateFrom = formatIstCalendarYmd(dateRange.from);
-      params.dateTo = formatIstCalendarYmd(dateRange.to);
-    }
-    const response = await financeApi.getDoctorFinanceProfile(selectedPayout.psychologist_id, params);
+    const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
+    const { dateFrom, dateTo } = getDateParams();
+    const response = activeTab === 'pending'
+      ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year, psychologistId: selectedPayout.psychologist_id })
+      : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
     if (!response?.success) {
       throw new Error(response?.message || 'Failed to reload payout details');
     }
-    setSelectedPayoutProfile(response.data || null);
+    const full = (response.data?.payouts || []).find((p) => p.psychologist_id === selectedPayout.psychologist_id);
+    if (full) {
+      setSelectedPayoutProfile(null);           // never mix profile rows into this popup
+      setSelectedPayout((prev) => (prev && prev.psychologist_id === full.psychologist_id ? { ...prev, ...full } : prev));
+    }
   };
 
   const startEditDetailRow = (row) => {
@@ -356,12 +369,13 @@ export default function FinancePayouts() {
       company_amount: String(Number(companyAmount || 0)),
       status: String(row.status || 'booked').toLowerCase(),
       payout_status: String(row.payout_status || row.payment_status || 'pending').toLowerCase() === 'paid' ? 'paid' : 'pending',
+      session_sequence: (row.session_sequence || (row.is_first_session || row.is_package_first_for_client ? 'first' : 'followup')),
     });
   };
 
   const cancelEditDetailRow = () => {
     setEditingDetailRowId(null);
-    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '' });
+    setDetailEditValues({ session_amount: '', doctor_amount: '', company_amount: '', status: '', payout_status: '', session_sequence: '' });
   };
 
   const updateDetailEditValue = (field, value) => {
@@ -390,7 +404,13 @@ export default function FinancePayouts() {
       const originalPayoutStatus = String(row.payout_status || row.payment_status || 'pending').toLowerCase() === 'paid' ? 'paid' : 'pending';
       const nextPayoutStatus = detailEditValues.payout_status || originalPayoutStatus;
       const payoutStatusChanged = nextPayoutStatus !== originalPayoutStatus;
-      const response = await financeApi.updateSessionCommission(rowId, companyAmount, sessionAmount, payoutStatusChanged ? nextPayoutStatus : undefined);
+      const originalSequence = row.session_sequence || (row.is_first_session || row.is_package_first_for_client ? 'first' : 'followup');
+      const sequenceChanged = detailEditValues.session_sequence && detailEditValues.session_sequence !== originalSequence;
+      const response = await financeApi.updateSessionCommission(
+        rowId, companyAmount, sessionAmount,
+        payoutStatusChanged ? nextPayoutStatus : undefined,
+        sequenceChanged ? detailEditValues.session_sequence : undefined,
+      );
       // The response was previously never checked, so a rejected save still patched the table
       // and looked "saved" — until a refresh showed the old value. Fail loudly instead.
       if (!response?.success) {
@@ -775,6 +795,7 @@ export default function FinancePayouts() {
       dateFrom,
       dateTo,
       sourceStyleFor,
+      statusLabelFor: displaySessionStatus,
       payoutStyles: PAYOUT_STYLES,
       summary: {
         status: activeTab === 'pending' ? 'Pending Payout' : 'Paid',
@@ -1213,8 +1234,9 @@ export default function FinancePayouts() {
                               ? session.payout_status
                               : (activeTab === 'pending' ? 'pending' : 'paid');
                             const payoutStyle = PAYOUT_STYLES[payoutStatus] || PAYOUT_STYLES.not_due;
-                            const companyAmount = (isProfileRow ? session.company_amount : session.company_commission) || 0;
-                            const doctorAmount = (isProfileRow ? session.doctor_amount : session.doctor_wallet) || 0;
+                            // Same resolution as the Excel export, so the two can never disagree.
+                            const companyAmount = Number(session.company_commission ?? session.company_amount ?? 0);
+                            const doctorAmount = Number(session.doctor_wallet ?? session.doctor_amount ?? 0);
                             const source = sourceStyleFor(session.source);
                             const rowId = session.session_id || session.id || idx;
                             const isEditing = editingDetailRowId === rowId;
@@ -1238,7 +1260,19 @@ export default function FinancePayouts() {
                                   {session.package_label || session.session_type_label || session.session_type?.replace(/_/g, ' ') || '-'}
                                 </td>
                                 <td className="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">
-                                  {session.session_sequence_label || (session.is_first_session || session.is_package_first_for_client ? 'First' : 'Follow-up')}
+                                  {isEditing ? (
+                                    <select
+                                      value={detailEditValues.session_sequence}
+                                      onChange={(e) => setDetailEditValues(prev => ({ ...prev, session_sequence: e.target.value }))}
+                                      className="w-28 rounded border border-slate-200 px-2 py-1 text-xs bg-white"
+                                      title="Changing this re-derives the doctor amount from the therapist's rate card"
+                                    >
+                                      <option value="first">First</option>
+                                      <option value="followup">Follow-up</option>
+                                    </select>
+                                  ) : (
+                                    session.session_sequence_label || (session.is_first_session || session.is_package_first_for_client ? 'First' : 'Follow-up')
+                                  )}
                                 </td>
                                 <td className="px-4 py-2.5">
                                   <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${source.cls}`}>
