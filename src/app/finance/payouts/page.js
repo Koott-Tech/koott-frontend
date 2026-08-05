@@ -1268,7 +1268,7 @@ export default function FinancePayouts() {
                                       type="number"
                                       value={detailEditValues.session_amount}
                                       onChange={(e) => updateDetailEditValue('session_amount', e.target.value)}
-                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
                                   ) : inr(session.session_amount)}
                                 </td>
@@ -1278,7 +1278,7 @@ export default function FinancePayouts() {
                                       type="number"
                                       value={detailEditValues.doctor_amount}
                                       onChange={(e) => updateDetailEditValue('doctor_amount', e.target.value)}
-                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
                                   ) : inr(doctorAmount)}
                                 </td>
@@ -1288,7 +1288,7 @@ export default function FinancePayouts() {
                                       type="number"
                                       value={detailEditValues.company_amount}
                                       onChange={(e) => updateDetailEditValue('company_amount', e.target.value)}
-                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs"
+                                      className="w-24 rounded border border-slate-200 px-2 py-1 text-right text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     />
                                   ) : inr(companyAmount)}
                                 </td>
