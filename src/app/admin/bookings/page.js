@@ -868,7 +868,19 @@ export default function BookingsPage() {
     }
   };
 
+  // A session moved to another therapist reads as "Transferred" while it is still upcoming.
+  // The transfer is only recorded via original_psychologist_id — nothing writes a status — so
+  // the list used to show plain "Booked" even after the therapist AND the time had changed.
+  // Derived for display only (same approach as the past-due "Pending" rule below), so no
+  // finance/payout status filter has to learn a new value.
+  const TERMINAL_STATUSES = ['completed', 'cancelled', 'no_show', 'noshow', 'refunded', 'deleted'];
+  const isTransferredDisplay = (status, booking) =>
+    Boolean(booking?.original_psychologist_id) &&
+    booking.original_psychologist_id !== booking.psychologist_id &&
+    !TERMINAL_STATUSES.includes(String(status || '').toLowerCase());
+
   const getStatusColor = (status, booking) => {
+    if (isTransferredDisplay(status, booking)) return 'bg-violet-100 text-violet-800';
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800';
@@ -907,6 +919,7 @@ export default function BookingsPage() {
   };
 
   const getStatusText = (status, booking) => {
+    if (isTransferredDisplay(status, booking)) return 'Transferred';
     switch (status) {
       case 'completed':
         return 'Completed';
