@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, CheckCircle, FileText, MessageSquare } from 'lucide-react';
+import { formatSessionDate } from '@/lib/sessionDate';
 
 export default function CompleteSessionModal({ 
   session, 
@@ -85,7 +86,7 @@ export default function CompleteSessionModal({
             <div>
               <span className="text-gray-600">Date:</span>
               <span className="ml-2 font-medium text-gray-800">
-                {new Date(session.scheduled_date).toLocaleDateString()}
+                {formatSessionDate(session.scheduled_date)}
               </span>
             </div>
             <div>

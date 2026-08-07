@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Star, MessageSquare } from 'lucide-react';
+import { formatSessionDate } from '@/lib/sessionDate';
 
 export default function SessionFeedbackModal({ 
   session, 
@@ -122,7 +123,7 @@ export default function SessionFeedbackModal({
             <div>
               <span className="text-gray-600">Date:</span>
               <span className="ml-2 font-medium text-gray-800">
-                {new Date(session.scheduled_date).toLocaleDateString()}
+                {formatSessionDate(session.scheduled_date)}
               </span>
             </div>
             <div>

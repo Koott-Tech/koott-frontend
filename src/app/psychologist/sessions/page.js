@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { psychologistApi } from "../../../lib/backendApi";
+import { formatSessionDate } from "../../../lib/sessionDate";
 import {
   Calendar,
   Clock,
@@ -455,9 +456,11 @@ export default function PsychologistSessions() {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
     });
   };
+
 
   const isAssignedToCurrentPsychologist = (session) => {
     // Regular therapy sessions always have psychologist_id; ensure it matches current user
@@ -893,7 +896,7 @@ export default function PsychologistSessions() {
                         {session.scheduled_date ? (
                           <span className="flex items-center gap-1.5">
                             <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
-                            {new Date(session.scheduled_date).toLocaleDateString()}
+                            {formatSessionDate(session.scheduled_date)}
                           </span>
                         ) : (session.status === 'pending' && !session.scheduled_date) ? (
                           <span className="text-amber-600 text-xs font-medium">Pending</span>
@@ -1179,7 +1182,7 @@ export default function PsychologistSessions() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-slate-900 truncate">
-                            {s.scheduled_date ? new Date(s.scheduled_date).toLocaleDateString() : '—'} at {s.scheduled_time ? formatTime(s.scheduled_time) : '—'}
+                            {formatSessionDate(s.scheduled_date)} at {s.scheduled_time ? formatTime(s.scheduled_time) : '—'}
                           </p>
                           <p className="text-xs text-slate-500">with {s.psychologist_name || 'Psychologist'}</p>
                         </div>

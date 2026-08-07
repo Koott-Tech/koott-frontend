@@ -768,6 +768,19 @@ export default function FinancePayouts() {
   const selectedSummaryCompanyEarnings = selectedProfileSummary?.company_earnings ?? selectedPayout?.profile_company_earnings ?? selectedPayout?.total_company_commission ?? 0;
   const selectedSummaryPendingPayout = selectedProfileSummary?.payout_pending ?? getPayoutDisplayAmount(selectedPayout, activeTab);
   const selectedSummaryNotDue = selectedProfileSummary?.payout_not_due ?? selectedPayout?.profile_payout_not_due ?? 0;
+  /**
+   * Completed / pending counts for the summary, derived from the SAME rows the table below
+   * renders and via the SAME display rule it uses — so the header can never disagree with the
+   * list underneath it. (A backend counter would be a second source of truth for the same
+   * number, which is exactly how these screens drift apart.)
+   */
+  const selectedStatusCounts = selectedDetailRowsAll.reduce((acc, session) => {
+    const rawStatus = session.status || (activeTab === 'pending' ? 'completed' : 'paid');
+    const shown = String(displaySessionStatus({ ...session, status: rawStatus }) || rawStatus).toLowerCase();
+    if (shown === 'completed') acc.completed += 1;
+    else if (shown === 'pending') acc.pending += 1;
+    return acc;
+  }, { completed: 0, pending: 0 });
   // On the Completed tab the headline figure is what was PAID, not what is pending — showing
   // "Pending Payout ₹6,750" above a list of ₹1,43,000 of settled sessions made no sense.
   const selectedSummaryPaidPayout = selectedProfileSummary?.payout_paid
@@ -800,7 +813,9 @@ export default function FinancePayouts() {
       summary: {
         status: activeTab === 'pending' ? 'Pending Payout' : 'Paid',
         total_sessions: selectedSummaryTotalSessions,
-        completed_sessions: selectedSummaryCompletedSessions,
+        // Same derived counts the popup shows, so the export can't disagree with the screen.
+        completed_sessions: selectedStatusCounts.completed,
+        pending_sessions: selectedStatusCounts.pending,
         company_earnings: Number(selectedSummaryCompanyEarnings || 0),
         pending_payout: Number(selectedSummaryPendingPayout || 0),
         not_due_payout: Number(selectedSummaryNotDue || 0),
@@ -1134,9 +1149,11 @@ export default function FinancePayouts() {
                   <div>
                     <label className="text-sm font-medium text-gray-700">Total Sessions</label>
                     <p className="mt-1 text-lg font-semibold text-gray-900">{selectedSummaryTotalSessions}</p>
-                    {isUsingProfileRows && (
-                      <p className="mt-0.5 text-xs text-gray-500">Completed sessions: {selectedSummaryCompletedSessions}</p>
-                    )}
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      Completed: <span className="font-medium text-gray-700">{selectedStatusCounts.completed}</span>
+                      {' · '}
+                      Pending: <span className="font-medium text-gray-700">{selectedStatusCounts.pending}</span>
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">Company Earnings</label>

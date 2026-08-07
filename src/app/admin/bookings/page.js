@@ -76,6 +76,35 @@ function formatIstFromIso(iso) {
   }
 }
 
+/**
+ * IST calendar day / wall-clock time from a UTC timestamp.
+ *
+ * wix_bookings.start_time is a timestamptz stored in UTC ("2026-08-06T16:30:00+00:00"), while
+ * sessions.scheduled_date/scheduled_time hold the IST wall clock ("2026-08-06", "22:00:00").
+ * Slicing the ISO string to convert between them yields the UTC time — 5h30m early, every time,
+ * and a day early for anything before 05:30 IST.
+ */
+function istYmdFromIso(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(d).slice(0, 10);
+}
+
+function istHmFromIso(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(d);
+  const hh = parts.find((p) => p.type === 'hour')?.value || '00';
+  const mm = parts.find((p) => p.type === 'minute')?.value || '00';
+  return `${hh}:${mm}`;
+}
+
 function deriveWixSessionType(row) {
   const type = row.session_type || null;
   const count = row.session_count;
@@ -453,8 +482,11 @@ export default function BookingsPage() {
       ...row,
       id: row.session_id || row.sessions?.[0]?.id || row.sessions?.id || null,
       status: row.session_status || row.status,
-      scheduled_date: row.start_time?.slice(0, 10),
-      scheduled_time: row.start_time?.slice(11, 16),
+      // Convert UTC -> IST. Slicing the ISO string handed back the UTC time, so View Details
+      // and the reschedule dialog showed every Wix booking 5h30m early (and a day early for
+      // anything before 05:30 IST) while the table beside them showed the correct IST.
+      scheduled_date: istYmdFromIso(row.start_time),
+      scheduled_time: istHmFromIso(row.start_time),
       package: {
         id: row.package_id || null,
         session_count: total,
