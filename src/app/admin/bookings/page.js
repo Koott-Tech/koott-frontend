@@ -507,7 +507,7 @@ export default function BookingsPage() {
         first_name: row.therapist_name?.split(' ')[0] || '',
         last_name: row.therapist_name?.split(' ').slice(1).join(' ') || '',
       } : null,
-      wix_row_id: row.package_id ? null : (row.id || null),
+      wix_row_id: row.wix_booking_id ? (row.id || null) : null,
     };
   };
 

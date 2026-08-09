@@ -916,7 +916,7 @@ export default function AdminWixDiscoverPage() {
     setSelectedBookNextSession({
       ...sessionProxy,
       // wix_row_id is the wix_bookings.id (primary key UUID), used by the backend to find the linked session
-      wix_row_id: row.package_id ? null : (row.id || null),
+      wix_row_id: row.wix_booking_id ? (row.id || null) : null,
     });
     setIsBookNextOpen(true);
   };

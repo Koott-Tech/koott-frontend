@@ -59,8 +59,8 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
   const [duration, setDuration] = useState(50);
 
   // Wix vs internal package
-  const isWixSession = !!session?.wix_row_id;
-  const wixRowId = session?.wix_row_id ?? null;
+  const isWixSession = !!session?.wix_row_id || !!session?._isWixBooking;
+  const wixRowId = session?.wix_row_id ?? session?._wixBookingId ?? null;
   const clientId = session?.client_id ?? normRel(session?.client)?.id;
   const packageId = session?.package_id ?? session?.package?.id;
 
