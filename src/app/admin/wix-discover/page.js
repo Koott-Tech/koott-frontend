@@ -986,7 +986,13 @@ export default function AdminWixDiscoverPage() {
           />
           <span className="md:ml-auto text-xs text-gray-400">
             {pagination.total + platformRows.length} booking{(pagination.total + platformRows.length) === 1 ? '' : 's'}
-            {platformRows.length > 0 && <span className="ml-1 text-[#025545]">({platformRows.length} platform)</span>}
+            {platformRows.length > 0 && (
+              // Platform rows aren't paginated — they all render on page 1. Saying so stops the
+              // count looking wrong on later pages, where only the Wix rows appear.
+              <span className="ml-1 text-[#025545]">
+                ({platformRows.length} platform{page === 1 ? '' : ', shown on page 1'})
+              </span>
+            )}
           </span>
         </div>
       </div>
@@ -1064,13 +1070,26 @@ export default function AdminWixDiscoverPage() {
       {/* Table — Wix bookings + Platform/manual sessions combined */}
       {(() => {
         const pageLimit = pagination.limit || 10;
-        const platformTagged = platformRows.map((s) => ({ ...s, _isPlatform: true }));
-        const allRows = [...rows, ...platformTagged]
-          // Keep the visible rows consistent with the selected tab's badge. The backend can't
-          // filter platform rows by past-due, so a past-due rescheduled/booked platform row
-          // (which displays as "pending") would otherwise leak into the Rescheduled/Upcoming tab.
-          .filter((r) => matchesStatusTab(r, statusFilter))
-          .slice(0, pageLimit);
+        // Keep the visible rows consistent with the selected tab's badge. The backend can't
+        // filter platform rows by past-due, so a past-due rescheduled/booked platform row
+        // (which displays as "pending") would otherwise leak into the Rescheduled/Upcoming tab.
+        const tabFilter = (r) => matchesStatusTab(r, statusFilter);
+
+        // Platform rows are fetched once (page 1, unpaginated) and are NOT part of the Wix
+        // pagination, so they belong only on the first page — appending them to every page
+        // repeated the same rows on page 2, 3, ...
+        const platformTagged = (page === 1 ? platformRows : [])
+          .map((s) => ({ ...s, _isPlatform: true }))
+          .filter(tabFilter);
+
+        // Wix rows are already server-paginated to `limit`; only they get trimmed. The combined
+        // list used to be sliced to pageLimit AFTER the platform rows were appended — and since
+        // Wix rows come first, a full Wix page left almost no room, so platform rows were
+        // silently dropped. A client's 6-session package showed 1/6 and 5/6 while 2/6, 3/6 and
+        // 4/6 vanished. Nothing extra is fetched here: these rows are already in memory, so
+        // removing the truncation costs no time.
+        const wixVisible = rows.filter(tabFilter).slice(0, pageLimit);
+        const allRows = [...wixVisible, ...platformTagged];
         // Highest booked session number per package group → "Book Next" shows only on the latest.
         // Keyed by real package_group_id when present, else client+therapist+type fallback,
         // so couple/individual packages without a group_id are still tracked.
