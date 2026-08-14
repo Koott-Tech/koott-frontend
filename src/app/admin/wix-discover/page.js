@@ -750,8 +750,11 @@ export default function AdminWixDiscoverPage() {
   const canBookNextFromRow = (row, groupMaxMap) => {
     if (!row) return false;
     const status = effectiveCompletionStatus(row);
-    // Never offer "Book Next" from a terminated session.
-    if (['cancelled', 'refunded', 'deleted', 'no_show', 'noshow'].includes(status)) return false;
+    // Never offer "Book Next" from a session that ended the booking itself — cancelled,
+    // refunded or deleted. A NO-SHOW is not one of those: the client still holds the rest of
+    // the package, so if sessions remain they must still be bookable. Blocking it here left a
+    // package stuck with no way to book session 2 after a missed session 1.
+    if (['cancelled', 'refunded', 'deleted'].includes(status)) return false;
     if (!row.client_id || !row.psychologist_id) return false;
 
     // Internal package path (has a real internal package_id).

@@ -461,18 +461,24 @@ export default function BookingsPage() {
     setIsRescheduleOpen(true);
   };
 
+  // A session that ended the booking (cancelled / refunded / deleted) can't lead to a next one.
+  // Everything else can — including NO-SHOW: the client still holds the remaining sessions of
+  // the package, so a missed session 1 must not strand sessions 2 and 3 with no way to book.
+  const BOOK_NEXT_BLOCKING_STATUSES = ['cancelled', 'refunded', 'deleted'];
+
   const canBookNextFromWixRow = (row) => {
     if (!row) return false;
     const status = effectiveWixStatus(row);
-    if (status !== 'completed') return false;
-    if (row.package_id && row.client_id && row.psychologist_id) return true;
-    const isWixPackage = row.session_type === 'package' && !row.package_id;
-    if (isWixPackage && row.client_id && row.psychologist_id) {
-      const total = row.session_count ?? row.payload?.creditsAvailable ?? 0;
-      const done = row.package_session_number ?? row.payload?.planSessionNumber ?? 1;
-      return total > done;
-    }
-    return false;
+    if (BOOK_NEXT_BLOCKING_STATUSES.includes(String(status || '').toLowerCase())) return false;
+    if (!row.client_id || !row.psychologist_id) return false;
+    // Sessions remaining? This used to return true for any internal package regardless, so the
+    // button also showed on a package that was already fully booked.
+    const total = Number(row.session_count ?? row.payload?.creditsAvailable ?? 0);
+    const done = Number(row.package_session_number ?? row.payload?.planSessionNumber ?? 1);
+    const isPackage = !!row.package_id || row.session_type === 'package' || total > 1;
+    if (!isPackage) return false;
+    if (total > 0 && done >= total) return false;
+    return true;
   };
 
   const buildWixSessionProxy = (row) => {
@@ -839,8 +845,19 @@ export default function BookingsPage() {
 
   const canBookNextFromSession = (session) => {
     if (!session) return false;
-    const isPackage = session.session_type === 'package' || !!session.package_id || !!session.package || !!session.package_parent_booking_id;
-    return isPackage && session.status === 'completed' && !!session.package_id && !!session.client_id && !!session.psychologist_id;
+    const total = Number(session.session_count ?? session.package?.session_count ?? 0);
+    const done = Number(session.package_session_number ?? 0);
+    const isPackage = session.session_type === 'package' || !!session.package_id ||
+      !!session.package || !!session.package_parent_booking_id || total > 1;
+    if (!isPackage) return false;
+    if (!session.client_id || !session.psychologist_id) return false;
+    // Was `status === 'completed'` AND required a package_id. Both were too strict:
+    //   • a NO-SHOW still leaves the rest of the package to book;
+    //   • many package sessions carry a null package_id and are identified by session_count,
+    //     so the button never appeared for them at all.
+    if (BOOK_NEXT_BLOCKING_STATUSES.includes(String(session.status || '').toLowerCase())) return false;
+    if (total > 0 && done >= total) return false; // package fully booked
+    return true;
   };
 
   const getMeetLink = (session) =>
