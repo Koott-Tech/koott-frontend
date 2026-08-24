@@ -304,7 +304,20 @@ export default function PsychologistSessions() {
       const mappedData = {
         summary: sessionData.summary?.trim?.() || '',
         report: sessionData.report?.trim?.() || '',
-        summary_notes: sessionData.summary_notes?.trim?.() || ''
+        summary_notes: sessionData.summary_notes?.trim?.() || '',
+        // Fields the therapists used to keep in their own session spreadsheets. This mapping
+        // is an allow-list, so anything not named here is dropped before it reaches the API —
+        // that is why these have to be added explicitly.
+        client_status: sessionData.client_status || null,
+        // "Condition" and "To Operation" reuse the fields that already existed rather than
+        // adding duplicates: the labels changed, the payload keys did not.
+        condition: sessionData.client_opening_statement?.trim?.() || null,
+        to_operation: sessionData.message_to_operations?.trim?.() || null,
+        // Client-level, captured once. Sent only when the popup actually asked, so a blank
+        // can never overwrite details already on the client record.
+        ...(sessionData.client_sex ? { client_sex: sessionData.client_sex } : {}),
+        ...(sessionData.client_pronouns ? { client_pronouns: sessionData.client_pronouns } : {}),
+        ...(sessionData.client_age ? { client_age: sessionData.client_age } : {}),
       };
       
       // Only the "Message to Team" (report) is required — it's sent to operations.

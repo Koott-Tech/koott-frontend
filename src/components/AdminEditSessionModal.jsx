@@ -639,13 +639,39 @@ export default function AdminEditSessionModal({
                     Session Type
                   </label>
                   <select
-                    value={sessionType}
-                    onChange={(e) => setSessionType(e.target.value)}
+                    // A couple PACKAGE is stored as session_type 'couple' with session_count > 1
+                    // — there is no separate stored value. That was invisible here: the only
+                    // couple option read as a single couple session, so a couple package got
+                    // saved as "package", which pays the individual-package rate (₹200 instead
+                    // of ₹400 on Irene's 3-pack) and rendered as "Pkg" inside a "Couple Pkg"
+                    // series. Surface it as its own choice and keep the storage identical.
+                    value={
+                      String(sessionType).toLowerCase() === 'couple' && Number(sessionCount) > 1
+                        ? 'couple_package'
+                        : sessionType
+                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === 'couple_package') {
+                        setSessionType('couple');
+                        // Default to a 3-session pack; the Session Count box stays editable for
+                        // 6 / 9 / anything else.
+                        if (!(Number(sessionCount) > 1)) setSessionCount('3');
+                        return;
+                      }
+                      setSessionType(v);
+                      // Leaving a package type clears the count, so a plain couple or individual
+                      // session can't keep a stale count and still read as a package.
+                      if (v === 'individual' || v === 'couple' || v === 'free_assessment') {
+                        if (Number(sessionCount) > 1) setSessionCount('');
+                      }
+                    }}
                     className="w-full px-4 py-3 border border-slate-200 rounded-2xl text-sm font-semibold focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] transition-all outline-none"
                     disabled={isLoading}
                   >
                     <option value="individual">Individual</option>
-                    <option value="couple">Couple</option>
+                    <option value="couple">Couple (single session)</option>
+                    <option value="couple_package">Couple Package (set count below)</option>
                     <option value="package">Package Session</option>
                     <option value="free_assessment">Free Assessment</option>
                   </select>

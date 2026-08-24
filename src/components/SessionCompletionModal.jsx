@@ -20,7 +20,22 @@ export default function SessionCompletionModal({
     message_to_operations: "",
     client_opening_statement: "",
     attachments: [],
+    // From the therapists' own "Koott-26 Sessions" sheets. Only the columns the form did not
+    // already cover are here — "To Operation" and "Condition" map onto message_to_operations
+    // and client_opening_statement, which already existed, so they are relabelled rather than
+    // duplicated.
+    client_status: "",
+    client_sex: "",
+    client_pronouns: "",
+    client_age: "",
   });
+
+  const CLIENT_STATUSES = ["New", "Follow up", "Resumed after a pause"];
+  // Sex / pronouns / age describe the PERSON, not the session. Asking them at every completion
+  // is exactly what makes a form feel like paperwork, so they appear only while the client
+  // record still lacks them — for a returning client this whole block never renders.
+  const clientRecord = session?.client || {};
+  const needsClientDetails = !clientRecord.sex || !clientRecord.pronouns || !clientRecord.age;
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -253,6 +268,66 @@ export default function SessionCompletionModal({
             </div>
           )}
           <form id="session-completion-form" onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
+            {/* One tap, no typing — kept first because it is the quickest thing to answer. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] mr-1">Client</span>
+              {CLIENT_STATUSES.map((label) => {
+                const active = formData.client_status === label;
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleInputChange("client_status", active ? "" : label)}
+                    disabled={isSubmitting}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                      active
+                        ? "bg-[#025545] text-white border-[#025545]"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              {needsClientDetails && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-[10px] text-slate-400">first time — </span>
+                  <select
+                    value={formData.client_sex}
+                    onChange={(e) => handleInputChange("client_sex", e.target.value)}
+                    disabled={isSubmitting}
+                    className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:border-[#025545] focus:outline-none"
+                  >
+                    <option value="">Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Couple">Couple</option>
+                  </select>
+                  <select
+                    value={formData.client_pronouns}
+                    onChange={(e) => handleInputChange("client_pronouns", e.target.value)}
+                    disabled={isSubmitting}
+                    className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:border-[#025545] focus:outline-none"
+                  >
+                    <option value="">Pronouns</option>
+                    <option value="He/Him">He/Him</option>
+                    <option value="She/Her">She/Her</option>
+                    <option value="They/Them">They/Them</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="1"
+                    max="129"
+                    value={formData.client_age}
+                    onChange={(e) => handleInputChange("client_age", e.target.value)}
+                    disabled={isSubmitting}
+                    placeholder="Age"
+                    className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-xs focus:border-[#025545] focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Summary + Report side-by-side */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Public Summary */}
@@ -300,12 +375,12 @@ export default function SessionCompletionModal({
               {/* Client Opening Statement */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                  Client Opening Statement <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
+                  Condition <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
                 </label>
                 <textarea
                   value={formData.client_opening_statement}
                   onChange={(e) => handleInputChange("client_opening_statement", e.target.value)}
-                  placeholder="Client's opening statement or description of issue..."
+                  placeholder="What the session was about — e.g. GAD/OCD concerns, self esteem, marital repair"
                   className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
                   disabled={isSubmitting}
                 />
@@ -314,12 +389,12 @@ export default function SessionCompletionModal({
               {/* Message to operation */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                  Message to operation {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
+                  To Operation {!fieldsOptional && <span className="text-rose-500 ml-1">*</span>}
                 </label>
                 <textarea
                   value={formData.message_to_operations}
                   onChange={(e) => handleInputChange("message_to_operations", e.target.value)}
-                  placeholder="Message regarding booking, payments, or scheduling issues..."
+                  placeholder="Anything the team should action — follow-up call, booking, payment…"
                   className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
                     errors.message_to_operations
                       ? "border-rose-500 ring-4 ring-rose-500/10"
