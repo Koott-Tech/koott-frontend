@@ -240,7 +240,9 @@ export default function FinancePayouts() {
     const pendingMy = pendingPayoutIstMonthYear(dateRange?.from);
 
     if (tab === 'completed') {
-      const completedRes = await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+      // listOnly: the table renders a name and two totals. Without it the response carried a
+      // session_details row for every completed session in the month (391 KB → 8 KB).
+      const completedRes = await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed', listOnly: 'true' });
       const completedPayouts = completedRes?.data?.payouts || [];
       setCompletedPayoutRows(completedPayouts);
       if (isActive) setDoctorPayouts(completedPayouts);
@@ -318,7 +320,7 @@ export default function FinancePayouts() {
 
       const response = activeTab === 'pending'
         ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year, psychologistId: payout.psychologist_id })
-        : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+        : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed', psychologistId: payout.psychologist_id });
 
       if (!response?.success) {
         throw new Error(response?.message || 'Failed to load full session breakdown');
@@ -347,7 +349,7 @@ export default function FinancePayouts() {
     const { dateFrom, dateTo } = getDateParams();
     const response = activeTab === 'pending'
       ? await financeApi.getPendingPayouts({ month: pendingMy.month, year: pendingMy.year, psychologistId: selectedPayout.psychologist_id })
-      : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed' });
+      : await financeApi.getDoctorPayouts({ dateFrom, dateTo, status: 'completed', psychologistId: selectedPayout.psychologist_id });
     if (!response?.success) {
       throw new Error(response?.message || 'Failed to reload payout details');
     }
@@ -650,9 +652,21 @@ export default function FinancePayouts() {
       });
 
       if (response.success) {
-        // Switch first, then load completed payouts explicitly to avoid stale-tab fetches.
-        setActiveTab('completed');
-        await loadPayoutPageData('completed');
+        // Stay on Pending. Jumping to Completed forced an await on that tab's fetch before the
+        // click felt finished, so marking one doctor paid blocked the UI on a full reload of a
+        // tab the user hadn't asked for. Drop the row locally for instant feedback and refresh
+        // both tabs in the background — the numbers settle without anyone waiting on them.
+        const paidId = payoutToMark.psychologist_id;
+        setPendingPayoutRows((prev) => {
+          const next = (prev || []).filter((p) => p.psychologist_id !== paidId);
+          setPendingTabCount(next.length);
+          setPendingTabAmount(next.reduce((sum, p) => sum + getPayoutDisplayAmount(p, 'pending'), 0));
+          return next;
+        });
+        setFinanceToast('Payout marked as paid');
+        loadPayoutPageData(activeTab, { silent: true }).catch((err) =>
+          console.error('Background payout refresh failed:', err)
+        );
       } else {
         alert(response.message || 'Failed to mark payout as paid');
       }

@@ -2266,7 +2266,15 @@ export const financeApi = {
   },
 
   async getDoctorPayouts(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
+    // Drop empty values instead of letting URLSearchParams stringify them: a null dateFrom
+    // was being sent as the literal "null", which the backend's `if (dateFrom && dateTo)`
+    // accepts as a real bound and then compares dates against.
+    const qp = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v === undefined || v === null || v === '') return;
+      qp.append(k, String(v));
+    });
+    const queryString = qp.toString();
     return apiRequest(`/finance/payouts/doctors${queryString ? `?${queryString}` : ''}`);
   },
 
