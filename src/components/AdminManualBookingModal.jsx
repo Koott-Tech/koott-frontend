@@ -758,67 +758,19 @@ export default function AdminManualBookingModal({
 
     let finalClientId = clientId;
 
-    // Record-only mode: existing client only
-    if (recordOnly && !clientId) {
+    // Record-only used to accept existing clients only. A client who has never been booked
+    // through Koott still needs their past sessions recorded, which forced admins to create
+    // the client in one screen and come back — so the same "+ New Client" flow as manual
+    // booking is available here, and only the existing-client path needs a selection.
+    if (recordOnly && !isNewClient && !clientId) {
       setError('Please select a client');
       isSubmittingRef.current = false;
       return;
     }
 
-    // ── Record-only PACKAGE: record N already-happened package sessions ─────────
-    if (isRecordPackage) {
-      const total = parseInt(recordTotal, 10);
-      if (!Number.isFinite(total) || total < 1) {
-        setError('Enter a valid total number of sessions for the package.');
-        isSubmittingRef.current = false;
-        return;
-      }
-      if (recordRows.length > total) {
-        setError(`You're recording ${recordRows.length} sessions but the package total is only ${total}.`);
-        isSubmittingRef.current = false;
-        return;
-      }
-      if (recordRows.some((r) => !r.date || !r.time)) {
-        setError('Fill in a date and time for every session record.');
-        isSubmittingRef.current = false;
-        return;
-      }
-      if (isNaN(parseFloat(amount)) || parseFloat(amount) < 0) {
-        setError('Enter the total package amount.');
-        isSubmittingRef.current = false;
-        return;
-      }
-      setIsLoading(true);
-      try {
-        const response = await adminApi.createRecordOnlyPackage({
-          client_id: clientId,
-          psychologist_id: psychologistId,
-          session_type: effectiveSessionType,
-          total_sessions: total,
-          total_amount: parseFloat(amount) || 0,
-          payment_method: paymentMethod,
-          receipt_url: paymentScreenshotUrl || null,
-          payment_received_date: paymentReceivedDate,
-          notes: notes || null,
-          records: recordRows.map((r) => ({ scheduled_date: r.date, scheduled_time: r.time, status: r.status })),
-        });
-        if (response?.success) {
-          setShowSuccessModal(true);
-          onBookingSuccess?.(response.data);
-        } else {
-          setError(response?.message || response?.error || 'Failed to record package sessions');
-        }
-      } catch (err) {
-        setError(err?.message || 'Failed to record package sessions');
-      } finally {
-        setIsLoading(false);
-        isSubmittingRef.current = false;
-      }
-      return;
-    }
 
-    // If creating a new client (manual booking only), create it first
-    if (!recordOnly && isNewClient) {
+    // If creating a new client, create it first — for manual bookings AND record-only.
+    if (isNewClient) {
       // Validate new client data - only email, first_name, and phone_number are required
       // last_name is optional
       if (!newClientData.email || !newClientData.first_name || !normalizeCountryCode(newClientData.country_code) || !newClientData.phone_number) {
@@ -924,6 +876,60 @@ export default function AdminManualBookingModal({
         isSubmittingRef.current = false;
         return;
       }
+    }
+
+    // ── Record-only PACKAGE: record N already-happened package sessions ─────────
+    // Runs after the client block above so a brand-new client has an id by now — it used to
+    // sit before it and read `clientId`, which is empty on the new-client path.
+    if (isRecordPackage) {
+      const total = parseInt(recordTotal, 10);
+      if (!Number.isFinite(total) || total < 1) {
+        setError('Enter a valid total number of sessions for the package.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (recordRows.length > total) {
+        setError(`You're recording ${recordRows.length} sessions but the package total is only ${total}.`);
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (recordRows.some((r) => !r.date || !r.time)) {
+        setError('Fill in a date and time for every session record.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      if (isNaN(parseFloat(amount)) || parseFloat(amount) < 0) {
+        setError('Enter the total package amount.');
+        isSubmittingRef.current = false;
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const response = await adminApi.createRecordOnlyPackage({
+          client_id: finalClientId,
+          psychologist_id: psychologistId,
+          session_type: effectiveSessionType,
+          total_sessions: total,
+          total_amount: parseFloat(amount) || 0,
+          payment_method: paymentMethod,
+          receipt_url: paymentScreenshotUrl || null,
+          payment_received_date: paymentReceivedDate,
+          notes: notes || null,
+          records: recordRows.map((r) => ({ scheduled_date: r.date, scheduled_time: r.time, status: r.status })),
+        });
+        if (response?.success) {
+          setShowSuccessModal(true);
+          onBookingSuccess?.(response.data);
+        } else {
+          setError(response?.message || response?.error || 'Failed to record package sessions');
+        }
+      } catch (err) {
+        setError(err?.message || 'Failed to record package sessions');
+      } finally {
+        setIsLoading(false);
+        isSubmittingRef.current = false;
+      }
+      return;
     }
 
     // ── PACKAGE PATH: schedule ALL N sessions upfront (distinct dates/times) ──
@@ -1162,7 +1168,7 @@ export default function AdminManualBookingModal({
                   <User className="h-4 w-4 inline mr-1" />
                   Client *
                 </label>
-                {!recordOnly && (
+                {(
                   <button
                     type="button"
                     onClick={() => {
@@ -1183,7 +1189,7 @@ export default function AdminManualBookingModal({
                 )}
               </div>
 
-              {!recordOnly && isNewClient ? (
+              {isNewClient ? (
                 /* New Client Form */
                 <div className="border border-slate-200 rounded-lg p-4 bg-white/60 space-y-4 mt-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
