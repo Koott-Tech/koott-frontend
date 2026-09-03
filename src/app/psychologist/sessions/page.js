@@ -309,15 +309,29 @@ export default function PsychologistSessions() {
         // is an allow-list, so anything not named here is dropped before it reaches the API —
         // that is why these have to be added explicitly.
         client_status: sessionData.client_status || null,
-        // "Condition" and "To Operation" reuse the fields that already existed rather than
-        // adding duplicates: the labels changed, the payload keys did not.
-        condition: sessionData.client_opening_statement?.trim?.() || null,
+        // "Main Concern" and "Opening Statement" are now two separate answers. `condition`
+        // used to carry the opening statement — it is the Main Concern from here on, and the
+        // opening statement travels under its own key.
+        condition: sessionData.condition?.trim?.() || null,
+        client_opening_statement: sessionData.client_opening_statement?.trim?.() || null,
         to_operation: sessionData.message_to_operations?.trim?.() || null,
+        // Intake answers, session-level.
+        concern_duration: sessionData.concern_duration || null,
+        therapy_awareness: sessionData.therapy_awareness || null,
+        tried_therapy_before: sessionData.tried_therapy_before || null,
+        therapy_trigger: sessionData.therapy_trigger?.trim?.() || null,
+        therapy_hesitation: sessionData.therapy_hesitation?.trim?.() || null,
         // Client-level, captured once. Sent only when the popup actually asked, so a blank
         // can never overwrite details already on the client record.
         ...(sessionData.client_sex ? { client_sex: sessionData.client_sex } : {}),
         ...(sessionData.client_pronouns ? { client_pronouns: sessionData.client_pronouns } : {}),
         ...(sessionData.client_age ? { client_age: sessionData.client_age } : {}),
+        ...(sessionData.client_age_group ? { client_age_group: sessionData.client_age_group } : {}),
+        ...(sessionData.client_location ? { client_location: sessionData.client_location } : {}),
+        // Couple sessions only — the second person in the room.
+        ...(sessionData.partner_sex ? { partner_sex: sessionData.partner_sex } : {}),
+        ...(sessionData.partner_age_group ? { partner_age_group: sessionData.partner_age_group } : {}),
+        ...(sessionData.partner_location ? { partner_location: sessionData.partner_location } : {}),
       };
       
       // Only the "Message to Team" (report) is required — it's sent to operations.
@@ -940,7 +954,12 @@ export default function PsychologistSessions() {
                           const p = session.package || {};
                           const idx = p.session_index ?? session.package_session_number ?? null;
                           const total = p.total_sessions ?? p.session_count ?? session.session_count ?? 0;
-                          const isCouple = session.session_type === 'couple' || String(p.package_type || '').toLowerCase().includes('couple');
+                          // Same test the completion popup and finance use. session_type alone
+                          // misses couple packages that arrive typed 'package' and are only
+                          // identifiable as couple from the Wix payload — 7 sessions today.
+                          const isCouple = /couple|cpl/i.test(
+                            `${session.session_type || ''} ${p.package_type || ''} ${session.wix_payload?.bookingType || ''}`
+                          );
                           // A package = has a package link, an explicit 'package' type, OR more than one session.
                           const isPackage = !!(session.package_id || session.package || session.session_type === 'package' || Number(total) > 1);
                           // Numbered suffix (e.g. " 2/3") when we know the position + total.

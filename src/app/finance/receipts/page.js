@@ -520,10 +520,36 @@ async function generateSalaryCertificatePDF(data) {
   put(data.workingDays, 373, 359, { size: 9.2, maxWidth: 45 });
   put(data.paymentMode, 391, 377, { size: 9.2, maxWidth: 115 });
 
+  // The template PRINTS the eight standard earning labels at these exact positions, so those
+  // rows only need their amount drawn. Custom rows have no printed label, so both the label and
+  // the amount are drawn — and they have to live in the gap between the last printed row (570)
+  // and the Total line (603).
   const rowYs = [451, 468, 485, 502, 519, 536, 553, 570];
-  earnings.slice(0, 8).forEach((row, idx) => {
+  const PRINTED_ROWS = 8;
+  const CUSTOM_BAND_TOP = 570;      // last printed row
+  const CUSTOM_BAND_BOTTOM = 597;   // leave 6pt clear of the Total rule at 603
+
+  const printedEarnings = earnings.filter(r => !r.custom).slice(0, PRINTED_ROWS);
+  const customEarnings = earnings.filter(r => r.custom);
+
+  printedEarnings.forEach((row, idx) => {
     put(row.amount === '' ? '' : fmtSalary(row.amount), 260, rowYs[idx], { size: 9.5, align: 'right' });
   });
+
+  if (customEarnings.length) {
+    // Spread whatever rows there are across the remaining band rather than at a fixed pitch:
+    // one custom row sits on the normal 17pt rhythm, more than that tightens until they fit.
+    const room = CUSTOM_BAND_BOTTOM - CUSTOM_BAND_TOP;
+    const gap = Math.min(17, room / customEarnings.length);
+    // Shrink type alongside the gap so the rows never touch, with a legible floor.
+    const size = Math.max(6.6, Math.min(9.5, gap - 2.2));
+    customEarnings.forEach((row, idx) => {
+      const y = CUSTOM_BAND_TOP + gap * (idx + 1);
+      if (y > CUSTOM_BAND_BOTTOM) return; // out of template — the editor blocks this case
+      put(row.label || '', 57, y, { size, maxWidth: 150 });
+      put(row.amount === '' ? '' : fmtSalary(row.amount), 260, y, { size, align: 'right' });
+    });
+  }
   deductions.slice(0, 7).forEach((row, idx) => {
     put(row.amount === '' ? '' : fmtSalary(row.amount), 491, rowYs[idx], { size: 9.5, align: 'right' });
   });
@@ -981,6 +1007,22 @@ function SalaryCertificateForm({
     const rows = (data[group] || []).map((row, i) => i === idx ? { ...row, amount: value } : row);
     onChange({ ...data, [group]: rows });
   };
+  const updateLabel = (group, idx, value) => {
+    const rows = (data[group] || []).map((row, i) => i === idx ? { ...row, label: value } : row);
+    onChange({ ...data, [group]: rows });
+  };
+  // The certificate template prints its eight earning labels, and the only free space left is
+  // the band between the last printed row and the Total rule. Three custom rows is what fits
+  // there before the type gets too small to read, so the button stops at three.
+  const MAX_CUSTOM_EARNINGS = 3;
+  const customEarningCount = (data.earnings || []).filter(r => r.custom).length;
+  const addCustomEarning = () => {
+    if (customEarningCount >= MAX_CUSTOM_EARNINGS) return;
+    onChange({ ...data, earnings: [...(data.earnings || []), { label: '', amount: '0', custom: true }] });
+  };
+  const removeEarning = (idx) => {
+    onChange({ ...data, earnings: (data.earnings || []).filter((_, i) => i !== idx) });
+  };
 
   const totalEarnings = (data.earnings || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
   const totalDeductions = (data.deductions || []).reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
@@ -1165,17 +1207,54 @@ function SalaryCertificateForm({
           <div className="text-sm font-semibold text-gray-700 mb-4">Earnings</div>
           <div className="space-y-3">
             {(data.earnings || []).map((row, idx) => (
-              <div key={row.label} className="grid grid-cols-5 gap-3 items-center">
-                <div className="col-span-3 text-sm text-gray-700">{row.label}</div>
-                <input
-                  className={`${inputClass} col-span-2`}
-                  type="number"
-                  min="0"
-                  value={row.amount}
-                  onChange={e => updateAmount('earnings', idx, e.target.value)}
-                />
+              <div key={row.custom ? `custom-${idx}` : row.label} className="grid grid-cols-5 gap-3 items-center">
+                {row.custom ? (
+                  <input
+                    className={`${inputClass} col-span-3`}
+                    type="text"
+                    placeholder="Field name"
+                    value={row.label}
+                    onChange={e => updateLabel('earnings', idx, e.target.value)}
+                  />
+                ) : (
+                  <div className="col-span-3 text-sm text-gray-700">{row.label}</div>
+                )}
+                <div className="col-span-2 flex items-center gap-2">
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min="0"
+                    value={row.amount}
+                    onChange={e => updateAmount('earnings', idx, e.target.value)}
+                  />
+                  {row.custom && (
+                    <button
+                      type="button"
+                      onClick={() => removeEarning(idx)}
+                      title="Remove field"
+                      className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={addCustomEarning}
+              disabled={customEarningCount >= MAX_CUSTOM_EARNINGS}
+              className="text-xs font-semibold text-[#025545] hover:text-[#013d31] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              + Add custom field
+            </button>
+            <span className="text-[11px] text-gray-400">
+              {customEarningCount >= MAX_CUSTOM_EARNINGS
+                ? 'Template is full — no room left before the total'
+                : `${MAX_CUSTOM_EARNINGS - customEarningCount} more will fit on the certificate`}
+            </span>
           </div>
         </div>
 
