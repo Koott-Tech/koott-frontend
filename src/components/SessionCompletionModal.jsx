@@ -25,17 +25,63 @@ export default function SessionCompletionModal({
     // and client_opening_statement, which already existed, so they are relabelled rather than
     // duplicated.
     client_status: "",
+    therapist_session_sequence: "",
     client_sex: "",
-    client_pronouns: "",
     client_age: "",
+    client_age_group: "",
+    client_location: "",
+    partner_sex: "",
+    partner_age_group: "",
+    partner_location: "",
+    // Intake answers. Session-level: a returning client can answer differently later, so these
+    // are asked each time rather than stamped once onto the client record.
+    condition: "",
+    concern_duration: "",
+    therapy_trigger: "",
+    therapy_awareness: "",
+    tried_therapy_before: "",
+    therapy_hesitation: "",
   });
 
+  const AGE_GROUPS = ["Under 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
+  const CONCERN_DURATIONS = ["Less than 3 months", "3-6 months", "6-12 months", "1+ year"];
+  const AWARENESS_LEVELS = ["Very aware", "Somewhat aware", "Not much aware"];
+  const TRIED_BEFORE = ["Yes", "No"];
+
+  // Verbatim from the brief, in its numbering. Question 4 (Session Type) is intentionally
+  // missing: it is set at booking and shown on the session, so asking again adds nothing.
+  const INTAKE_QUESTIONS = [
+    { n: 5, field: "condition", label: "Main Concern" },
+    { n: 6, field: "concern_duration", label: "How long has the client been experiencing this concern?", options: CONCERN_DURATIONS },
+    { n: 7, field: "therapy_trigger", label: "What made them seek therapy at this point?" },
+    { n: 8, field: "therapy_awareness", label: "How aware were they about therapy before starting?", options: AWARENESS_LEVELS },
+    { n: 9, field: "tried_therapy_before", label: "Have they tried therapy before?", options: TRIED_BEFORE },
+    { n: 10, field: "therapy_hesitation", label: "What is one common thought, fear, or hesitation they had about seeking therapy?" },
+    { n: 11, field: "client_opening_statement", label: "Opening Statement" },
+  ];
+
   const CLIENT_STATUSES = ["New", "Follow up", "Resumed after a pause"];
-  // Sex / pronouns / age describe the PERSON, not the session. Asking them at every completion
+  // The therapist's own read on whether this was a first session or a follow-up. The system
+  // already works this out for commission (first session per client, or per package), and
+  // that stays the source of truth for money — this answer is recorded alongside it and
+  // mirrored to the therapist's sheet as a backup, never used to price anything.
+  const SESSION_SEQUENCES = [
+    { value: "first", label: "First session" },
+    { value: "followup", label: "Follow-up" },
+  ];
+  // Gender / age group / location describe the PERSON, not the session. Asking them at every completion
   // is exactly what makes a form feel like paperwork, so they appear only while the client
   // record still lacks them — for a returning client this whole block never renders.
   const clientRecord = session?.client || {};
-  const needsClientDetails = !clientRecord.sex || !clientRecord.pronouns || !clientRecord.age;
+  // A couple session has two people in the room but only one client record, so the partner's
+  // details are asked alongside. Matches the same shapes finance does — "couple", "Cpl x 3".
+  const isCoupleSession = /couple|cpl/i.test(
+    `${session?.session_type || ""} ${session?.wix_payload?.bookingType || ""}`
+  );
+  const needsPartnerDetails = isCoupleSession &&
+    (!clientRecord.partner_sex || !clientRecord.partner_age_group || !clientRecord.partner_location);
+  const needsClientDetails = !clientRecord.sex ||
+    !(clientRecord.age_group || clientRecord.age) || !clientRecord.location;
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -137,6 +183,32 @@ export default function SessionCompletionModal({
     }
     // "Message to operations" is required
     if (!formData.message_to_operations.trim()) newErrors.message_to_operations = "Required";
+    // Every intake answer is required. Session Type is deliberately absent — it is fixed at
+    // booking, so re-asking it would only be a chance to contradict the record.
+    const REQUIRED_INTAKE = {
+      condition: "Required",
+      concern_duration: "Pick one",
+      therapy_awareness: "Pick one",
+      tried_therapy_before: "Pick one",
+      therapy_trigger: "Required",
+      therapy_hesitation: "Required",
+      client_opening_statement: "Required",
+    };
+    for (const [field, message] of Object.entries(REQUIRED_INTAKE)) {
+      if (!String(formData[field] || "").trim()) newErrors[field] = message;
+    }
+    // Demographics are only asked when the client record still lacks them.
+    if (needsClientDetails) {
+      if (!formData.client_sex) newErrors.client_sex = "Required";
+      if (!formData.client_age_group) newErrors.client_age_group = "Required";
+      if (!String(formData.client_location || "").trim()) newErrors.client_location = "Required";
+    }
+    // Couple session — the second person's details are required too.
+    if (needsPartnerDetails) {
+      if (!formData.partner_sex) newErrors.partner_sex = "Required";
+      if (!formData.partner_age_group) newErrors.partner_age_group = "Required";
+      if (!String(formData.partner_location || "").trim()) newErrors.partner_location = "Required";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -168,6 +240,21 @@ export default function SessionCompletionModal({
         message_to_operations: "",
         client_opening_statement: "",
         attachments: [],
+        client_status: "",
+        therapist_session_sequence: "",
+        client_sex: "",
+            client_age: "",
+        client_age_group: "",
+        client_location: "",
+        partner_sex: "",
+        partner_age_group: "",
+        partner_location: "",
+        condition: "",
+        concern_duration: "",
+        therapy_trigger: "",
+        therapy_awareness: "",
+        tried_therapy_before: "",
+        therapy_hesitation: "",
       });
       setPrivateUnlocked(false);
       onClose();
@@ -231,7 +318,7 @@ export default function SessionCompletionModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={isSubmitting ? undefined : handleClose} aria-hidden="true" />
-      <div className={`relative w-full max-h-[90vh] flex flex-col rounded-3xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden ${wide ? "max-w-4xl" : "max-w-2xl"}`}>
+      <div className={`relative w-full h-[92vh] flex flex-col rounded-3xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-white/20 overflow-hidden ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 bg-gradient-to-r from-[#025545] to-[#189e4f] flex-shrink-0">
           <div className="flex items-center gap-4">
@@ -251,7 +338,7 @@ export default function SessionCompletionModal({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-contain [scrollbar-gutter:stable] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-slate-50">
           {session && (
             <div className="px-8 pt-6">
               <div className="flex items-center gap-6 text-sm font-semibold text-slate-700 bg-slate-50 px-5 py-3 rounded-xl border border-slate-100">
@@ -289,76 +376,202 @@ export default function SessionCompletionModal({
                   </button>
                 );
               })}
-              {needsClientDetails && (
-                <div className="flex items-center gap-2 ml-auto">
-                  <span className="text-[10px] text-slate-400">first time — </span>
-                  <select
-                    value={formData.client_sex}
-                    onChange={(e) => handleInputChange("client_sex", e.target.value)}
-                    disabled={isSubmitting}
-                    className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:border-[#025545] focus:outline-none"
-                  >
-                    <option value="">Sex</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Couple">Couple</option>
-                  </select>
-                  <select
-                    value={formData.client_pronouns}
-                    onChange={(e) => handleInputChange("client_pronouns", e.target.value)}
-                    disabled={isSubmitting}
-                    className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-white focus:border-[#025545] focus:outline-none"
-                  >
-                    <option value="">Pronouns</option>
-                    <option value="He/Him">He/Him</option>
-                    <option value="She/Her">She/Her</option>
-                    <option value="They/Them">They/Them</option>
-                  </select>
-                  <input
-                    type="number"
-                    min="1"
-                    max="129"
-                    value={formData.client_age}
-                    onChange={(e) => handleInputChange("client_age", e.target.value)}
-                    disabled={isSubmitting}
-                    placeholder="Age"
-                    className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-xs focus:border-[#025545] focus:outline-none"
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Summary + Report side-by-side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Public Summary */}
-              <div className="space-y-2">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                    Visible to Client {!fieldsOptional && <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>}
-                  </label>
-                  <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md self-start">Will be sent to client via WhatsApp</span>
+            {/* Asked separately from "Client" above: that describes the PERSON's history with
+                Koott, this describes THIS session. Finance derives its own answer for the
+                commission rate — this one is the therapist's, kept for the record. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] mr-1">Session</span>
+              {SESSION_SEQUENCES.map(({ value, label }) => {
+                const active = formData.therapist_session_sequence === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => handleInputChange("therapist_session_sequence", active ? "" : value)}
+                    disabled={isSubmitting}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                      active
+                        ? "bg-[#025545] text-white border-[#025545]"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Client details FIRST — these were a cramped inline row beside the status
+                chips and therapists were missing them entirely. Full-width labelled fields in
+                the order the questions were given, so they read as part of the form. Still
+                only rendered when the client record actually lacks them. */}
+            {(needsClientDetails || needsPartnerDetails) && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                    {isCoupleSession ? "Both Clients" : "Client Details"}
+                  </span>
+                  <div className="h-px flex-1 bg-slate-100" />
                 </div>
-                <textarea
-                  value={formData.summary}
-                  onChange={(e) => handleInputChange("summary", e.target.value)}
-                  placeholder="Warm summary the client will receive…"
-                  className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
-                    errors.summary
-                      ? "border-rose-500 ring-4 ring-rose-500/10"
-                      : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
-                  }`}
-                  disabled={isSubmitting}
-                />
-                {errors.summary && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.summary}</p>}
+
+                {/* A couple session has two people in the room, so both sets are asked side by
+                    side. For an individual session only the first column renders. */}
+                <div className="space-y-4">
+                  {[
+                    { who: "person", prefix: "client", heading: "Person 1", show: needsClientDetails },
+                    { who: "partner", prefix: "partner", heading: "Person 2", show: needsPartnerDetails },
+                  ].filter(({ who, show }) => show && (who === "person" || isCoupleSession)).map(({ prefix, heading }) => {
+                    const f = (n) => (prefix === "client" ? `client_${n}` : `partner_${n}`);
+                    const err = (n) => errors[f(n)];
+                    const box = (n) => `w-full px-3 py-2.5 border rounded-xl text-sm transition-all duration-200 focus:outline-none shadow-sm ${
+                      err(n) ? "border-rose-500 ring-4 ring-rose-500/10" : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
+                    }`;
+                    return (
+                      <div key={prefix} className="space-y-2">
+                        {isCoupleSession && (
+                          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.08em]">{heading}</div>
+                        )}
+                        {/* Three narrow fields across one row rather than full-width stacked
+                            boxes — a full-width select for an age band looked bloated. */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                            Age Group <span className="text-rose-500 ml-1">*</span>
+                          </label>
+                          <select
+                            value={formData[f("age_group")]}
+                            onChange={(e) => handleInputChange(f("age_group"), e.target.value)}
+                            disabled={isSubmitting}
+                            className={`${box("age_group")} bg-white`}
+                          >
+                            <option value="">Select age group</option>
+                            {AGE_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
+                          </select>
+                          {err("age_group") && <p className="text-xs font-semibold text-rose-500">{err("age_group")}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                            Gender <span className="text-rose-500 ml-1">*</span>
+                          </label>
+                          <select
+                            value={formData[f("sex")]}
+                            onChange={(e) => handleInputChange(f("sex"), e.target.value)}
+                            disabled={isSubmitting}
+                            className={`${box("sex")} bg-white`}
+                          >
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                          {err("sex") && <p className="text-xs font-semibold text-rose-500">{err("sex")}</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                            Location <span className="text-rose-500 ml-1">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={formData[f("location")]}
+                            onChange={(e) => handleInputChange(f("location"), e.target.value)}
+                            disabled={isSubmitting}
+                            placeholder="City, state or country"
+                            className={box("location")}
+                          />
+                          {err("location") && <p className="text-xs font-semibold text-rose-500">{err("location")}</p>}
+                        </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* The intake questions, verbatim and in the order they were given. Numbered so
+                the form and the source list stay comparable at a glance; Session Type (4) is
+                absent on purpose — it is fixed at booking, so re-asking it only invites a
+                contradiction of the record. */}
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">Intake</span>
+                <div className="h-px flex-1 bg-slate-100" />
               </div>
 
+              {INTAKE_QUESTIONS.map(({ n, field, label, options }) => (
+                <div key={field} className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] leading-relaxed block">
+                    <span className="text-slate-400 mr-1.5">{n}.</span>{label}
+                    <span className="text-rose-500 ml-1">*</span>
+                  </label>
+                  {options ? (
+                    <select
+                      value={formData[field]}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      disabled={isSubmitting}
+                      /* Capped rather than full width: a Yes/No control stretched across the
+                         whole modal reads as a mistake. Questions keep their given order. */
+                      className={`w-full max-w-xs px-3 py-2.5 border rounded-xl text-sm bg-white transition-all duration-200 focus:outline-none shadow-sm ${
+                        errors[field] ? "border-rose-500 ring-4 ring-rose-500/10" : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
+                      }`}
+                    >
+                      <option value="">Select one</option>
+                      {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  ) : (
+                    <textarea
+                      value={formData[field]}
+                      onChange={(e) => handleInputChange(field, e.target.value)}
+                      disabled={isSubmitting}
+                      className={`w-full h-20 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
+                        errors[field] ? "border-rose-500 ring-4 ring-rose-500/10" : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
+                      }`}
+                    />
+                  )}
+                  {errors[field] && <p className="text-xs font-semibold text-rose-500">{errors[field]}</p>}
+                </div>
+              ))}
+            </div>
+
+            {/* Client-visible summary. Sits after the intake so the therapist has the client's
+                own words in front of them before summarising back to them. */}
+            <div className="space-y-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
+                  Visible to Client {!fieldsOptional && <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>}
+                </label>
+                <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md self-start">Will be sent to client via WhatsApp</span>
+              </div>
+              <textarea
+                value={formData.summary}
+                onChange={(e) => handleInputChange("summary", e.target.value)}
+                placeholder="Warm summary the client will receive…"
+                className={`w-full h-24 px-3 py-2.5 border rounded-xl resize-none text-sm transition-all duration-200 focus:outline-none shadow-sm ${
+                  errors.summary
+                    ? "border-rose-500 ring-4 ring-rose-500/10"
+                    : "border-slate-200 focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10"
+                }`}
+                disabled={isSubmitting}
+              />
+              {errors.summary && <p className="text-xs font-semibold text-rose-500 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" />{errors.summary}</p>}
+            </div>
+
+            {/* Message to therapist and Main Concern sit with the client-visible summary:
+                all three are the written account of the session, so they are answered together
+                rather than split across the form. */}
+            {/* Therapist-facing note. The client-visible summary used to sit beside this; it
+                now lives further down, below the intake, so the personal details and intake
+                answers are captured before anything client-facing is written. */}
+            <div className="grid grid-cols-1 gap-5">
               {/* Message to other therapist */}
               <div className="space-y-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
                     Message to other therapist <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
                   </label>
-                  <span className="text-[10px] px-2 py-0.5 border border-transparent self-start opacity-0 pointer-events-none select-none">Spacer</span>
                 </div>
                 <textarea
                   value={formData.report}
@@ -370,22 +583,9 @@ export default function SessionCompletionModal({
               </div>
             </div>
 
-            {/* Client Opening Statement + Message to Operation side-by-side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Client Opening Statement */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
-                  Condition <span className="text-slate-400 ml-1 normal-case font-medium">(optional)</span>
-                </label>
-                <textarea
-                  value={formData.client_opening_statement}
-                  onChange={(e) => handleInputChange("client_opening_statement", e.target.value)}
-                  placeholder="What the session was about — e.g. GAD/OCD concerns, self esteem, marital repair"
-                  className="w-full h-24 px-3 py-2.5 border border-slate-200 rounded-xl resize-none text-sm focus:border-[#025545] focus:ring-4 focus:ring-[#025545]/10 transition-all duration-200 focus:outline-none shadow-sm"
-                  disabled={isSubmitting}
-                />
-              </div>
-
+              {/* Message to Operation — the Opening Statement that used to sit beside it is
+                  now question 11 of the intake block. */}
+            <div className="grid grid-cols-1 gap-5">
               {/* Message to operation */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em]">
