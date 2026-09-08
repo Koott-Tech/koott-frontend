@@ -757,6 +757,13 @@ export default function AdminWixDiscoverPage() {
   // A package's "group key": real package_group_id when present, else a stable fallback of
   // client+therapist+type so siblings without a group_id (admin couple/individual packages)
   // still resolve to the same group for "latest session only" gating.
+  // "Add Record" logs a session that ALREADY happened, so it deliberately creates no Meet
+  // link and sends no email or WhatsApp. Without saying so, those blank columns look like a
+  // delivery failure — and the natural next step is to "fix" it by messaging a client about a
+  // session they already attended. The backend flags Wix-mirrored rows; a platform row carries
+  // source directly.
+  const isRecordOnly = (row) => row?.is_record_only === true || row?.source === 'admin_manual';
+
   const packageGroupKey = (row) => row.package_group_id || `cp:${row.client_id}:${row.psychologist_id}:${String(row.session_type || '').toLowerCase()}`;
 
   const canBookNextFromRow = (row, groupMaxMap) => {
@@ -1555,10 +1562,23 @@ export default function AdminWixDiscoverPage() {
                   <div className="text-sm font-bold text-slate-900 truncate">{viewingRow.client_full_name || viewingRow.client_first_name || '—'}</div>
                   <div className="text-xs text-slate-500 truncate">{viewingRow.title || 'Session'}</div>
                 </div>
+                {isRecordOnly(viewingRow) && (
+                  <span
+                    className="inline-flex rounded-full px-2 py-1 text-[10px] font-bold bg-amber-100 text-amber-800 shrink-0"
+                    title="Logged with Add Record — the session had already happened, so no Meet link was created and no email or WhatsApp was sent."
+                  >
+                    Add Record
+                  </span>
+                )}
                 <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize shrink-0 ${statusBadge(effectiveCompletionStatus(viewingRow))}`}>
                   {effectiveCompletionStatus(viewingRow) || '—'}
                 </span>
               </div>
+              {isRecordOnly(viewingRow) && (
+                <div className="mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
+                  Added as a record of a session that already took place — no Meet link, email or WhatsApp was sent. Blank delivery fields below are expected.
+                </div>
+              )}
               {/* Detail grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
