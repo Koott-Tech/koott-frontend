@@ -81,12 +81,37 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
     setAmpm('AM');
     setError(null);
     setCurrentDate(new Date());
-    // Sensible duration default from session type
-    const type = (session?.session_type || '').toLowerCase();
-    if (type === 'couple') setDuration(80);
-    else if (type === 'assessment' || type === 'discovery') setDuration(30);
+    // Sensible duration default from session type.
+    //
+    // session_type alone is not enough: a couple PACKAGE reads 'package' there, and its
+    // couple-ness lives in payload.bookingType (its tags can even say INDIVIDUAL). Reading
+    // only session_type defaulted every couple-package follow-up to 50 minutes, so the
+    // therapist's calendar held half an hour less than the session actually runs.
+    //
+    // Preferring the parent's booked window over any label is better still — it is what was
+    // actually sold, and it covers session types this list has never heard of.
+    const payload = session?.payload || session?.wix_payload || {};
+    const bookedMinutes = (payload.startTime && payload.endTime)
+      ? Math.round((new Date(payload.endTime) - new Date(payload.startTime)) / 60000)
+      : (Number(payload.sessionDurationMin) || null);
+
+    if (Number.isFinite(bookedMinutes) && bookedMinutes >= 15 && bookedMinutes <= 240) {
+      setDuration(bookedMinutes);
+      return;
+    }
+
+    const signals = [
+      session?.session_type,
+      payload.bookingType,
+      payload.booking_type,
+      payload.serviceName,
+      session?.title,
+    ].map((v) => String(v || '').toLowerCase()).join(' ');
+
+    if (/couple|cpl/.test(signals)) setDuration(80);
+    else if (/assessment|discovery/.test(signals)) setDuration(30);
     else setDuration(50);
-  }, [isOpen, session?.session_type]);
+  }, [isOpen, session?.session_type, session?.payload, session?.wix_payload, session?.title]);
 
   const handlePrevMonth = () => { setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1)); setSelectedDateObj(null); };
   const handleNextMonth = () => { setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1)); setSelectedDateObj(null); };
