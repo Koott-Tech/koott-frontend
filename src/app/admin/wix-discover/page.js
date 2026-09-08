@@ -1146,14 +1146,17 @@ export default function AdminWixDiscoverPage() {
           }
         }
         const packageLabelFor = (r) => {
-          // Prefer a backend-computed map when one is available. The main table no longer
-          // blocks on that global scan, so the page-scoped fallback below is normally used.
+          // The server now computes this over the client's whole history with that therapist,
+          // so everyone sees the same letter for the same package. The local computation below
+          // could only see the rows this page had loaded and ordered them by the earliest date
+          // in that subset — so two admins on different filters or pages saw A and B swapped.
+          if (r.package_label) return r.package_label;
           const pairLabels = packageLabelMap[`${r.client_id}|${r.psychologist_id}`];
           if (pairLabels && r.package_group_id && pairLabels[r.package_group_id]) {
             return pairLabels[r.package_group_id];
           }
-          // Fallback to the local (page-scoped) computation for a package created after the
-          // last label fetch, or any row still lacking a real group id.
+          // Page-scoped fallback, kept only for rows an older backend hasn't labelled. It is
+          // NOT stable across users — treat a letter from here as approximate.
           return packageLabels[packageGroupKey(r)] || null;
         };
 
