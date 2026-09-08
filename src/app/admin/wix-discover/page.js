@@ -54,7 +54,19 @@ function deriveSessionType(row) {
   const idx = row.session_index;
   const p = row.payload || {};
   const rawCredits = p.pricingPlanInfo?.credits || {};
-  const isCouple = type === 'couple';
+  // A couple PACKAGE stores 'package' in session_type — its couple-ness survives only in the
+  // payload (and its tags can even read INDIVIDUAL). Testing session_type alone rendered
+  // "Couple 3-Session Package" bookings as a plain "Pkg (1/3)", so nobody could tell a couple
+  // package from an individual one in this list.
+  const coupleSignal = [
+    type,
+    p.bookingType,
+    p.booking_type,
+    p.serviceName,
+    row.title,
+    Array.isArray(row.tags) ? row.tags.join(' ') : row.tags,
+  ].map((v) => String(v || '').toLowerCase()).join(' ');
+  const isCouple = /\bcouple\b|\bcpl\b/.test(coupleSignal);
   const isChild = !!row.package_parent_booking_id && !!idx;
   const hasSeriesEvidence = (count ?? 0) > 1
     || row.package_session_number != null
