@@ -227,6 +227,10 @@ export default function AdminManualBookingModal({
   const [paymentScreenshotName, setPaymentScreenshotName] = useState('');
   const [isUploadingPaymentScreenshot, setIsUploadingPaymentScreenshot] = useState(false);
   const [notes, setNotes] = useState('');
+  // Wix asks for this on its own booking form and prints it into the therapist's calendar
+  // event. Admin-booked sessions had no equivalent, so a therapist opening one had no
+  // emergency number at all.
+  const [emergencyContact, setEmergencyContact] = useState('');
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   
   // Dropdown data
@@ -377,6 +381,7 @@ export default function AdminManualBookingModal({
     setPaymentScreenshotName('');
     setIsUploadingPaymentScreenshot(false);
     setNotes('');
+    setEmergencyContact('');
     setError(null);
     setPsychologistAvailability({});
     setCurrentDate(new Date());
@@ -915,6 +920,7 @@ export default function AdminManualBookingModal({
           receipt_url: paymentScreenshotUrl || null,
           payment_received_date: paymentReceivedDate,
           notes: notes || null,
+          emergency_contact: emergencyContact.trim() || null,
           records: recordRows.map((r) => ({ scheduled_date: r.date, scheduled_time: r.time, status: r.status })),
         });
         if (response?.success) {
@@ -981,6 +987,7 @@ export default function AdminManualBookingModal({
           receipt_url: paymentScreenshotUrl || null,
           therapist_commission: therapistCommission ? parseFloat(therapistCommission) : 0,
           notes: notes || null,
+          emergency_contact: emergencyContact.trim() || null,
           duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : undefined,
         });
         if (response.success) {
@@ -1045,6 +1052,7 @@ export default function AdminManualBookingModal({
         receipt_url: paymentScreenshotUrl || null,
         therapist_commission: therapistCommission ? parseFloat(therapistCommission) : 0,
         notes: notes || null,
+        emergency_contact: emergencyContact.trim() || null,
         duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : undefined,
       };
       if (recordOnly) {
@@ -1948,6 +1956,21 @@ export default function AdminManualBookingModal({
                 <p className="mt-1 text-xs text-slate-500">Paste the Meet link if the meeting was already created elsewhere</p>
               </div>
             )}
+
+            {/* Emergency contact — mirrored into the Google Calendar event, as Wix does */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Emergency Contact Number (Optional)
+              </label>
+              <input
+                type="tel"
+                value={emergencyContact}
+                onChange={(e) => setEmergencyContact(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#025545]/20 focus:border-[#025545] text-sm"
+                placeholder="+91 98470 00000"
+              />
+              <p className="mt-1 text-xs text-slate-500">Shown to the therapist in the Google Calendar event, the same as a Wix booking</p>
+            </div>
 
             {/* Notes */}
             <div className="rounded-xl border border-slate-200 bg-slate-50/30 p-4">
