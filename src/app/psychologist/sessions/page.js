@@ -315,6 +315,9 @@ export default function PsychologistSessions() {
         condition: sessionData.condition?.trim?.() || null,
         client_opening_statement: sessionData.client_opening_statement?.trim?.() || null,
         to_operation: sessionData.message_to_operations?.trim?.() || null,
+        // The therapist's own First / Follow-up answer. Missing from this allow-list, so it was
+        // dropped before reaching the API even though the popup asks for it.
+        therapist_session_sequence: sessionData.therapist_session_sequence || null,
         // Intake answers, session-level.
         concern_duration: sessionData.concern_duration || null,
         therapy_awareness: sessionData.therapy_awareness || null,
