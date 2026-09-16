@@ -3,6 +3,39 @@ import { useState, useEffect } from "react";
 import { X, FileText, Calendar, Loader2, User, AlertCircle, Lock, Unlock, Eye, EyeOff, Paperclip, Trash2 } from "lucide-react";
 import { psychologistApi } from "../lib/backendApi";
 
+const EMPTY_FORM = {
+  summary: "",
+  report: "",
+  summary_notes: "",
+  completion_date: "",
+  message_to_operations: "",
+  client_opening_statement: "",
+  attachments: [],
+  // From the therapists' own "Koott-26 Sessions" sheets.
+  client_status: "",
+  client_sex: "",
+  client_age: "",
+  client_age_group: "",
+  client_location: "",
+  partner_sex: "",
+  partner_age_group: "",
+  partner_location: "",
+  // Intake answers, stored per session.
+  condition: "",
+  concern_duration: "",
+  therapy_trigger: "",
+  therapy_awareness: "",
+  tried_therapy_before: "",
+  therapy_hesitation: "",
+};
+
+// Never pre-filled: these describe THIS session, so copying the last one would put stale
+// words in front of the client or the operations team.
+const PREFILL_INTAKE_FIELDS = [
+  "condition", "concern_duration", "therapy_trigger", "therapy_awareness",
+  "tried_therapy_before", "therapy_hesitation", "client_opening_statement",
+];
+
 export default function SessionCompletionModal({
   isOpen,
   onClose,
@@ -12,36 +45,7 @@ export default function SessionCompletionModal({
   /** When true (e.g. admin), summary, report, and private notes are optional */
   fieldsOptional = false,
 }) {
-  const [formData, setFormData] = useState({
-    summary: "",
-    report: "",
-    summary_notes: "",
-    completion_date: "",
-    message_to_operations: "",
-    client_opening_statement: "",
-    attachments: [],
-    // From the therapists' own "Koott-26 Sessions" sheets. Only the columns the form did not
-    // already cover are here — "To Operation" and "Condition" map onto message_to_operations
-    // and client_opening_statement, which already existed, so they are relabelled rather than
-    // duplicated.
-    client_status: "",
-    therapist_session_sequence: "",
-    client_sex: "",
-    client_age: "",
-    client_age_group: "",
-    client_location: "",
-    partner_sex: "",
-    partner_age_group: "",
-    partner_location: "",
-    // Intake answers. Session-level: a returning client can answer differently later, so these
-    // are asked each time rather than stamped once onto the client record.
-    condition: "",
-    concern_duration: "",
-    therapy_trigger: "",
-    therapy_awareness: "",
-    tried_therapy_before: "",
-    therapy_hesitation: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
   const AGE_GROUPS = ["Under 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
   const CONCERN_DURATIONS = ["Less than 3 months", "3-6 months", "6-12 months", "1+ year"];
@@ -61,14 +65,6 @@ export default function SessionCompletionModal({
   ];
 
   const CLIENT_STATUSES = ["New", "Follow up", "Resumed after a pause"];
-  // The therapist's own read on whether this was a first session or a follow-up. The system
-  // already works this out for commission (first session per client, or per package), and
-  // that stays the source of truth for money — this answer is recorded alongside it and
-  // mirrored to the therapist's sheet as a backup, never used to price anything.
-  const SESSION_SEQUENCES = [
-    { value: "first", label: "First session" },
-    { value: "followup", label: "Follow-up" },
-  ];
   // Gender / age group / location describe the PERSON, not the session. Asking them at every completion
   // is exactly what makes a form feel like paperwork, so they appear only while the client
   // record still lacks them — for a returning client this whole block never renders.
@@ -78,10 +74,16 @@ export default function SessionCompletionModal({
   const isCoupleSession = /couple|cpl/i.test(
     `${session?.session_type || ""} ${session?.wix_payload?.bookingType || ""}`
   );
-  const needsPartnerDetails = isCoupleSession &&
-    (!clientRecord.partner_sex || !clientRecord.partner_age_group || !clientRecord.partner_location);
-  const needsClientDetails = !clientRecord.sex ||
+  // The therapist popup always shows them now — pre-filled from the client record and editable —
+  // because the therapist session list never carried these fields, so the "only when missing"
+  // check below could not see them and the block rendered every time anyway.
+  const needsPartnerDetails = isCoupleSession && (!fieldsOptional ||
+    !clientRecord.partner_sex || !clientRecord.partner_age_group || !clientRecord.partner_location);
+  const needsClientDetails = !fieldsOptional || !clientRecord.sex ||
     !(clientRecord.age_group || clientRecord.age) || !clientRecord.location;
+
+  // Where the pre-filled answers came from, for the note at the top of the form.
+  const [prefillInfo, setPrefillInfo] = useState(null);
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -145,6 +147,53 @@ export default function SessionCompletionModal({
       }));
     }
   }, [session]);
+
+  // A different session (or a reopened popup) must never show the previous client's answers.
+  // Declared after the completion-date default above, so it re-applies that default here.
+  useEffect(() => {
+    setFormData({
+      ...EMPTY_FORM,
+      completion_date: session?.scheduled_date ? new Date(session.scheduled_date).toISOString().split("T")[0] : "",
+    });
+    setErrors({});
+    setPrefillInfo(null);
+  }, [session?.id]);
+
+  // Follow-up sessions: fill everything except the per-session messages from this therapist's
+  // last completed session with the client. Only empty fields are filled, so anything the
+  // therapist has already started typing is kept, and a late response for a session that is
+  // no longer open is ignored.
+  useEffect(() => {
+    if (!isOpen || fieldsOptional || !session?.id) return;
+    const sessionId = session.id;
+    let cancelled = false;
+    psychologistApi.getCompletionPrefill(sessionId)
+      .then((res) => {
+        if (cancelled || !res?.success || !res.data) return;
+        const { client, previous } = res.data;
+        const fill = {};
+        if (client) {
+          fill.client_sex = client.sex || "";
+          fill.client_age_group = client.age_group || "";
+          fill.client_location = client.location || "";
+          fill.partner_sex = client.partner_sex || "";
+          fill.partner_age_group = client.partner_age_group || "";
+          fill.partner_location = client.partner_location || "";
+        }
+        if (previous) {
+          fill.client_status = "Follow up";
+          for (const f of PREFILL_INTAKE_FIELDS) fill[f] = previous.intake?.[f] || "";
+        }
+        setFormData((prev) => {
+          const next = { ...prev };
+          for (const [k, v] of Object.entries(fill)) if (v && !String(prev[k] || "").trim()) next[k] = v;
+          return next;
+        });
+        if (previous) setPrefillInfo({ date: previous.date, hasIntake: !!previous.intake });
+      })
+      .catch(() => {}); // pre-fill is a convenience — the empty form still works
+    return () => { cancelled = true; };
+  }, [isOpen, fieldsOptional, session?.id]);
 
   // Reset lock state when modal closes
   useEffect(() => {
@@ -232,30 +281,8 @@ export default function SessionCompletionModal({
         ...formData,
         report: finalReportText
       });
-      setFormData({
-        summary: "",
-        report: "",
-        summary_notes: "",
-        completion_date: session?.scheduled_date ? new Date(session.scheduled_date).toISOString().split("T")[0] : "",
-        message_to_operations: "",
-        client_opening_statement: "",
-        attachments: [],
-        client_status: "",
-        therapist_session_sequence: "",
-        client_sex: "",
-            client_age: "",
-        client_age_group: "",
-        client_location: "",
-        partner_sex: "",
-        partner_age_group: "",
-        partner_location: "",
-        condition: "",
-        concern_duration: "",
-        therapy_trigger: "",
-        therapy_awareness: "",
-        tried_therapy_before: "",
-        therapy_hesitation: "",
-      });
+      setFormData(EMPTY_FORM);
+      setPrefillInfo(null);
       setPrivateUnlocked(false);
       onClose();
     } catch (error) {
@@ -266,15 +293,8 @@ export default function SessionCompletionModal({
   };
 
   const handleClose = () => {
-    setFormData({
-      summary: "",
-      report: "",
-      summary_notes: "",
-      completion_date: session?.scheduled_date ? new Date(session.scheduled_date).toISOString().split("T")[0] : "",
-      message_to_operations: "",
-      client_opening_statement: "",
-      attachments: [],
-    });
+    setFormData(EMPTY_FORM);
+    setPrefillInfo(null);
     setErrors({});
     setPrivateUnlocked(false);
     onClose();
@@ -355,7 +375,16 @@ export default function SessionCompletionModal({
             </div>
           )}
           <form id="session-completion-form" onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-            {/* One tap, no typing — kept first because it is the quickest thing to answer. */}
+            {prefillInfo && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
+                Follow-up session — {prefillInfo.hasIntake ? "client details and intake answers are" : "client details are"} filled in from
+                your last session{prefillInfo.date ? ` on ${new Date(prefillInfo.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}.
+                Check them and edit anything that has changed.
+              </div>
+            )}
+
+            {/* One tap, no typing — kept first because it is the quickest thing to answer. This is the
+                only First / Follow-up question; the sheet's First/Follow-up column is derived from it. */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] mr-1">Client</span>
               {CLIENT_STATUSES.map((label) => {
@@ -365,31 +394,6 @@ export default function SessionCompletionModal({
                     key={label}
                     type="button"
                     onClick={() => handleInputChange("client_status", active ? "" : label)}
-                    disabled={isSubmitting}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                      active
-                        ? "bg-[#025545] text-white border-[#025545]"
-                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Asked separately from "Client" above: that describes the PERSON's history with
-                Koott, this describes THIS session. Finance derives its own answer for the
-                commission rate — this one is the therapist's, kept for the record. */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-[0.05em] mr-1">Session</span>
-              {SESSION_SEQUENCES.map(({ value, label }) => {
-                const active = formData.therapist_session_sequence === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => handleInputChange("therapist_session_sequence", active ? "" : value)}
                     disabled={isSubmitting}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                       active
