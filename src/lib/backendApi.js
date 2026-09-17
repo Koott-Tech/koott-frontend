@@ -694,8 +694,9 @@ export const psychologistApi = {
   },
 
   // Last answers for this client (client details + intake) to pre-fill the completion popup
-  async getCompletionPrefill(sessionId) {
-    return apiRequest(`/psychologists/sessions/${sessionId}/completion-prefill`);
+  async getCompletionPrefill(sessionId, clientId) {
+    const q = clientId ? `?clientId=${encodeURIComponent(clientId)}` : '';
+    return apiRequest(`/psychologists/sessions/${sessionId}/completion-prefill${q}`);
   },
 
   // Complete session with summary, report, and notes

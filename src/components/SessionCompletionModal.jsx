@@ -36,6 +36,24 @@ const PREFILL_INTAKE_FIELDS = [
   "tried_therapy_before", "therapy_hesitation", "client_opening_statement",
 ];
 
+// One lookup per session, shared between the Complete button and the popup: the button starts
+// it on hover/tap so it is usually finished (or nearly) by the time the popup renders.
+// Short-lived, so a reopened popup never shows answers older than a few minutes.
+const PREFILL_TTL_MS = 5 * 60 * 1000;
+const prefillCache = new Map();
+export function prefetchCompletionPrefill(session) {
+  if (!session?.id) return null;
+  const hit = prefillCache.get(session.id);
+  if (hit && Date.now() - hit.at < PREFILL_TTL_MS) return hit.promise;
+  const clientId = session.client_id || session.client?.id;
+  const promise = psychologistApi.getCompletionPrefill(session.id, clientId).catch((err) => {
+    prefillCache.delete(session.id); // let the next open retry
+    throw err;
+  });
+  prefillCache.set(session.id, { at: Date.now(), promise });
+  return promise;
+}
+
 export default function SessionCompletionModal({
   isOpen,
   onClose,
@@ -84,6 +102,7 @@ export default function SessionCompletionModal({
 
   // Where the pre-filled answers came from, for the note at the top of the form.
   const [prefillInfo, setPrefillInfo] = useState(null);
+  const [prefillLoading, setPrefillLoading] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -165,9 +184,9 @@ export default function SessionCompletionModal({
   // no longer open is ignored.
   useEffect(() => {
     if (!isOpen || fieldsOptional || !session?.id) return;
-    const sessionId = session.id;
     let cancelled = false;
-    psychologistApi.getCompletionPrefill(sessionId)
+    setPrefillLoading(true);
+    prefetchCompletionPrefill(session)
       .then((res) => {
         if (cancelled || !res?.success || !res.data) return;
         const { client, previous } = res.data;
@@ -189,10 +208,21 @@ export default function SessionCompletionModal({
           for (const [k, v] of Object.entries(fill)) if (v && !String(prev[k] || "").trim()) next[k] = v;
           return next;
         });
-        if (previous) setPrefillInfo({ date: previous.date, hasIntake: !!previous.intake });
+        // Say what was actually filled. A follow-up whose earlier sessions predate the intake
+        // questions, and whose client record has no details, fills nothing — the note used to
+        // claim "filled in from your last session" over a blank form.
+        if (previous) {
+          const filled = (keys) => keys.some((k) => fill[k]);
+          setPrefillInfo({
+            date: previous.date,
+            intake: filled(PREFILL_INTAKE_FIELDS),
+            details: filled(["client_sex", "client_age_group", "client_location", "partner_sex", "partner_age_group", "partner_location"]),
+          });
+        }
       })
-      .catch(() => {}); // pre-fill is a convenience — the empty form still works
-    return () => { cancelled = true; };
+      .catch(() => {}) // pre-fill is a convenience — the empty form still works
+      .finally(() => { if (!cancelled) setPrefillLoading(false); });
+    return () => { cancelled = true; setPrefillLoading(false); };
   }, [isOpen, fieldsOptional, session?.id]);
 
   // Reset lock state when modal closes
@@ -375,13 +405,26 @@ export default function SessionCompletionModal({
             </div>
           )}
           <form id="session-completion-form" onSubmit={handleSubmit} className="px-8 py-6 space-y-6">
-            {prefillInfo && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
-                Follow-up session — {prefillInfo.hasIntake ? "client details and intake answers are" : "client details are"} filled in from
-                your last session{prefillInfo.date ? ` on ${new Date(prefillInfo.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}.
-                Check them and edit anything that has changed.
+            {prefillLoading && (
+              <div role="status" className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-medium text-slate-600">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#025545]" />
+                Fetching client details…
               </div>
             )}
+            {!prefillLoading && prefillInfo && (prefillInfo.intake || prefillInfo.details ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800">
+                Follow-up session — {prefillInfo.intake && prefillInfo.details ? "client details and intake answers are"
+                  : prefillInfo.intake ? "intake answers are" : "client details are"} filled in from
+                {prefillInfo.intake ? ` your last session${prefillInfo.date ? ` on ${new Date(prefillInfo.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}` : " the client record"}.
+                Check them and edit anything that has changed.
+                {!prefillInfo.intake && " The intake answers were not saved in earlier sessions, so please fill them in this time."}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800">
+                Follow-up client — no details were saved in earlier sessions, so there is nothing to fill in yet.
+                Please fill them in this time; they will be filled in automatically from the next session.
+              </div>
+            ))}
 
             {/* One tap, no typing — kept first because it is the quickest thing to answer. This is the
                 only First / Follow-up question; the sheet's First/Follow-up column is derived from it. */}

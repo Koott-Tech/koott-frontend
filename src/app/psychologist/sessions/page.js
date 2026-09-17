@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import SessionCompletionModal from "../../../components/SessionCompletionModal";
+import SessionCompletionModal, { prefetchCompletionPrefill } from "../../../components/SessionCompletionModal";
 import SessionDetailsModal from "../../../components/SessionDetailsModal";
 import SessionNotesModal from "../../../components/SessionNotesModal";
 import PrivateNotePasswordModal from "../../../components/PrivateNotePasswordModal";
@@ -371,6 +371,8 @@ export default function PsychologistSessions() {
       return;
     }
     
+    // Start the auto-fill lookup now rather than after the popup renders.
+    prefetchCompletionPrefill(session)?.catch(() => {});
     setSelectedCompleteSession(session);
     setShowCompleteModal(true);
   };
@@ -1002,6 +1004,8 @@ export default function PsychologistSessions() {
                               )}
                               <button
                                 onClick={() => openCompleteSessionModal(session)}
+                                onMouseEnter={() => prefetchCompletionPrefill(session)?.catch(() => {})}
+                                onTouchStart={() => prefetchCompletionPrefill(session)?.catch(() => {})}
                                 disabled={completingSessions.has(session.id)}
                                 className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#025545] text-white hover:bg-[#012f23] transition-colors shadow-sm disabled:opacity-50"
                                 title="Mark session as complete"
