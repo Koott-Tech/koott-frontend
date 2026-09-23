@@ -307,6 +307,9 @@ export default function AdminWixDiscoverPage() {
   const [viewingRow, setViewingRow] = useState(null);
   const [editingRow, setEditingRow] = useState(null);
   const [editForm, setEditForm] = useState({});
+  // Set while the admin is typing a package size that is not one of the listed ones
+  // ('package' or 'couple'); cleared whenever a listed type is chosen or the modal closes.
+  const [customCount, setCustomCount] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteIsPlatform, setDeleteIsPlatform] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -590,6 +593,8 @@ export default function AdminWixDiscoverPage() {
       curDate = ist.toISOString().slice(0, 10);
       curTime = ist.toISOString().slice(11, 16);
     }
+    // Opening another booking must not inherit the last one's custom-size state.
+    setCustomCount(null);
     setEditForm({
       status: row.status || '',
       title: row.title || '',
@@ -1653,26 +1658,55 @@ export default function AdminWixDiscoverPage() {
                       // Selecting a size sets session_type='package' + session_count=N; any other
                       // type is a single session (count 1). Always includes the current count so an
                       // existing 4/2/… pack isn't silently changed.
+                      // A COUPLE package is stored as session_type 'couple' with session_count > 1
+                      // (there is no separate stored type), so it needs its own entries here —
+                      // saved as a plain "package" it would pay the individual-package rate.
+                      // Assessment and Discovery are gone: neither is bookable, and choosing one
+                      // only produced a session type the rest of the system does not understand.
                       const curCount = Number(editForm.session_count) || 0;
-                      const pkgSizes = [...new Set([2, 3, 6, 9, 12, ...(curCount > 1 ? [curCount] : [])])].sort((a, b) => a - b);
-                      const value = editForm.session_type === 'package' ? `package_${curCount || 3}` : (editForm.session_type || 'individual');
+                      const isCouple = editForm.session_type === 'couple';
+                      const isPackage = editForm.session_type === 'package';
+                      const pkgSizes = [...new Set([2, 3, 6, 9, 12, ...(isPackage && curCount > 1 ? [curCount] : [])])].sort((a, b) => a - b);
+                      const couplePkgSizes = [...new Set([3, ...(isCouple && curCount > 1 ? [curCount] : [])])].sort((a, b) => a - b);
+                      const value = customCount === 'package' ? 'package_custom'
+                        : customCount === 'couple' ? 'couple_package_custom'
+                        : isPackage ? `package_${curCount || 3}`
+                        : isCouple && curCount > 1 ? `couple_package_${curCount}`
+                        : (editForm.session_type || 'individual');
                       return (
+                        <>
                         <select value={value} onChange={(e) => {
                           const v = e.target.value;
-                          if (v.startsWith('package_')) {
-                            const n = parseInt(v.slice(8), 10);
-                            setEditForm(f => ({ ...f, session_type: 'package', session_count: n }));
+                          if (v === 'package_custom' || v === 'couple_package_custom') {
+                            // The box below sets the count; keep the current one as a starting point.
+                            setCustomCount(v === 'package_custom' ? 'package' : 'couple');
+                            setEditForm(f => ({ ...f, session_type: v === 'package_custom' ? 'package' : 'couple', session_count: curCount > 1 ? curCount : '' }));
+                            return;
+                          }
+                          setCustomCount(null);
+                          if (v.startsWith('couple_package_')) {
+                            setEditForm(f => ({ ...f, session_type: 'couple', session_count: parseInt(v.slice(15), 10) }));
+                          } else if (v.startsWith('package_')) {
+                            setEditForm(f => ({ ...f, session_type: 'package', session_count: parseInt(v.slice(8), 10) }));
                           } else {
                             setEditForm(f => ({ ...f, session_type: v, session_count: 1 }));
                           }
                         }}
                           className="w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all cursor-pointer">
                           <option value="individual">Individual</option>
-                          <option value="couple">Couple</option>
+                          <option value="couple">Couple (single session)</option>
                           {pkgSizes.map(n => <option key={n} value={`package_${n}`}>{`Package (${n} sessions)`}</option>)}
-                          <option value="assessment">Assessment</option>
-                          <option value="discovery">Discovery</option>
+                          <option value="package_custom">Package (custom number…)</option>
+                          {couplePkgSizes.map(n => <option key={`c${n}`} value={`couple_package_${n}`}>{`Couple package (${n} sessions)`}</option>)}
+                          <option value="couple_package_custom">Couple package (custom number…)</option>
                         </select>
+                        {customCount && (
+                          <input type="number" min="2" value={editForm.session_count ?? ''}
+                            onChange={(e) => setEditForm(f => ({ ...f, session_count: e.target.value }))}
+                            placeholder={`Number of sessions in this ${customCount === 'couple' ? 'couple ' : ''}package`}
+                            className="mt-2 w-full px-4 py-3 border border-slate-200 rounded-2xl bg-white text-sm font-medium text-slate-900 shadow-sm focus:ring-4 focus:ring-[#025545]/10 focus:border-[#025545] outline-none transition-all" />
+                        )}
+                        </>
                       );
                     })() : field.type === 'psychologist' ? (
                       <select value={editForm[field.key] || ''} onChange={(e) => setEditForm(f => ({ ...f, [field.key]: e.target.value }))}
