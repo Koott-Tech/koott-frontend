@@ -187,6 +187,16 @@ export default function AdminManualBookingModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const isSubmittingRef = useRef(false); // Ref to prevent duplicate submissions
+  // One id per opened form. The in-flight lock above stops a double click, but not a RETRY
+  // after a slow or failed response — and the booking may already have been created by then.
+  // Sending the same id lets the server recognise the repeat and hand back the first booking
+  // instead of creating a second one (which used to leave an extra calendar invite behind).
+  const requestKeyRef = useRef(null);
+  const newRequestKey = () => {
+    requestKeyRef.current = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
   const [error, setError] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showFailureModal, setShowFailureModal] = useState(false);
@@ -395,6 +405,7 @@ export default function AdminManualBookingModal({
     setFailureMessage('');
     setShowNewClientPassword(false);
     isSubmittingRef.current = false; // Reset submission flag when form resets
+    requestKeyRef.current = null; // a cleared form is a new booking, so it gets a new id
   };
 
   const handleNewClientInputChange = (field, value) => {
@@ -758,6 +769,8 @@ export default function AdminManualBookingModal({
 
     // Mark as submitting immediately (atomic operation)
     isSubmittingRef.current = true;
+    // Kept across retries of THIS booking; only a reset form gets a new one.
+    if (!requestKeyRef.current) newRequestKey();
     console.log('🔒 Lock acquired for submission');
     setError(null);
 
@@ -989,6 +1002,7 @@ export default function AdminManualBookingModal({
           notes: notes || null,
           emergency_contact: emergencyContact.trim() || null,
           duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : undefined,
+          request_key: requestKeyRef.current,
         });
         if (response.success) {
           setShowSuccessModal(true);
@@ -1039,6 +1053,8 @@ export default function AdminManualBookingModal({
 
       // Step 2: Create booking
       const bookingData = {
+        // Same id on a retry of this booking, so the server can recognise the repeat.
+        request_key: requestKeyRef.current,
         client_id: finalClientId,
         psychologist_id: psychologistId,
         package_id: null,
