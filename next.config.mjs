@@ -37,6 +37,23 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'static.wixstatic.com',
       },
+      // The backend's /api/images/* route now 302-redirects public objects straight to
+      // Supabase Storage instead of proxying the bytes through Render. next/image follows that
+      // redirect, so the Supabase host must be allowlisted here or optimisation can fail.
+      //
+      // Derived from NEXT_PUBLIC_SUPABASE_URL so it cannot drift from the project the backend
+      // actually uses — the hardcoded entry below is a stale project ref kept only so any
+      // legacy stored URL pointing at it still renders.
+      ...(() => {
+        const fallback = 'radviiokxmrzwzwxxssd.supabase.co'; // current project, used if the env var is absent at build time
+        let host = fallback;
+        try {
+          host = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname;
+        } catch { /* keep fallback */ }
+        return host === fallback
+          ? [{ protocol: 'https', hostname: fallback }]
+          : [{ protocol: 'https', hostname: host }, { protocol: 'https', hostname: fallback }];
+      })(),
       {
         protocol: 'https',
         hostname: 'iylutfwntoqcnqnjdnnp.supabase.co',

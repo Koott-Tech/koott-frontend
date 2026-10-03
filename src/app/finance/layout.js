@@ -20,8 +20,6 @@ import {
   Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { financeApi } from '@/lib/backendApi';
-import { formatIstCalendarYmd, istCalendarMonthBounds } from '@/lib/wixFinanceDates';
 
 // Cache removed - always fetch fresh data from API
 
@@ -37,16 +35,11 @@ export default function FinanceLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   
-  // Initialize header stats - no caching, always fetch fresh data
-  const [headerStats, setHeaderStats] = useState({
-    total_revenue: 0,
-    net_profit: 0,
-    total_expenses: 0,
-    pending_payouts: 0,
-    total_sessions: 0,
-    total_doctor_wallet: 0
-  });
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  // NOTE: this layout used to hold `headerStats` state and poll financeApi.getDashboard()
+  // every 5 minutes to fill it. The stats were removed from the header JSX at some point but
+  // the fetch was left behind, so every open /finance/* tab was firing the single heaviest
+  // endpoint in the app 12 times an hour into state that nothing rendered. Removed.
+  // If header figures come back, call the light GET /api/finance/summary — not getDashboard.
 
   useEffect(() => {
     if (!authLoading) {
@@ -61,43 +54,6 @@ export default function FinanceLayout({ children }) {
       }
     }
   }, [authLoading, isAuthenticated, hasRole, router]);
-
-  // Load header stats - always fetch fresh data (no caching)
-  useEffect(() => {
-    const loadHeaderStats = async () => {
-      try {
-        setIsLoadingStats(true);
-        
-        const b = istCalendarMonthBounds(new Date());
-        const dates = { from: formatIstCalendarYmd(b.from), to: formatIstCalendarYmd(b.to) };
-        const response = await financeApi.getDashboard({
-          dateFrom: dates.from,
-          dateTo: dates.to,
-          includeCharts: false,
-        });
-        if (response.success && response.data?.summary) {
-          const stats = response.data.summary;
-          setHeaderStats(stats);
-        }
-      } catch (err) {
-        console.error('Failed to load header stats:', err);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    if (!authLoading && (hasRole('finance') || hasRole('admin') || hasRole('superadmin'))) {
-      // Always load fresh data (no cache)
-      loadHeaderStats();
-      
-      // Header numbers do not need heavy polling; detail pages refresh their own data.
-      const interval = setInterval(() => {
-        loadHeaderStats();
-      }, 5 * 60 * 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [authLoading, hasRole]);
 
   const handleLogout = () => {
     logout();

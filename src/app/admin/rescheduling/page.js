@@ -22,9 +22,38 @@ export default function AdminReschedulingPage() {
 
   useEffect(() => {
     loadRescheduleRequests();
-    // Refresh every 30 seconds
-    const interval = setInterval(loadRescheduleRequests, 30000);
-    return () => clearInterval(interval);
+
+    // BANDWIDTH: was a flat 30s poll that kept running while the tab was hidden. Now 2 minutes,
+    // and only while the tab is actually visible; becoming visible again refetches immediately
+    // so the operator never looks at stale data.
+    const POLL_MS = 2 * 60 * 1000;
+    let interval = null;
+
+    const stop = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+    const start = () => {
+      if (!interval) interval = setInterval(loadRescheduleRequests, POLL_MS);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadRescheduleRequests();
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [filter]);
 
   const loadRescheduleRequests = async () => {
