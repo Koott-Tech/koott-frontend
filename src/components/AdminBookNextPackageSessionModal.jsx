@@ -239,7 +239,9 @@ export default function AdminBookNextPackageSessionModal({ isOpen, onClose, sess
                 {Array.from({ length: startingDay }, (_, i) => <div key={`b${i}`} />)}
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
-                  const isPast = isCurrentMonth && day < today.getDate();
+                  // Admin books the next package session after the fact just as often as
+                  // ahead of time, so past days stay clickable here too.
+                  const isPast = false;
                   const isToday = isCurrentMonth && day === today.getDate();
                   const isSel = selectedDateObj &&
                     selectedDateObj.getDate() === day &&

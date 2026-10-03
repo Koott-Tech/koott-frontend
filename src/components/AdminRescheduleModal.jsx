@@ -426,8 +426,11 @@ export default function AdminRescheduleModal({
                         const isSelected = selectedDate === dateStr;
                         const startOfToday = new Date(todayY, todayM, todayD);
                         const startOfCell = new Date(year, dateObj.getMonth(), day);
+                        // Admin-side tool: sessions are often logged or corrected AFTER they
+                        // happened, so past dates stay selectable. The client-facing reschedule
+                        // flow keeps its own future-only guard.
                         const isPastDate = startOfCell < startOfToday;
-                        const isClickable = !isPastDate;
+                        const isClickable = true;
 
                         cells.push(
                           <button
