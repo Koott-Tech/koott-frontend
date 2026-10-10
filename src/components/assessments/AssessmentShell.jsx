@@ -43,7 +43,7 @@ export default function AssessmentShell({ title, subtitle, intro, endpoint, buil
           <div className="w-14 h-14 rounded-full bg-[#0B5345]/10 mx-auto mb-5 flex items-center justify-center">
             <span className="text-[#0B5345] text-2xl">✓</span>
           </div>
-          <h1 className="text-xl font-semibold text-[#0B5345] mb-2">Thank you</h1>
+          <div role="heading" aria-level={1} className="text-xl font-semibold text-[#0B5345] mb-2" style={{ lineHeight: 1.3 }}>Thank you</div>
           <p className="text-slate-600 text-sm leading-relaxed">
             Your responses have been submitted and the report has been sent to the practice.
             Your therapist will go through the results with you.
@@ -57,7 +57,7 @@ export default function AssessmentShell({ title, subtitle, intro, endpoint, buil
     <main className="min-h-screen bg-[#EFF6F0] pt-24 pb-10 px-3 sm:px-4">
       <form onSubmit={submit} className="max-w-3xl mx-auto">
         <div className="bg-[#0B5345] text-white rounded-t-xl px-5 sm:px-8 py-5 sm:py-6">
-          <h1 className="text-xl sm:text-2xl font-semibold leading-[1.25] pb-0.5">{title}</h1>
+          <div role="heading" aria-level={1} className="text-xl sm:text-2xl font-semibold" style={{ lineHeight: 1.3 }}>{title}</div>
           {subtitle && <p className="text-white/70 text-sm mt-1">{subtitle}</p>}
         </div>
 

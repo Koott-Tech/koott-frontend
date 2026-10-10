@@ -9,6 +9,16 @@ import AuthModal from "@/components/AuthModal";
 import QuickContactModal from "@/components/QuickContactModal";
 import { authApi } from "../lib/backendApi";
 
+/**
+ * Questionnaires the client fills in directly on the site. These are static routes rather than
+ * CMS entries, so they are listed here instead of coming back from /api/assessments.
+ */
+const QUESTIONNAIRES = [
+  { name: 'Big Five Personality Inventory (BFI-44)', url: '/assessments/big-five' },
+  { name: 'Depression Anxiety Stress Scales (DASS-21)', url: '/assessments/dass-21' },
+  { name: 'Kalyana Raman Premarital Scale', url: '/assessments/kalyana-raman' },
+];
+
 export default function Header() {
   const [isFindCareOpen, setIsFindCareOpen] = useState(false);
   const [isForProvidersOpen, setIsForProvidersOpen] = useState(false);
@@ -983,6 +993,17 @@ export default function Header() {
                               </div>
                             )}
                           </div>
+
+                          {/* Questionnaires - static pages, opened directly */}
+                          <div className="pt-2 mt-1 border-t border-gray-100">
+                            <div className="text-gray-400 px-2 pt-1 pb-1" style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: '1.2' }}>Questionnaires</div>
+                            {QUESTIONNAIRES.map((item) => (
+                              <div key={item.url} className="py-2 cursor-pointer hover:bg-gray-50 rounded-md px-2 transition-all duration-200"
+                                onClick={() => { router.push(item.url); setClickedSubmenu(null); setIsAssessmentsOpen(false); }}>
+                                <h2 className="text-gray-900 hover:translate-x-1 transition-all duration-200" style={{ fontSize: '15px', fontWeight: 500, lineHeight: '1.25', margin: 0 }}>{item.name}</h2>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="px-6 pt-4">
@@ -1706,6 +1727,17 @@ export default function Header() {
                               ))}
                             </div>
                           )}
+
+                          {/* Questionnaires - static pages, opened directly */}
+                          <div className="pt-2 mt-1 border-t border-gray-100">
+                            <div className="text-gray-400 px-2 pb-1" style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', lineHeight: '1.3' }}>Questionnaires</div>
+                            {QUESTIONNAIRES.map((item) => (
+                              <div key={item.url} className="py-1.5 cursor-pointer hover:bg-gray-50 rounded-md px-2"
+                                onClick={() => { router.push(item.url); setIsMobileMenuOpen(false); setIsMobileAssessmentsOpen(false); }}>
+                                <h2 className="text-gray-900 mobile-submenu-header" style={{ fontSize: '15px', fontWeight: 500, lineHeight: '1.3', margin: 0 }}>{item.name}</h2>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="px-4 pt-4">

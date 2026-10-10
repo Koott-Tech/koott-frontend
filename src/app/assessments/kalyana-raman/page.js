@@ -45,9 +45,9 @@ export default function KalyanaRamanPage() {
 
       {KR_DOMAINS.map((domain, di) => (
         <div key={di} className="pt-2">
-          <h2 className="text-[#0B5345] font-medium text-sm mb-3 pb-2 border-b border-slate-100 leading-snug">
+          <div role="heading" aria-level={2} className="text-[#0B5345] font-medium text-sm mb-3 pb-2 border-b border-slate-100" style={{ lineHeight: 1.4 }}>
             {di + 1}. {domain.title}
-          </h2>
+          </div>
           <div className="space-y-4">
             {domain.questions.map((q, qi) => (
               <label key={qi} className="block">
