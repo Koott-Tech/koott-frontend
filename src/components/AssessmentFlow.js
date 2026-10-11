@@ -124,7 +124,7 @@ export default function AssessmentFlow({
   const start = (e) => {
     e.preventDefault();
     if (!agreed) return setError('Please tick the box to confirm you have read the informed consent.');
-    if (!EMAIL_RE.test(email.trim())) return setError('Please enter a valid email address so we can send you a copy of your report.');
+    if (!EMAIL_RE.test(email.trim())) return setError('Please enter a valid email address so your psychologist can reach you about this assessment.');
     setError(''); setStep('questions'); setI(0); top();
   };
 
@@ -167,7 +167,7 @@ export default function AssessmentFlow({
         <div className="w-14 h-14 rounded-full bg-[#0B5345]/10 mx-auto mb-5 flex items-center justify-center text-[#0B5345] text-2xl">✓</div>
         <div role="heading" aria-level={1} className="text-lg font-semibold text-[#0B5345] mb-2" style={{ lineHeight: 1.35 }}>Your report is on its way</div>
         <p className="text-slate-600 text-sm leading-relaxed">
-          A copy has been sent to <b>{email}</b> and to your psychologist. {doneMessage}
+          Your responses have gone to your psychologist. {doneMessage}
         </p>
       </div>
     </main>
@@ -209,7 +209,8 @@ export default function AssessmentFlow({
 
             <Field label="Email ID" required type="email" value={email} inputMode="email"
               onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-            <p className="text-[11px] text-slate-400 -mt-2">We will send a copy of your report here.</p>
+            {/* The report is NOT mailed to the client; do not promise them a copy. */}
+            <p className="text-[11px] text-slate-400 -mt-2">So your psychologist can reach you about this assessment.</p>
           </div>
         )}
 
@@ -335,7 +336,7 @@ export default function AssessmentFlow({
                 </select>
               </label>
             </div>
-            <p className="text-[11px] text-slate-400 mt-4">Report will be sent to {email}.</p>
+            <p className="text-[11px] text-slate-400 mt-4">Your psychologist will go through the results with you in your session.</p>
           </div>
         )}
 
