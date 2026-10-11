@@ -12,6 +12,25 @@ import { useEffect, useRef, useState } from 'react';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/**
+ * Every detail is required: the report is a clinical record and is filed against the
+ * person, so a half-identified one is not much use to the psychologist.
+ * Returns a message to show, or '' when the details are usable.
+ */
+function detailsError({ name, phone, dob, sex }) {
+  if (!name.trim()) return 'Please enter your name.';
+  const digits = (phone || '').replace(/\D/g, '');
+  if (!digits) return 'Please enter your mobile number.';
+  if (digits.length < 10 || digits.length > 13) return 'Please enter a valid mobile number.';
+  if (!dob) return 'Please enter your date of birth.';
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return 'Please enter a valid date of birth.';
+  if (d > new Date()) return 'Your date of birth cannot be in the future.';
+  if (d.getFullYear() < 1900) return 'Please check your date of birth.';
+  if (!sex) return 'Please select an option for sex.';
+  return '';
+}
+
 export const Field = ({ label, required, ...props }) => (
   <label className="block">
     <span className="block text-[12px] font-medium text-slate-600 mb-1">{label}{required && <span className="text-rose-500"> *</span>}</span>
@@ -147,7 +166,8 @@ export default function AssessmentFlow({
 
   const generate = async (e) => {
     e.preventDefault();
-    if (!details.name.trim()) return setError('Please enter your name.');
+    const msg = detailsError(details);
+    if (msg) return setError(msg);
     setError(''); setSending(true);
     try {
       const res = await fetch(endpoint, {
@@ -321,13 +341,15 @@ export default function AssessmentFlow({
           <div className="bg-white px-5 sm:px-8 py-6">
             <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
               Thank you. Please add your details so the report can be identified correctly.
+              All fields are required.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Name" required value={details.name} onChange={(e) => setDetails((p) => ({ ...p, name: e.target.value }))} />
-              <Field label="Mobile number" value={details.phone} inputMode="tel" onChange={(e) => setDetails((p) => ({ ...p, phone: e.target.value }))} />
-              <Field label="Date of birth" type="date" value={details.dob} onChange={(e) => setDetails((p) => ({ ...p, dob: e.target.value }))} />
+              <Field label="Mobile number" required value={details.phone} inputMode="tel" onChange={(e) => setDetails((p) => ({ ...p, phone: e.target.value }))} />
+              <Field label="Date of birth" required type="date" max={new Date().toISOString().slice(0, 10)}
+                value={details.dob} onChange={(e) => setDetails((p) => ({ ...p, dob: e.target.value }))} />
               <label className="block">
-                <span className="block text-[12px] font-medium text-slate-600 mb-1">Sex</span>
+                <span className="block text-[12px] font-medium text-slate-600 mb-1">Sex<span className="text-rose-500"> *</span></span>
                 <select value={details.sex} onChange={(e) => setDetails((p) => ({ ...p, sex: e.target.value }))}
                   className="w-full border border-slate-300 rounded-lg px-3 min-h-11 py-2 text-sm bg-white focus:border-[#0B5345] focus:outline-none">
                   <option value="">Select</option>
@@ -349,7 +371,7 @@ export default function AssessmentFlow({
             <div className="flex gap-3">
               <button type="button" onClick={() => { setError(''); setStep('review'); top(); }}
                 className="px-5 min-h-11 rounded-lg border border-slate-300 text-slate-600 text-sm">Back</button>
-              <button type="submit" disabled={sending}
+              <button type="submit" disabled={sending || !!detailsError(details)}
                 className="flex-1 bg-[#0B5345] text-white rounded-lg min-h-11 py-3 font-medium disabled:opacity-60">
                 {sending ? 'Generating…' : 'Generate report'}
               </button>
