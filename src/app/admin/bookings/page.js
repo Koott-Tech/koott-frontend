@@ -26,7 +26,8 @@ import {
   FileText,
   Video,
   Globe,
-  CloudDownload
+  CloudDownload,
+  ArrowRightLeft
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -38,6 +39,7 @@ import {
 import { adminApi, sessionsApi } from '@/lib/backendApi';
 import { useNotification } from '@/contexts/NotificationContext';
 import AdminRescheduleModal from '@/components/AdminRescheduleModal';
+import AdminTransferSessionModal from '@/components/AdminTransferSessionModal';
 import AdminManualBookingModal from '@/components/AdminManualBookingModal';
 import AdminBookNextPackageSessionModal from '@/components/AdminBookNextPackageSessionModal';
 import AdminEditSessionModal from '@/components/AdminEditSessionModal';
@@ -802,6 +804,12 @@ export default function BookingsPage() {
     } catch (e) { showError(e?.message || 'Failed to cancel', 'Error'); }
     finally { setIsCancelRefunding(false); }
   };
+
+  // Transfer moves ONE session to another therapist. Package and couple-package sessions
+  // after the first are platform sessions and only appear on this page, so without this they
+  // could never be transferred - the action existed only on the Wix discover screen, which
+  // shows the first session of a package but not the later ones.
+  const [transferSession, setTransferSession] = useState(null);
 
   const handleRescheduleSuccess = (updatedSession) => {
     // Update the booking in the list
@@ -1975,6 +1983,15 @@ export default function BookingsPage() {
                               <DropdownMenuSeparator />
                             </>
                           )}
+                          {!['completed', 'cancelled', 'refunded', 'no_show', 'noshow'].includes(booking.status) && (
+                            <>
+                              <DropdownMenuItem onClick={() => setTransferSession(booking)} className="cursor-pointer">
+                                <ArrowRightLeft className="h-4 w-4 mr-2" />
+                                Transfer
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
                           {booking.status !== 'completed' && booking.status !== 'no_show' && booking.status !== 'noshow' && (
                             <>
                               <DropdownMenuItem onClick={() => openCompleteSessionModal(booking)} className="cursor-pointer text-green-600">
@@ -2334,6 +2351,18 @@ export default function BookingsPage() {
         onClose={() => setIsRescheduleOpen(false)}
         session={selectedSession}
         onRescheduleSuccess={handleRescheduleSuccess}
+      />
+
+      {/* Transfer one session to another therapist. The backend moves only this session row,
+          so the sessions already held by the current therapist keep their therapist. */}
+      <AdminTransferSessionModal
+        isOpen={!!transferSession}
+        onClose={() => setTransferSession(null)}
+        session={transferSession}
+        onTransferSuccess={async () => {
+          setTransferSession(null);
+          await loadBookings();
+        }}
       />
 
       {/* Admin Manual Booking Modal */}
